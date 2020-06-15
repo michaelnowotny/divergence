@@ -26,25 +26,30 @@ def intersection(a0: float,
 ################################################################################
 def compute_entropy_from_density_with_support(pdf: tp.Callable,
                                               a: float,
-                                              b: float) \
+                                              b: float,
+                                              log_fun: tp.Callable = np.log) \
         -> float:
     def integrand(x):
-        return pdf(x) * np.log(pdf(x)) if pdf(x) > 0.0 else 0.0
+        return pdf(x) * log_fun(pdf(x)) if pdf(x) > 0.0 else 0.0
 
     return -sp.integrate.quad(integrand, a=a, b=b)[0]
 
 
-def compute_entropy_from_kde(kde: sm.nonparametric.KDEUnivariate):
+def compute_entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
+                             log_fun: tp.Callable = np.log) -> float:
     a = min(kde.support)
     b = max(kde.support)
     return compute_entropy_from_density_with_support(pdf=kde.evaluate,
                                                      a=a,
-                                                     b=b)
+                                                     b=b,
+                                                     log_fun=log_fun)
 
 
-def compute_entropy_from_samples(samples: np.ndarray) -> float:
+def compute_entropy_from_samples(samples: np.ndarray,
+                                 log_fun: tp.Callable = np.log) -> float:
     kde = sm.nonparametric.KDEUnivariate(samples)
-    return compute_entropy_from_kde(kde)
+    return compute_entropy_from_kde(kde=kde,
+                                    log_fun=log_fun)
 
 
 ################################################################################
@@ -52,7 +57,8 @@ def compute_entropy_from_samples(samples: np.ndarray) -> float:
 ################################################################################
 def _cross_entropy_integrand(p: tp.Callable,
                              q: tp.Callable,
-                             x: float) -> float:
+                             x: float,
+                             log_fun: tp.Callable = np.log) -> float:
     qx = q(x)
     px = p(x)
     if qx == 0.0:
@@ -63,16 +69,19 @@ def _cross_entropy_integrand(p: tp.Callable,
     elif px == 0.0:
         return 0.0
     else:
-        return px * np.log(qx)
+        return px * log_fun(qx)
 
 
 def compute_cross_entropy_from_densities_with_support(p: tp.Callable,
                                                       q: tp.Callable,
                                                       a: float,
-                                                      b: float):
+                                                      b: float,
+                                                      log_fun: tp.Callable = np.log) -> float:
     # print(f'computing cross entropy from {a} to {b}')
 
-    return -sp.integrate.quad(lambda x: _cross_entropy_integrand(p, q, x), a=a, b=b)[0]
+    return -sp.integrate.quad(lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+                              a=a,
+                              b=b)[0]
 
 
 def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
@@ -81,7 +90,8 @@ def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
 
 
 def compute_cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
-                                   q: sm.nonparametric.KDEUnivariate) -> float:
+                                   q: sm.nonparametric.KDEUnivariate,
+                                   log_fun: tp.Callable = np.log) -> float:
     if not _does_support_overlap(p, q):
         raise ValueError('The support of p and q does not overlap.')
 
@@ -91,14 +101,17 @@ def compute_cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     return compute_cross_entropy_from_densities_with_support(p=p.evaluate,
                                                              q=q.evaluate,
                                                              a=a,
-                                                             b=b)
+                                                             b=b,
+                                                             log_fun=log_fun)
 
 
-def compute_cross_entropy_from_samples(samples_p: np.ndarray, samples_q: np.ndarray) -> float:
+def compute_cross_entropy_from_samples(samples_p: np.ndarray,
+                                       samples_q: np.ndarray,
+                                       log_fun: tp.Callable = np.log) -> float:
     kde_p = sm.nonparametric.KDEUnivariate(samples_p)
     kde_q = sm.nonparametric.KDEUnivariate(samples_q)
 
-    return compute_cross_entropy_from_kde(kde_p, kde_q)
+    return compute_cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
 
 ################################################################################
@@ -106,7 +119,8 @@ def compute_cross_entropy_from_samples(samples_p: np.ndarray, samples_q: np.ndar
 ################################################################################
 def _relative_entropy_integrand(p: tp.Callable,
                                 q: tp.Callable,
-                                x: float) -> float:
+                                x: float,
+                                log_fun: tp.Callable = np.log) -> float:
     qx = q(x)
     px = p(x)
     if qx == 0.0:
@@ -117,20 +131,24 @@ def _relative_entropy_integrand(p: tp.Callable,
     elif px == 0.0:
         return 0.0
     else:
-        return px * np.log(px / qx)
+        return px * log_fun(px / qx)
 
 
 def compute_relative_entropy_from_densities_with_support(p: tp.Callable,
                                                          q: tp.Callable,
                                                          a: float,
-                                                         b: float) -> float:
+                                                         b: float,
+                                                         log_fun: tp.Callable = np.log) -> float:
     # print(f'computing relative entropy from {a} to {b}')
 
-    return sp.integrate.quad(lambda x: _relative_entropy_integrand(p, q, x), a=a, b=b)[0]
+    return sp.integrate.quad(lambda x: _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+                             a=a,
+                             b=b)[0]
 
 
 def compute_relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
-                                      q: sm.nonparametric.KDEUnivariate):
+                                      q: sm.nonparametric.KDEUnivariate,
+                                      log_fun: tp.Callable = np.log) -> float:
     if not _does_support_overlap(p, q):
         raise ValueError('The support of p and q does not overlap.')
 
@@ -139,25 +157,30 @@ def compute_relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     return compute_relative_entropy_from_densities_with_support(p=p.evaluate,
                                                                 q=q.evaluate,
                                                                 a=a,
-                                                                b=b)
+                                                                b=b,
+                                                                log_fun=log_fun)
 
 
-def compute_relative_entropy_from_samples(samples_p: np.ndarray, samples_q: np.ndarray) -> float:
+def compute_relative_entropy_from_samples(samples_p: np.ndarray,
+                                          samples_q: np.ndarray,
+                                          log_fun: tp.Callable = np.log) -> float:
     kde_p = sm.nonparametric.KDEUnivariate(samples_p)
     kde_q = sm.nonparametric.KDEUnivariate(samples_q)
 
-    return compute_relative_entropy_from_kde(kde_p, kde_q)
+    return compute_relative_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
 
 ################################################################################
 # Jensen-Shannon Divergence
 ###############################################################################
-def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(p: tp.Callable,
-                                                                                 q: tp.Callable,
-                                                                                 a: float,
-                                                                                 b: float) -> float:
+def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(
+        p: tp.Callable,
+        q: tp.Callable,
+        a: float,
+        b: float,
+        log_fun: tp.Callable = np.log) -> float:
     def integrand(x):
-        return p(x) * np.log(p(x) / q(x)) if p(x) > 0.0 else 0.0
+        return p(x) * log_fun(p(x) / q(x)) if p(x) > 0.0 else 0.0
 
     return sp.integrate.quad(integrand, a=a, b=b)[0]
 
@@ -165,33 +188,44 @@ def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence
 def compute_jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                                                                   q: tp.Callable,
                                                                   a: float,
-                                                                  b: float) -> float:
+                                                                  b: float,
+                                                                  log_fun: tp.Callable = np.log) \
+        -> float:
     m = lambda x: 0.5 * (p(x) + q(x))
-    D_PM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(p=p,
-                                                                                        q=m,
-                                                                                        a=a,
-                                                                                        b=b)
+    D_PM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(
+                p=p,
+                q=m,
+                a=a,
+                b=b,
+                log_fun=log_fun)
 
-    D_QM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(p=q,
-                                                                                        q=m,
-                                                                                        a=a,
-                                                                                        b=b)
+    D_QM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(
+                p=q,
+                q=m,
+                a=a,
+                b=b,
+                log_fun=log_fun)
+
     return 0.5 * D_PM + 0.5 * D_QM
 
 
 def compute_jensen_shannon_divergence_from_kde(kde_p: sm.nonparametric.KDEUnivariate,
-                                               kde_q: sm.nonparametric.KDEUnivariate) -> float:
+                                               kde_q: sm.nonparametric.KDEUnivariate,
+                                               log_fun: tp.Callable = np.log) \
+        -> float:
     a = min(min(kde_p.support), min(kde_q.support))
     b = max(max(kde_p.support), max(kde_q.support))
     return compute_jensen_shannon_divergence_from_densities_with_support(p=kde_p.evaluate,
                                                                          q=kde_q.evaluate,
                                                                          a=a,
-                                                                         b=b)
+                                                                         b=b,
+                                                                         log_fun=log_fun)
 
 
 def compute_jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
-                                                   samples_q: np.ndarray) -> float:
+                                                   samples_q: np.ndarray,
+                                                   log_fun: tp.Callable = np.log) -> float:
     kde_p = sm.nonparametric.KDEUnivariate(samples_p)
     kde_q = sm.nonparametric.KDEUnivariate(samples_q)
 
-    return compute_jensen_shannon_divergence_from_kde(kde_p, kde_q)
+    return compute_jensen_shannon_divergence_from_kde(kde_p, kde_q, log_fun=log_fun)
