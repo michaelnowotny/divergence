@@ -37,7 +37,9 @@ def compute_entropy_from_density_with_support(pdf: tp.Callable,
 def compute_entropy_from_kde(kde: sm.nonparametric.KDEUnivariate):
     a = min(kde.support)
     b = max(kde.support)
-    return compute_entropy_from_density_with_support(pdf=kde.evaluate, a=a, b=b)
+    return compute_entropy_from_density_with_support(pdf=kde.evaluate,
+                                                     a=a,
+                                                     b=b)
 
 
 def compute_entropy_from_samples(samples: np.ndarray) -> float:
@@ -86,7 +88,10 @@ def compute_cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     a = min(min(p.support), min(q.support))
     b = max(max(p.support), max(q.support))
 
-    return compute_cross_entropy_from_densities_with_support(p=p.evaluate, q=q.evaluate, a=a, b=b)
+    return compute_cross_entropy_from_densities_with_support(p=p.evaluate,
+                                                             q=q.evaluate,
+                                                             a=a,
+                                                             b=b)
 
 
 def compute_cross_entropy_from_samples(samples_p: np.ndarray, samples_q: np.ndarray) -> float:
@@ -131,7 +136,10 @@ def compute_relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
 
     a = min(min(p.support), min(q.support))
     b = max(max(p.support), max(q.support))
-    return compute_relative_entropy_from_densities_with_support(p=p.evaluate, q=q.evaluate, a=a, b=b)
+    return compute_relative_entropy_from_densities_with_support(p=p.evaluate,
+                                                                q=q.evaluate,
+                                                                a=a,
+                                                                b=b)
 
 
 def compute_relative_entropy_from_samples(samples_p: np.ndarray, samples_q: np.ndarray) -> float:
@@ -147,7 +155,7 @@ def compute_relative_entropy_from_samples(samples_p: np.ndarray, samples_q: np.n
 def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(p: tp.Callable,
                                                                                  q: tp.Callable,
                                                                                  a: float,
-                                                                                 b: float):
+                                                                                 b: float) -> float:
     def integrand(x):
         return p(x) * np.log(p(x) / q(x)) if p(x) > 0.0 else 0.0
 
@@ -157,7 +165,7 @@ def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence
 def compute_jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                                                                   q: tp.Callable,
                                                                   a: float,
-                                                                  b: float):
+                                                                  b: float) -> float:
     m = lambda x: 0.5 * (p(x) + q(x))
     D_PM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(p=p,
                                                                                         q=m,
@@ -172,7 +180,7 @@ def compute_jensen_shannon_divergence_from_densities_with_support(p: tp.Callable
 
 
 def compute_jensen_shannon_divergence_from_kde(kde_p: sm.nonparametric.KDEUnivariate,
-                                               kde_q: sm.nonparametric.KDEUnivariate):
+                                               kde_q: sm.nonparametric.KDEUnivariate) -> float:
     a = min(min(kde_p.support), min(kde_q.support))
     b = max(max(kde_p.support), max(kde_q.support))
     return compute_jensen_shannon_divergence_from_densities_with_support(p=kde_p.evaluate,
