@@ -13,4 +13,4 @@ The following functionality is provided:
 </pre>
 
 ## Examples
-See the Jupyter notebook divergence-examples 
+See the Jupyter notebook [Divergence](notebooks/Divergence.ipynb).
