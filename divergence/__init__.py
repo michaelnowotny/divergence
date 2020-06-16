@@ -214,7 +214,7 @@ def compute_cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
 
                 H(p, q) = - E_p [log(q)]
 
-    given by the statsmodels kde objects via numerical integration from a to b.
+    given by the statsmodels kde objects via numerical integration.
     The argument log_fun can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
@@ -310,8 +310,27 @@ def compute_relative_entropy_from_densities_with_support(p: tp.Callable,
                                                          a: float,
                                                          b: float,
                                                          log_fun: tp.Callable = np.log) -> float:
-    # print(f'computing relative entropy from {a} to {b}')
+    """
+    Compute the relative entropy of the distribution q relative to the distribution p
 
+                D_KL(p||q) = E_p [log(p/q)]
+
+    via numerical integration from a to b.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    p: probability density function of the distribution p
+    q: probability density function of the distribution q
+    a: lower bound of the integration region
+    b: upper bound of the integration region
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The relative entropy of the distribution q relative to the distribution p.
+    """
     return sp.integrate.quad(lambda x: _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
                              a=a,
                              b=b)[0]
@@ -320,6 +339,25 @@ def compute_relative_entropy_from_densities_with_support(p: tp.Callable,
 def compute_relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                       q: sm.nonparametric.KDEUnivariate,
                                       log_fun: tp.Callable = np.log) -> float:
+    """
+    Compute the relative entropy of the distribution q relative to the distribution p
+
+                D_KL(p||q) E_p [log(p/q)]
+
+    given by the statsmodels kde objects via numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    p: statsmodels kde object approximating the probability density function of the distribution p
+    q: statsmodels kde object approximating the probability density function of the distribution q
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The relative entropy of the distribution q relative to the distribution p.
+    """
     if not _does_support_overlap(p, q):
         raise ValueError('The support of p and q does not overlap.')
 
@@ -335,6 +373,26 @@ def compute_relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
 def compute_relative_entropy_from_samples(samples_p: np.ndarray,
                                           samples_q: np.ndarray,
                                           log_fun: tp.Callable = np.log) -> float:
+    """
+    Compute the relative entropy of the distribution q relative to the distribution p
+
+                D_KL(p||q) = E_p [log(p/q)]
+
+    from samples of the two distributions via approximation by a kernel density estimate and
+    numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    samples_p: numpy array of samples from the distribution p
+    samples_q: numpy array of samples from the distribution q
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The relative entropy of the distribution q relative to the distribution p.
+    """
     kde_p = sm.nonparametric.KDEUnivariate(samples_p)
     kde_q = sm.nonparametric.KDEUnivariate(samples_q)
 
@@ -350,6 +408,27 @@ def _compute_relative_entropy_from_densities_with_support_for_shannon_divergence
         a: float,
         b: float,
         log_fun: tp.Callable = np.log) -> float:
+    """
+    Compute the relative entropy of the distribution q relative to the distribution p
+
+                D_KL(p||q) = E_p [log(p/q)]
+
+    via numerical integration from a to b.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    p: probability density function of the distribution p
+    q: probability density function of the distribution q
+    a: lower bound of the integration region
+    b: upper bound of the integration region
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The relative entropy of the distribution q relative to the distribution p.
+    """
     def integrand(x):
         return p(x) * log_fun(p(x) / q(x)) if p(x) > 0.0 else 0.0
 
@@ -362,6 +441,27 @@ def compute_jensen_shannon_divergence_from_densities_with_support(p: tp.Callable
                                                                   b: float,
                                                                   log_fun: tp.Callable = np.log) \
         -> float:
+    """
+    Compute the Jensen-Shannon divergence between distributions p and q
+
+                JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
+
+    via numerical integration from a to b.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    p: probability density function of the distribution p
+    q: probability density function of the distribution q
+    a: lower bound of the integration region
+    b: upper bound of the integration region
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The Jensen-Shannon divergence between distributions p and q.
+    """
     m = lambda x: 0.5 * (p(x) + q(x))
     D_PM = _compute_relative_entropy_from_densities_with_support_for_shannon_divergence(
                 p=p,
@@ -380,14 +480,33 @@ def compute_jensen_shannon_divergence_from_densities_with_support(p: tp.Callable
     return 0.5 * D_PM + 0.5 * D_QM
 
 
-def compute_jensen_shannon_divergence_from_kde(kde_p: sm.nonparametric.KDEUnivariate,
-                                               kde_q: sm.nonparametric.KDEUnivariate,
+def compute_jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
+                                               q: sm.nonparametric.KDEUnivariate,
                                                log_fun: tp.Callable = np.log) \
         -> float:
-    a = min(min(kde_p.support), min(kde_q.support))
-    b = max(max(kde_p.support), max(kde_q.support))
-    return compute_jensen_shannon_divergence_from_densities_with_support(p=kde_p.evaluate,
-                                                                         q=kde_q.evaluate,
+    """
+    Compute the Jensen-Shannon divergence between distributions p and q
+
+                JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
+
+    given by the statsmodels kde objects via numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    p: statsmodels kde object approximating the probability density function of the distribution p
+    q: statsmodels kde object approximating the probability density function of the distribution q
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The Jensen-Shannon divergence between distributions p and q.
+    """
+    a = min(min(p.support), min(q.support))
+    b = max(max(p.support), max(q.support))
+    return compute_jensen_shannon_divergence_from_densities_with_support(p=p.evaluate,
+                                                                         q=q.evaluate,
                                                                          a=a,
                                                                          b=b,
                                                                          log_fun=log_fun)
@@ -396,6 +515,26 @@ def compute_jensen_shannon_divergence_from_kde(kde_p: sm.nonparametric.KDEUnivar
 def compute_jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
                                                    samples_q: np.ndarray,
                                                    log_fun: tp.Callable = np.log) -> float:
+    """
+    Compute the Jensen-Shannon divergence between distributions p and q
+
+                JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
+
+    from samples of the two distributions via approximation by a kernel density estimate and
+    numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    samples_p: numpy array of samples from the distribution p
+    samples_q: numpy array of samples from the distribution q
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    The Jensen-Shannon divergence between distributions p and q.
+    """
     kde_p = sm.nonparametric.KDEUnivariate(samples_p)
     kde_q = sm.nonparametric.KDEUnivariate(samples_q)
 
