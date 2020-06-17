@@ -119,6 +119,7 @@ def continuous_entropy_from_sample(sample: np.ndarray,
     The entropy of the density approximated by the sample
     """
     kde = sm.nonparametric.KDEUnivariate(sample)
+    kde.fit()
     return entropy_from_kde(kde=kde,
                             log_fun=log_fun)
 
@@ -265,7 +266,9 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     The cross entropy of the distribution q relative to the distribution p.
     """
     kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_p.fit()
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
+    kde_q.fit()
 
     return cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
@@ -394,7 +397,9 @@ def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
     The relative entropy of the distribution q relative to the distribution p.
     """
     kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_p.fit()
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
+    kde_q.fit()
 
     return relative_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
@@ -536,6 +541,8 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
     The Jensen-Shannon divergence between distributions p and q.
     """
     kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_p.fit()
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
+    kde_q.fit()
 
     return jensen_shannon_divergence_from_kde(kde_p, kde_q, log_fun=log_fun)
