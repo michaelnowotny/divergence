@@ -39,10 +39,15 @@ def discrete_entropy_scipy(sample: np.ndarray, log_fun: tp.Callable = np.log) ->
     return sp.stats.entropy(_construct_frequencies_for_one_sample(sample), base=base)
 
 
-# def test_entropy(sample: np.ndarray, log_fun: tp.Callable = np.log):
-#     # entropy_from_divergence =
-#     entropy_from_scipy = discrete_entropy_scipy(sample=sample, log_fun=log_fun)
-#     pass
+@pytest.mark.parametrize("sample", (multinomial_sample_q_1,
+                                    multinomial_sample_p_1,
+                                    multinomial_sample_q_2,
+                                    multinomial_sample_p_2))
+@pytest.mark.parametrize("log_fun", (np.log, np.log2, np.log10))
+def test_entropy(sample: np.ndarray, log_fun: tp.Callable):
+    entropy_from_divergence = discrete_entropy(sample=sample, log_fun=log_fun)
+    entropy_from_scipy = discrete_entropy_scipy(sample=sample, log_fun=log_fun)
+    assert np.isclose(entropy_from_divergence, entropy_from_scipy)
 
 
 @pytest.mark.parametrize("sample_p, sample_q, expected_frequencies_p, expected_frequencies_q",
