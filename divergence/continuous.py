@@ -98,8 +98,8 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
                                              log_fun=log_fun)
 
 
-def continuous_entropy_from_samples(samples: np.ndarray,
-                                    log_fun: tp.Callable = np.log) -> float:
+def continuous_entropy_from_sample(sample: np.ndarray,
+                                   log_fun: tp.Callable = np.log) -> float:
     """
     Compute the entropy
 
@@ -111,14 +111,14 @@ def continuous_entropy_from_samples(samples: np.ndarray,
 
     Parameters
     ----------
-    samples: a 1-dimensional numpy array of samples from the density
+    sample: a sample of draws from the density represented as a 1-dimensional numpy array
     log_fun: logarithmic function to control the units of measurement for the result
 
     Returns
     -------
-    The entropy of the density approximated by the draws of samples
+    The entropy of the density approximated by the sample
     """
-    kde = sm.nonparametric.KDEUnivariate(samples)
+    kde = sm.nonparametric.KDEUnivariate(sample)
     return entropy_from_kde(kde=kde,
                             log_fun=log_fun)
 
@@ -241,9 +241,9 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                      log_fun=log_fun)
 
 
-def continuous_cross_entropy_from_samples(samples_p: np.ndarray,
-                                          samples_q: np.ndarray,
-                                          log_fun: tp.Callable = np.log) -> float:
+def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
+                                         sample_q: np.ndarray,
+                                         log_fun: tp.Callable = np.log) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
@@ -256,16 +256,16 @@ def continuous_cross_entropy_from_samples(samples_p: np.ndarray,
 
     Parameters
     ----------
-    samples_p: numpy array of samples from the distribution p
-    samples_q: numpy array of samples from the distribution q
+    sample_p: sample from the distribution p
+    sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
 
     Returns
     -------
     The cross entropy of the distribution q relative to the distribution p.
     """
-    kde_p = sm.nonparametric.KDEUnivariate(samples_p)
-    kde_q = sm.nonparametric.KDEUnivariate(samples_q)
+    kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_q = sm.nonparametric.KDEUnivariate(sample_q)
 
     return cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
@@ -370,9 +370,9 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                         log_fun=log_fun)
 
 
-def continuous_relative_entropy_from_samples(samples_p: np.ndarray,
-                                             samples_q: np.ndarray,
-                                             log_fun: tp.Callable = np.log) -> float:
+def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
+                                            sample_q: np.ndarray,
+                                            log_fun: tp.Callable = np.log) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -385,16 +385,16 @@ def continuous_relative_entropy_from_samples(samples_p: np.ndarray,
 
     Parameters
     ----------
-    samples_p: numpy array of samples from the distribution p
-    samples_q: numpy array of samples from the distribution q
+    sample_p: sample from the distribution p
+    sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
 
     Returns
     -------
     The relative entropy of the distribution q relative to the distribution p.
     """
-    kde_p = sm.nonparametric.KDEUnivariate(samples_p)
-    kde_q = sm.nonparametric.KDEUnivariate(samples_q)
+    kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_q = sm.nonparametric.KDEUnivariate(sample_q)
 
     return relative_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
 
@@ -512,9 +512,9 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                                  log_fun=log_fun)
 
 
-def continuous_jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
-                                                      samples_q: np.ndarray,
-                                                      log_fun: tp.Callable = np.log) -> float:
+def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
+                                                     sample_q: np.ndarray,
+                                                     log_fun: tp.Callable = np.log) -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
 
@@ -527,15 +527,15 @@ def continuous_jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
 
     Parameters
     ----------
-    samples_p: numpy array of samples from the distribution p
-    samples_q: numpy array of samples from the distribution q
+    sample_p: sample from the distribution p
+    sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
 
     Returns
     -------
     The Jensen-Shannon divergence between distributions p and q.
     """
-    kde_p = sm.nonparametric.KDEUnivariate(samples_p)
-    kde_q = sm.nonparametric.KDEUnivariate(samples_q)
+    kde_p = sm.nonparametric.KDEUnivariate(sample_p)
+    kde_q = sm.nonparametric.KDEUnivariate(sample_q)
 
     return jensen_shannon_divergence_from_kde(kde_p, kde_q, log_fun=log_fun)
