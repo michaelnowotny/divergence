@@ -17,7 +17,6 @@ The following units can be realized by the corresponding choice of the argument 
 In a Bayesian context, relative entropy can be used as a measure of the information gained by moving 
 from a prior distribution `q` to a posterior distribution `p`.
 
-
 ## Installation
 
 <pre>
