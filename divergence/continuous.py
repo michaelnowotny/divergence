@@ -98,8 +98,8 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
                                              log_fun=log_fun)
 
 
-def entropy_from_samples(samples: np.ndarray,
-                         log_fun: tp.Callable = np.log) -> float:
+def continuous_entropy_from_samples(samples: np.ndarray,
+                                    log_fun: tp.Callable = np.log) -> float:
     """
     Compute the entropy
 
@@ -241,9 +241,9 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                      log_fun=log_fun)
 
 
-def cross_entropy_from_samples(samples_p: np.ndarray,
-                               samples_q: np.ndarray,
-                               log_fun: tp.Callable = np.log) -> float:
+def continuous_cross_entropy_from_samples(samples_p: np.ndarray,
+                                          samples_q: np.ndarray,
+                                          log_fun: tp.Callable = np.log) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
@@ -370,9 +370,9 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                         log_fun=log_fun)
 
 
-def relative_entropy_from_samples(samples_p: np.ndarray,
-                                  samples_q: np.ndarray,
-                                  log_fun: tp.Callable = np.log) -> float:
+def continuous_relative_entropy_from_samples(samples_p: np.ndarray,
+                                             samples_q: np.ndarray,
+                                             log_fun: tp.Callable = np.log) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -512,9 +512,9 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                                  log_fun=log_fun)
 
 
-def jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
-                                           samples_q: np.ndarray,
-                                           log_fun: tp.Callable = np.log) -> float:
+def continuous_jensen_shannon_divergence_from_samples(samples_p: np.ndarray,
+                                                      samples_q: np.ndarray,
+                                                      log_fun: tp.Callable = np.log) -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
 
