@@ -24,4 +24,4 @@ from a prior distribution `q` to a posterior distribution `p`.
 </pre>
 
 ## Examples
-See the Jupyter notebook [Divergence](notebooks/Divergence.ipynb).
+See the Jupyter notebook [Divergence](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb).

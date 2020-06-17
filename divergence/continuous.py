@@ -264,6 +264,7 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     Returns
     -------
     The cross entropy of the distribution q relative to the distribution p.
+
     """
     kde_p = sm.nonparametric.KDEUnivariate(sample_p)
     kde_p.fit()
@@ -433,6 +434,7 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
     Returns
     -------
     The relative entropy of the distribution q relative to the distribution p.
+
     """
     def integrand(x):
         return p(x) * log_fun(p(x) / q(x)) if p(x) > 0.0 else 0.0
@@ -466,6 +468,7 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
     Returns
     -------
     The Jensen-Shannon divergence between distributions p and q.
+
     """
     m = lambda x: 0.5 * (p(x) + q(x))
     D_PM = _relative_entropy_from_densities_with_support_for_shannon_divergence(
@@ -507,6 +510,7 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
     Returns
     -------
     The Jensen-Shannon divergence between distributions p and q.
+
     """
     a = min(min(p.support), min(q.support))
     b = max(max(p.support), max(q.support))
@@ -539,6 +543,7 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
     Returns
     -------
     The Jensen-Shannon divergence between distributions p and q.
+
     """
     kde_p = sm.nonparametric.KDEUnivariate(sample_p)
     kde_p.fit()
