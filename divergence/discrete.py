@@ -104,11 +104,8 @@ def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
     for combined_index in range(len(sorted_combined_realizations)):
         realization = sorted_combined_realizations[combined_index]
 
-        # print(f'combined_index = {combined_index}, realization = {realization}')
         if sorted_p_realizations[p_source_index] != realization:
-            # print(f'realization {realization} is not in p')
             if sorted_q_realizations[q_source_index] == realization:
-                # print(f'but realization {realization} is in q')
                 q_source_index += 1
             continue
 
@@ -118,13 +115,14 @@ def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
                 q_source_index += 1
             continue
 
-        if sorted_q_realizations[q_source_index] != realization or sorted_q_realizations[
-            q_source_index] == 0.0:
-            if sorted_p_frequencies[p_source_index] != 0.0:  # we know that is true
-                # if q(x) == 0 we must have p(x) == 0, which is not the case here
-                raise ValueError('q(x) is zero but p(x) is not')
-            else:
-                continue
+        if sorted_q_realizations[q_source_index] != realization or \
+           sorted_q_realizations[q_source_index] == 0.0:
+            raise ValueError('q(x) is zero but p(x) is not')
+            # if sorted_p_frequencies[p_source_index] != 0.0:  # we know that is true
+            #     # if q(x) == 0 we must have p(x) == 0, which is not the case here
+            #     raise ValueError('q(x) is zero but p(x) is not')
+            # else:
+            #     continue
 
         p_frequencies[p_target_index] = sorted_p_frequencies[p_source_index]
         q_frequencies[q_target_index] = sorted_q_frequencies[q_source_index]

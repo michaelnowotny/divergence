@@ -64,11 +64,9 @@ def test_construct_frequencies(sample_p: np.ndarray,
 
     unique_q, counts_q = np.unique(sample_q, return_counts=True)
     frequencies_q = counts_q / len(sample_q)
-    # print(f'frequencies_q = {frequencies_q}')
 
     unique_p, counts_p = np.unique(sample_p, return_counts=True)
     frequencies_p = counts_p / len(sample_p)
-    # print(f'frequencies_p = {frequencies_p}')
 
     combined_frequencies_p, combined_frequencies_q = \
         _construct_frequencies_for_two_samples(sorted_p_realizations=unique_p,
@@ -90,11 +88,9 @@ def test_construct_frequencies_error_q_zero_and_p_nonzero():
 
     unique_q, counts_q = np.unique(sample_q, return_counts=True)
     frequencies_q = counts_q / len(sample_q)
-    # print(f'frequencies_q = {frequencies_q}')
 
     unique_p, counts_p = np.unique(sample_p, return_counts=True)
     frequencies_p = counts_p / len(sample_p)
-    # print(f'frequencies_p = {frequencies_p}')
 
     with pytest.raises(ValueError):
         combined_frequencies_p, combined_frequencies_q = \
