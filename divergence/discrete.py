@@ -1,3 +1,4 @@
+import numba
 import numpy as np
 import typing as tp
 
@@ -16,6 +17,7 @@ def discrete_entropy(sample: np.ndarray, log_fun: tp.Callable = np.log):
     return - np.sum(frequencies * log_fun(frequencies))
 
 
+@numba.njit
 def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
                                            sorted_p_frequencies: np.ndarray,
                                            sorted_q_realizations: np.ndarray,
@@ -35,11 +37,11 @@ def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
     for combined_index in range(len(sorted_combined_realizations)):
         realization = sorted_combined_realizations[combined_index]
 
-        print(f'combined_index = {combined_index}, realization = {realization}')
+        # print(f'combined_index = {combined_index}, realization = {realization}')
         if sorted_p_realizations[p_source_index] != realization:
-            print(f'realization {realization} is not in p')
+            # print(f'realization {realization} is not in p')
             if sorted_q_realizations[q_source_index] == realization:
-                print(f'but realization {realization} is in q')
+                # print(f'but realization {realization} is in q')
                 q_source_index += 1
             continue
 
@@ -92,3 +94,23 @@ def discrete_relative_entropy(sample_p: np.ndarray,
     # print(f'combined_frequencies_q = {combined_frequencies_q}')
 
     return np.sum(combined_frequencies_p * log_fun(combined_frequencies_p / combined_frequencies_q))
+
+
+def discrete_cross_entropy(sample_p: np.ndarray,
+                           sample_q: np.ndarray,
+                           log_fun: tp.Callable = np.log):
+    return discrete_relative_entropy(sample_p=sample_p,
+                                     sample_q=sample_q,
+                                     log_fun=log_fun) + \
+           discrete_entropy(sample=sample_p,
+                            log_fun=log_fun)
+
+
+def discrete_jensen_shannon_divergence(sample_p: np.ndarray,
+                                       sample_q: np.ndarray,
+                                       log_fun: tp.Callable = np.log):
+    m = np.hstack((sample_p, sample_q))
+    D_PM = discrete_relative_entropy(sample_p=sample_p, sample_q=m, log_fun=log_fun)
+    D_QM = discrete_relative_entropy(sample_p=sample_q, sample_q=m, log_fun=log_fun)
+
+    return 0.5 * D_PM + 0.5 * D_QM
