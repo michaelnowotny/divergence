@@ -1,4 +1,5 @@
 import numpy as np
+import quadpy
 import scipy as sp
 import statsmodels.api as sm
 import typing as tp
@@ -42,7 +43,9 @@ def intersection(a0: float,
 def entropy_from_density_with_support(pdf: tp.Callable,
                                       a: float,
                                       b: float,
-                                      log_fun: tp.Callable = np.log) \
+                                      log_fun: tp.Callable = np.log,
+                                      eps_abs: float = 1.49e-08,
+                                      eps_rel: float = 1.49e-08) \
         -> float:
     """
     Compute the entropy
@@ -59,19 +62,43 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     a: lower bound of the integration region
     b: upper bound of the integration region
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
     The entropy of the density given by pdf
     """
-    def integrand(x):
-        return pdf(x) * log_fun(pdf(x)) if pdf(x) > 0.0 else 0.0
+    # def entropy_integrand(x: float):
+    #     return pdf(x) * log_fun(pdf(x)) if pdf(x) > 0.0 else 0.0
+    #
+    # return -sp.integrate.quad(entropy_integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
 
-    return -sp.integrate.quad(integrand, a=a, b=b)[0]
+    def entropy_integrand_vectorized_fast(x: np.ndarray):
+        p = pdf(x)
+        return - np.where(p > 0.0, p * log_fun(p), 0.0)
+
+    # def entropy_integrand_vectorized_slow(x):
+    #     p = pdf(x)
+    #
+    #     result = np.zeros_like(x)
+    #
+    #     positive_index = p > 0.0
+    #     p_positive = p[positive_index]
+    #     result[positive_index] = - p_positive * log_fun(p_positive)
+    #
+    #     return result
+
+    return quadpy.line_segment.integrate_adaptive(f=entropy_integrand_vectorized_fast,
+                                                  intervals=[a, b],
+                                                  eps_abs=eps_abs,
+                                                  eps_rel=eps_rel)[0]
 
 
 def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
-                     log_fun: tp.Callable = np.log) -> float:
+                     log_fun: tp.Callable = np.log,
+                     eps_abs: float = 1.49e-08,
+                     eps_rel: float = 1.49e-08) -> float:
     """
     Compute the entropy
 
@@ -85,6 +112,8 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
     ----------
     kde: statsmodels kde object representing an approximation of the density
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -95,11 +124,15 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
     return entropy_from_density_with_support(pdf=kde.evaluate,
                                              a=a,
                                              b=b,
-                                             log_fun=log_fun)
+                                             log_fun=log_fun,
+                                             eps_abs=eps_abs,
+                                             eps_rel=eps_rel)
 
 
 def continuous_entropy_from_sample(sample: np.ndarray,
-                                   log_fun: tp.Callable = np.log) -> float:
+                                   log_fun: tp.Callable = np.log,
+                                   eps_abs: float = 1.49e-08,
+                                   eps_rel: float = 1.49e-08) -> float:
     """
     Compute the entropy
 
@@ -113,6 +146,8 @@ def continuous_entropy_from_sample(sample: np.ndarray,
     ----------
     sample: a sample of draws from the density represented as a 1-dimensional numpy array
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -121,7 +156,9 @@ def continuous_entropy_from_sample(sample: np.ndarray,
     kde = sm.nonparametric.KDEUnivariate(sample)
     kde.fit()
     return entropy_from_kde(kde=kde,
-                            log_fun=log_fun)
+                            log_fun=log_fun,
+                            eps_abs=eps_abs,
+                            eps_rel=eps_rel)
 
 
 ################################################################################
@@ -145,6 +182,7 @@ def _cross_entropy_integrand(p: tp.Callable,
     -------
     Integrand for the cross entropy calculation
     """
+    # return p(x) * log_fun(q(x) + 1e-12)
     qx = q(x)
     px = p(x)
     if qx == 0.0:
@@ -158,11 +196,46 @@ def _cross_entropy_integrand(p: tp.Callable,
         return px * log_fun(qx)
 
 
+def _vectorized_cross_entropy_integrand(p: tp.Callable,
+                                        q: tp.Callable,
+                                        x: np.ndarray,
+                                        log_fun: tp.Callable = np.log) -> float:
+    """
+    Compute the integrand p(x) * log(q(x)) vectorized at given points x for the calculation of cross
+    entropy.
+
+    Parameters
+    ----------
+    p: probability density function of the distribution p
+    q: probability density function of the distribution q
+    x: the point at which to evaluate the integrand
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    Integrand for the cross entropy calculation
+    """
+    # return p(x) * log_fun(q(x) + 1e-12)
+    qx = q(x)
+    px = p(x)
+
+    q_positive_index = qx > 0.0
+    p_positive_index = px > 0.0
+
+    q_zero_but_p_positive_index = ~q_positive_index & p_positive_index
+    if np.any(q_zero_but_p_positive_index):
+        raise ValueError(f'q(x) is zero at x={x[q_zero_but_p_positive_index]} but p(x) is not')
+
+    return -np.where(p_positive_index, px * log_fun(qx), 0.0)
+
+
 def cross_entropy_from_densities_with_support(p: tp.Callable,
                                               q: tp.Callable,
                                               a: float,
                                               b: float,
-                                              log_fun: tp.Callable = np.log) -> float:
+                                              log_fun: tp.Callable = np.log,
+                                              eps_abs: float = 1.49e-08,
+                                              eps_rel: float = 1.49e-08) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
@@ -179,6 +252,8 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
     a: lower bound of the integration region
     b: upper bound of the integration region
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -187,7 +262,17 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
 
     return -sp.integrate.quad(lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
                               a=a,
-                              b=b)[0]
+                              b=b,
+                              epsabs=eps_abs,
+                              epsrel=eps_rel)[0]
+
+    # return -(quadpy
+    #         .line_segment
+    #         .integrate_adaptive(
+    #             f=lambda x: _vectorized_cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+    #             intervals=[a, b],
+    #             eps_abs=eps_abs,
+    #             eps_rel=eps_rel)[0])
 
 
 def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
@@ -209,7 +294,9 @@ def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
 
 def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                            q: sm.nonparametric.KDEUnivariate,
-                           log_fun: tp.Callable = np.log) -> float:
+                           log_fun: tp.Callable = np.log,
+                           eps_abs: float = 1.49e-08,
+                           eps_rel: float = 1.49e-08) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
@@ -224,6 +311,8 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -239,12 +328,16 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                      q=q.evaluate,
                                                      a=a,
                                                      b=b,
-                                                     log_fun=log_fun)
+                                                     log_fun=log_fun,
+                                                     eps_abs=eps_abs,
+                                                     eps_rel=eps_rel)
 
 
 def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
                                          sample_q: np.ndarray,
-                                         log_fun: tp.Callable = np.log) -> float:
+                                         log_fun: tp.Callable = np.log,
+                                         eps_abs: float = 1.49e-08,
+                                         eps_rel: float = 1.49e-08) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
@@ -260,6 +353,8 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -271,7 +366,7 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
+    return cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun, eps_abs=eps_abs, eps_rel=eps_rel)
 
 
 ################################################################################
@@ -313,7 +408,10 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
                                                  q: tp.Callable,
                                                  a: float,
                                                  b: float,
-                                                 log_fun: tp.Callable = np.log) -> float:
+                                                 log_fun: tp.Callable = np.log,
+                                                 eps_abs: float = 1.49e-08,
+                                                 eps_rel: float = 1.49e-08
+                                                 ) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -330,19 +428,28 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
     a: lower bound of the integration region
     b: upper bound of the integration region
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
     The relative entropy of the distribution q relative to the distribution p.
     """
-    return sp.integrate.quad(lambda x: _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+    def integrand(x: float):
+        return _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun)
+
+    return sp.integrate.quad(integrand,
                              a=a,
-                             b=b)[0]
+                             b=b,
+                             epsabs=eps_abs,
+                             epsrel=eps_rel)[0]
 
 
 def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                               q: sm.nonparametric.KDEUnivariate,
-                              log_fun: tp.Callable = np.log) -> float:
+                              log_fun: tp.Callable = np.log,
+                              eps_abs: float = 1.49e-08,
+                              eps_rel: float = 1.49e-08) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -357,6 +464,8 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -371,12 +480,16 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                         q=q.evaluate,
                                                         a=a,
                                                         b=b,
-                                                        log_fun=log_fun)
+                                                        log_fun=log_fun,
+                                                        eps_abs=eps_abs,
+                                                        eps_rel=eps_rel)
 
 
 def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
                                             sample_q: np.ndarray,
-                                            log_fun: tp.Callable = np.log) -> float:
+                                            log_fun: tp.Callable = np.log,
+                                            eps_abs: float = 1.49e-08,
+                                            eps_rel: float = 1.49e-08) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -392,6 +505,8 @@ def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -402,7 +517,11 @@ def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return relative_entropy_from_kde(kde_p, kde_q, log_fun=log_fun)
+    return relative_entropy_from_kde(p=kde_p,
+                                     q=kde_q,
+                                     log_fun=log_fun,
+                                     eps_abs=eps_abs,
+                                     eps_rel=eps_rel)
 
 
 ################################################################################
@@ -413,7 +532,9 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
         q: tp.Callable,
         a: float,
         b: float,
-        log_fun: tp.Callable = np.log) -> float:
+        log_fun: tp.Callable = np.log,
+        eps_abs: float = 1.49e-08,
+        eps_rel: float = 1.49e-08) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
@@ -430,6 +551,8 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
     a: lower bound of the integration region
     b: upper bound of the integration region
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -439,14 +562,16 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
     def integrand(x):
         return p(x) * log_fun(p(x) / q(x)) if p(x) > 0.0 else 0.0
 
-    return sp.integrate.quad(integrand, a=a, b=b)[0]
+    return sp.integrate.quad(integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
 
 
 def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                                                           q: tp.Callable,
                                                           a: float,
                                                           b: float,
-                                                          log_fun: tp.Callable = np.log) \
+                                                          log_fun: tp.Callable = np.log,
+                                                          eps_abs: float = 1.49e-08,
+                                                          eps_rel: float = 1.49e-08) \
         -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
@@ -464,6 +589,8 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
     a: lower bound of the integration region
     b: upper bound of the integration region
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -476,21 +603,27 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                 q=m,
                 a=a,
                 b=b,
-                log_fun=log_fun)
+                log_fun=log_fun,
+                eps_abs=eps_abs,
+                eps_rel=eps_rel)
 
     D_QM = _relative_entropy_from_densities_with_support_for_shannon_divergence(
                 p=q,
                 q=m,
                 a=a,
                 b=b,
-                log_fun=log_fun)
+                log_fun=log_fun,
+                eps_abs=eps_abs,
+                eps_rel=eps_rel)
 
     return 0.5 * D_PM + 0.5 * D_QM
 
 
 def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                        q: sm.nonparametric.KDEUnivariate,
-                                       log_fun: tp.Callable = np.log) \
+                                       log_fun: tp.Callable = np.log,
+                                       eps_abs: float = 1.49e-08,
+                                       eps_rel: float = 1.49e-08) \
         -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
@@ -506,6 +639,8 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -518,12 +653,16 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                                  q=q.evaluate,
                                                                  a=a,
                                                                  b=b,
-                                                                 log_fun=log_fun)
+                                                                 log_fun=log_fun,
+                                                                 eps_abs=eps_abs,
+                                                                 eps_rel=eps_rel)
 
 
 def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
                                                      sample_q: np.ndarray,
-                                                     log_fun: tp.Callable = np.log) -> float:
+                                                     log_fun: tp.Callable = np.log,
+                                                     eps_abs: float = 1.49e-08,
+                                                     eps_rel: float = 1.49e-08) -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
 
@@ -539,6 +678,8 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
     log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -550,4 +691,8 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return jensen_shannon_divergence_from_kde(kde_p, kde_q, log_fun=log_fun)
+    return jensen_shannon_divergence_from_kde(kde_p,
+                                              kde_q,
+                                              log_fun=log_fun,
+                                              eps_abs=eps_abs,
+                                              eps_rel=eps_rel)
