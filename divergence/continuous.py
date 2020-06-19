@@ -92,7 +92,8 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     return quadpy.line_segment.integrate_adaptive(f=entropy_integrand_vectorized_fast,
                                                   intervals=[a, b],
                                                   eps_abs=eps_abs,
-                                                  eps_rel=eps_rel)[0]
+                                                  eps_rel=eps_rel,
+                                                  kronrod_degree=10)[0]
 
 
 def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
@@ -199,7 +200,7 @@ def _cross_entropy_integrand(p: tp.Callable,
 def _vectorized_cross_entropy_integrand(p: tp.Callable,
                                         q: tp.Callable,
                                         x: np.ndarray,
-                                        log_fun: tp.Callable = np.log) -> float:
+                                        log_fun: tp.Callable = np.log) -> np.ndarray:
     """
     Compute the integrand p(x) * log(q(x)) vectorized at given points x for the calculation of cross
     entropy.
@@ -266,13 +267,14 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
                               epsabs=eps_abs,
                               epsrel=eps_rel)[0]
 
-    # return -(quadpy
+    # return (quadpy
     #         .line_segment
     #         .integrate_adaptive(
     #             f=lambda x: _vectorized_cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
     #             intervals=[a, b],
     #             eps_abs=eps_abs,
-    #             eps_rel=eps_rel)[0])
+    #             eps_rel=eps_rel,
+    #             kronrod_degree=15)[0])
 
 
 def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
@@ -404,6 +406,39 @@ def _relative_entropy_integrand(p: tp.Callable,
         return px * log_fun(px / qx)
 
 
+def _vectorized_relative_entropy_integrand(p: tp.Callable,
+                                           q: tp.Callable,
+                                           x: np.ndarray,
+                                           log_fun: tp.Callable = np.log) -> np.ndarray:
+    """
+    Compute the integrand p(x) * log(p(x) / q(x)) vectorized at given points x for the calculation
+    of relative entropy.
+
+    Parameters
+    ----------
+    p: probability density function of the distribution p
+    q: probability density function of the distribution q
+    x: the point at which to evaluate the integrand
+    log_fun: logarithmic function to control the units of measurement for the result
+
+    Returns
+    -------
+    Integrand for the cross entropy calculation
+    """
+    # return p(x) * log_fun(q(x) + 1e-12)
+    qx = q(x)
+    px = p(x)
+
+    q_positive_index = qx > 0.0
+    p_positive_index = px > 0.0
+
+    q_zero_but_p_positive_index = ~q_positive_index & p_positive_index
+    if np.any(q_zero_but_p_positive_index):
+        raise ValueError(f'q(x) is zero at x={x[q_zero_but_p_positive_index]} but p(x) is not')
+
+    return np.where(p_positive_index, px * log_fun(px / qx), 0.0)
+
+
 def relative_entropy_from_densities_with_support(p: tp.Callable,
                                                  q: tp.Callable,
                                                  a: float,
@@ -443,6 +478,15 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
                              b=b,
                              epsabs=eps_abs,
                              epsrel=eps_rel)[0]
+
+    # return (quadpy
+    #         .line_segment
+    #         .integrate_adaptive(
+    #             f=lambda x: _vectorized_relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+    #             intervals=[a, b],
+    #             eps_abs=eps_abs,
+    #             eps_rel=eps_rel,
+    #             kronrod_degree=10)[0])
 
 
 def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
