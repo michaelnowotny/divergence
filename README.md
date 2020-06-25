@@ -6,6 +6,7 @@ The following functionality is provided:
 * Cross Entropy 
 * Relative Entropy or Kullback-Leibler Divergence
 * Jensen-Shannon Divergence
+* Mutual Information (for continuous random variables)
 
 The units in which these entropy and divergence measures are calculated can be specified by the user. 
 This is achieved by the argument `log_fun`, which accepts a function that calculates the logarithm with respect to a particular base. 

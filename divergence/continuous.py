@@ -740,3 +740,155 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
                                               log_fun=log_fun,
                                               eps_abs=eps_abs,
                                               eps_rel=eps_rel)
+
+
+################################################################################
+# Mutual Information
+###############################################################################
+def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
+                                                   pdf_y: tp.Callable,
+                                                   pdf_xy: tp.Callable,
+                                                   x_min: float,
+                                                   x_max: float,
+                                                   y_min: float,
+                                                   y_max: float,
+                                                   log_fun: tp.Callable = np.log,
+                                                   eps_abs: float = 1.49e-08,
+                                                   eps_rel: float = 1.49e-08
+                                                   ) -> float:
+    """
+    Compute mutual information of the random variables x and y with joint density p_{x, y} and
+    marginal densities p_x and p_y defined as the KL divergence between the product of marginal
+    densities and the joint density, i.e.
+
+            I(X; Y) = D_KL(p_{x, y}|| p_x \otimes p_y) =
+            E_{p_{x, y}} \left[ \log \left( \frac{p_{x, y} (x, y)}{p_x(x) p_y(y)} \right) \right]
+
+    via numerical integration on a rectangular domain aligned with the axes.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    pdf_x: probability density function of the distribution p
+    pdf_y: probability density function of the distribution q
+    x_min: lower bound of the integration domain for x
+    x_max: upper bound of the integration domain for x
+    y_min: lower bound of the integration domain for y
+    y_max: upper bound of the integration domain for y
+    log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
+
+    Returns
+    -------
+    The mutual information of the random variables x and y
+    """
+    def mutual_information_integrand(x: float, y: float):
+        pxy = pdf_xy((x, y))
+        px = pdf_x(x)
+        py = pdf_y(y)
+
+        return pxy * log_fun(pxy / (px * py))
+
+    return sp.integrate.dblquad(mutual_information_integrand,
+                                a=x_min,
+                                b=x_max,
+                                gfun=lambda x: y_min,
+                                hfun=lambda x: y_max,
+                                epsabs=eps_abs,
+                                epsrel=eps_rel)[0]
+
+
+def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
+                                kde_y: sm.nonparametric.KDEUnivariate,
+                                kde_xy: sp.stats.kde.gaussian_kde,
+                                log_fun: tp.Callable = np.log,
+                                eps_abs: float = 1.49e-08,
+                                eps_rel: float = 1.49e-08) -> float:
+    """
+    Compute mutual information of the random variables x and y with joint density p_{x, y} and
+    marginal densities p_x and p_y defined as the KL divergence between the product of marginal
+    densities and the joint density, i.e.
+
+            I(X; Y) = D_KL(p_{x, y}|| p_x \otimes p_y) =
+            E_{p_{x, y}} \left[ \log \left( \frac{p_{x, y} (x, y)}{p_x(x) p_y(y)} \right) \right]
+
+    given by the statsmodels kde objects for the marginal densities and a scipy gaussian_kde object
+    for the joint density via numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    kde_x: statsmodels kde object approximating the marginal density of x
+    kde_y: statsmodels kde object approximating the marginal density of y
+    kde_xy: scipy gaussian_kde object approximating the joint density of x and y
+    log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
+
+    Returns
+    -------
+    The mutual information of the random variables x and y
+    """
+    x_min = min(kde_x.support)
+    x_max = max(kde_x.support)
+    y_min = min(kde_y.support)
+    y_max = max(kde_y.support)
+
+    return mutual_information_from_densities_with_support(pdf_x=kde_x.evaluate,
+                                                          pdf_y=kde_y.evaluate,
+                                                          pdf_xy=kde_xy.pdf,
+                                                          x_min=x_min,
+                                                          x_max=x_max,
+                                                          y_min=y_min,
+                                                          y_max=y_max,
+                                                          log_fun=log_fun,
+                                                          eps_abs=eps_abs,
+                                                          eps_rel=eps_rel)
+
+
+def mutual_information_from_samples(sample_x: np.ndarray,
+                                    sample_y: np.ndarray,
+                                    log_fun: tp.Callable = np.log,
+                                    eps_abs: float = 1.49e-08,
+                                    eps_rel: float = 1.49e-08) -> float:
+    """
+    Compute mutual information of the random variables x and y with joint density p_{x, y} and
+    marginal densities p_x and p_y defined as the KL divergence between the product of marginal
+    densities and the joint density, i.e.
+
+            I(X; Y) = D_KL(p_{x, y}|| p_x \otimes p_y) =
+            E_{p_{x, y}} \left[ \log \left( \frac{p_{x, y} (x, y)}{p_x(x) p_y(y)} \right) \right]
+
+    from samples of the two distributions via approximation by kernel density estimates and
+    numerical integration.
+    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
+
+    Parameters
+    ----------
+    sample_x: x-component of the sample from the joint density p_{x, y}
+    sample_y: y-component of the sample from the joint density p_{x, y}
+    log_fun: logarithmic function to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
+
+    Returns
+    -------
+    The mutual information of the random variables x and y
+    """
+    kde_x = sm.nonparametric.KDEUnivariate(sample_x)
+    kde_x.fit()
+    kde_y = sm.nonparametric.KDEUnivariate(sample_y)
+    kde_y.fit()
+
+    kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
+
+    return mutual_information_from_kde(kde_x=kde_x,
+                                       kde_y=kde_y,
+                                       kde_xy=kde_xy,
+                                       log_fun=log_fun,
+                                       eps_abs=eps_abs,
+                                       eps_rel=eps_rel)
