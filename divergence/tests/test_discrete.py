@@ -1,3 +1,4 @@
+import numbers
 import numpy as np
 import pytest
 import scipy as sp
@@ -7,8 +8,15 @@ from divergence.discrete import (
     discrete_entropy,
     _construct_frequencies_for_one_sample,
     _construct_frequencies_for_two_samples,
-    discrete_relative_entropy
+    discrete_relative_entropy,
+    _construct_unique_combinations_and_counts_from_two_samples,
+    _get_index_for_combination,
+    _get_count_for_combination,
+    _get_index_of_value_in_1d_array,
+    _get_count_for_value,
+    discrete_mutual_information
 )
+
 
 multinomial_sample_q_1 = np.array([1, 2, 3, 2, 3, 3, 3, 2, 1, 1])
 multinomial_sample_p_1 = np.array([2, 2, 3, 2, 3])
@@ -154,3 +162,93 @@ def test_compare_slow_and_fast_implementations_of_relative_entropy(sample_p: np.
 
     assert np.isclose(relative_entropy_from_slow_calculation,
                       relative_entropy_from_fast_calculation)
+
+
+@pytest.fixture
+def sample_x() -> np.ndarray:
+    return np.array([1, 1, 3, 1, 2, 3])
+
+
+@pytest.fixture
+def sample_y() -> np.ndarray:
+    return np.array([1, 1, 1, 3, 2, 1])
+
+
+def test_construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y):
+    unique_combinations, counts = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    print('unique combinations:')
+    print(unique_combinations)
+
+    print('counts')
+    print(counts)
+
+    assert np.all(unique_combinations == np.array([[1, 1], [1, 3], [2, 2], [3, 1]]))
+    assert np.all(counts == np.array([2, 1, 1, 2]))
+
+
+@pytest.mark.parametrize('combination, index', [(np.array([1, 1]), 0),
+                                                (np.array([1, 3]), 1),
+                                                (np.array([2, 2]), 2),
+                                                (np.array([3, 1]), 3)])
+def test_get_index_for_combination(combination: np.ndarray,
+                                   index: int,
+                                   sample_x: np.ndarray,
+                                   sample_y: np.ndarray):
+    unique_combinations, counts = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    assert index == _get_index_for_combination(combination=combination,
+                                               unique_combinations=unique_combinations)
+
+
+@pytest.mark.parametrize('combination, count', [(np.array([1, 1]), 2),
+                                                (np.array([1, 3]), 1),
+                                                (np.array([2, 2]), 1),
+                                                (np.array([3, 1]), 2)])
+def test_get_count_for_combination(combination: np.ndarray,
+                                   count: int,
+                                   sample_x: np.ndarray,
+                                   sample_y: np.ndarray):
+    unique_combinations, counts = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    assert count == _get_count_for_combination(combination=combination,
+                                               unique_combinations=unique_combinations,
+                                               counts=counts)
+
+
+@pytest.mark.parametrize('value, index', [(1, 0), (2, 1), (3, 2)])
+def test_get_index_for_value(value: numbers.Number,
+                             index: int,
+                             sample_x: np.ndarray):
+    unique_values = np.unique(sample_x)
+
+    assert index == _get_index_of_value_in_1d_array(value, unique_values)
+
+
+@pytest.mark.parametrize('value, count', [(1, 3), (2, 1), (3, 2)])
+def test_get_count_for_value(value: numbers.Number,
+                             count: int,
+                             sample_x: np.ndarray):
+    unique_values, counts = np.unique(sample_x, return_counts=True)
+
+    assert count == _get_count_for_value(value,
+                                         unique_values=unique_values,
+                                         counts=counts)
+
+
+@pytest.mark.parametrize('sample', [np.array([1, 1, 3, 1, 2, 3]),
+                                    np.array([1, 1, 1, 3, 2, 1]),
+                                    np.array([1, 1, 1, 1, 1, 1])])
+def test_compare_mutual_information_of_self_with_entropy(sample):
+    assert discrete_entropy(sample) == discrete_mutual_information(sample, sample)
+
+
+@pytest.mark.parametrize('sample_x, sample_y',
+                         [(np.array([1, 1, 3, 1, 2, 3]), np.array([1, 1, 1, 3, 2, 1])),
+                          (np.array([1, 1, 1, 1, 1, 1]), np.array([2, 2, 2, 2, 2, 2]))])
+def test_symmetry_of_mutual_information(sample_x, sample_y):
+    assert discrete_mutual_information(sample_x, sample_y) == \
+           discrete_mutual_information(sample_y, sample_x)

@@ -1,4 +1,5 @@
 import numba
+import numbers
 import numpy as np
 import typing as tp
 
@@ -230,3 +231,221 @@ def discrete_jensen_shannon_divergence(sample_p: np.ndarray,
     D_QM = discrete_relative_entropy(sample_p=sample_q, sample_q=m, log_fun=log_fun)
 
     return 0.5 * D_PM + 0.5 * D_QM
+
+
+def _construct_unique_combinations_and_counts_from_two_samples(sample_x: np.ndarray,
+                                                               sample_y: np.ndarray) \
+        -> tp.Tuple[np.ndarray, np.ndarray]:
+    """
+    Construct an array of unique co-located combinations of sample_x and sample_y as well as an
+    array of associated counts.
+
+    Parameters
+    ----------
+    sample_x: a numpy array of draws of variable x
+    sample_y: a numpy array of draws of variable y
+
+    Returns
+    -------
+    a tuple of unique combinations of draws from x and y and associated counts
+    """
+    assert sample_x.ndim == 1
+    assert sample_y.ndim == 1
+
+    assert sample_x.shape == sample_y.shape
+
+    n = len(sample_x)
+
+    sample_x = sample_x.reshape((n, 1))
+    sample_y = sample_y.reshape((n, 1))
+
+    sample_xy = np.concatenate((sample_x, sample_y), axis=1)
+
+    unique_combinations, counts = np.unique(sample_xy, axis=0, return_counts=True)
+
+    return unique_combinations, counts
+
+
+@numba.njit
+def _get_index_for_combination(combination: np.ndarray,
+                               unique_combinations: np.ndarray) -> int:
+    """
+    Returns the row index of a 2 element array in a nx2 dimensional array. Returns -1 if the
+    requested array is not in the search array.
+
+    Parameters
+    ----------
+    combination: an array whose position of first occurence is to be found
+    unique_combinations: an array which is to be searched
+
+    Returns
+    -------
+    the row index of the combination
+    """
+    for i in range(unique_combinations.shape[0]):
+        if np.all(unique_combinations[i, :] == combination):
+            return i
+
+    return -1
+
+
+@numba.njit
+def _get_count_for_combination(combination: np.ndarray,
+                               unique_combinations: np.ndarray,
+                               counts: np.ndarray) -> int:
+    """
+    Given a 2x1 combination and arrays of unique combinations and associated counts, return the
+    count of the combination.
+
+    Parameters
+    ----------
+    combination: a 2 element array whose count is to be determined
+    unique_combinations: a 2xn array of unique combinations
+    counts: the count associated with the unique combinations
+
+    Returns
+    -------
+    the count of the combination
+    """
+
+    return counts[_get_index_for_combination(combination=combination,
+                                             unique_combinations=unique_combinations)]
+
+
+@numba.njit
+def _get_index_of_value_in_1d_array(value: numbers.Number,
+                                    array: np.ndarray) -> int:
+    """
+    Returns the index of a value in an array and returns -1 if the array does not contain the value.
+    Parameters
+    ----------
+    value: a number
+    array: a one-dimensional numpy array
+
+    Returns
+    -------
+    the index of the value in the array
+    """
+    for i in range(len(array)):
+        if value == array[i]:
+            return i
+
+    return -1
+
+
+@numba.njit
+def _get_count_for_value(value: numbers.Number,
+                         unique_values: np.ndarray,
+                         counts: np.ndarray) -> int:
+    """
+    Given a value and arrays of unique values and associated counts, return the
+    count of the value.
+
+    Parameters
+    ----------
+    value: a number whose count is to be determined
+    unique_values: a one-dimensional array of unique values
+    counts: the count associated with each unique value
+
+    Returns
+    -------
+    the count of the value
+    """
+
+    return counts[_get_index_of_value_in_1d_array(value, unique_values)]
+
+
+@numba.njit
+def _discrete_mutual_information_internal(n: int,
+                                          unique_combinations_xy: np.ndarray,
+                                          counts_xy: np.ndarray,
+                                          unique_combinations_x: np.ndarray,
+                                          counts_x: np.ndarray,
+                                          unique_combinations_y: np.ndarray,
+                                          counts_y: np.ndarray) -> float:
+    mutual_information = 0.0
+    # for i in range(n):
+    #     x = sample_x[i]
+    #     y = sample_y[i]
+    #
+    #     joint_count = \
+    #         _get_count_for_combination(combination=np.array([x, y]),
+    #                                    unique_combinations=unique_combinations_xy,
+    #                                    counts=counts_xy)
+    #
+    #     x_count = _get_count_for_value(value=x,
+    #                                    unique_values=unique_combinations_x,
+    #                                    counts=counts_x)
+    #
+    #     y_count = _get_count_for_value(value=y,
+    #                                    unique_values=unique_combinations_y,
+    #                                    counts=counts_y)
+    #
+    #     mutual_information += (1.0 / n) * np.log(n * joint_count / (x_count * y_count))
+
+    for i in range(counts_xy.shape[0]):
+        x = unique_combinations_xy[i, 0]
+        y = unique_combinations_xy[i, 1]
+        joint_count = counts_xy[i]
+
+        x_count = _get_count_for_value(value=x,
+                                       unique_values=unique_combinations_x,
+                                       counts=counts_x)
+
+        y_count = _get_count_for_value(value=y,
+                                       unique_values=unique_combinations_y,
+                                       counts=counts_y)
+
+        mutual_information += (joint_count / n) * np.log(n * joint_count / (x_count * y_count))
+
+    return mutual_information
+
+
+def discrete_mutual_information(sample_x: np.ndarray,
+                                sample_y: np.ndarray) -> float:
+    if sample_x.ndim > 1:
+        raise ValueError('sample_x must be a one dimensional array')
+
+    if sample_y.ndim > 1:
+        raise ValueError('sample_y must be a one dimensional array')
+
+    sample_x = sample_x.reshape((-1, ))
+    sample_y = sample_y.reshape((-1, ))
+
+    n = len(sample_x)
+
+    if n != len(sample_y):
+        raise ValueError('sample_x and sample_y must have the same length')
+
+    unique_combinations_xy, counts_xy = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    unique_combinations_x, counts_x = np.unique(sample_x, return_counts=True)
+    unique_combinations_y, counts_y = np.unique(sample_y, return_counts=True)
+
+    # print('unique_combinations_xy')
+    # print(unique_combinations_xy)
+    #
+    # print('counts_xy')
+    # print(counts_xy)
+    #
+    # print('unique_combinations_x')
+    # print(unique_combinations_x)
+    #
+    # print('counts_x')
+    # print(counts_x)
+    #
+    # print('unique_combinations_y')
+    # print(unique_combinations_y)
+    #
+    # print('counts_y')
+    # print(counts_y)
+
+
+    return _discrete_mutual_information_internal(n=n,
+                                                 unique_combinations_xy=unique_combinations_xy,
+                                                 counts_xy=counts_xy,
+                                                 unique_combinations_x=unique_combinations_x,
+                                                 counts_x=counts_x,
+                                                 unique_combinations_y=unique_combinations_y,
+                                                 counts_y=counts_y)
