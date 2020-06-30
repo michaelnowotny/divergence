@@ -420,19 +420,6 @@ def discrete_mutual_information(sample_x: np.ndarray,
                                                  unique_values_y=unique_values_y,
                                                  counts_y=counts_y)
 
-#
-# @numba.njit
-# def _discrete_joint_entropy_internal(n: int,
-#                                      counts_xy: np.ndarray) -> float:
-#     joint_entropy = 0.0
-#     for i in range(counts_xy.shape[0]):
-#         joint_count = counts_xy[i]
-#
-#         joint_entropy += (joint_count / n) * np.log(joint_count / n)
-#
-#     return joint_entropy
-#
-
 
 def discrete_joint_entropy(sample_x: np.ndarray,
                            sample_y: np.ndarray) -> float:
@@ -446,6 +433,7 @@ def discrete_joint_entropy(sample_x: np.ndarray,
     return - np.sum(joint_frequency * np.log(joint_frequency))
 
 
+@numba.njit
 def _get_conditional_frequency_of_y_given_x(n:int,
                                             x: numbers.Number,
                                             y: numbers.Number,
@@ -465,49 +453,13 @@ def _get_conditional_frequency_of_y_given_x(n:int,
         return count_x_and_y / count_x
 
 
-# def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
-#                                               sample_y: np.ndarray) -> float:
-#     conditional_entropy = 0.0
-#
-#     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
-#
-#     # unique_combinations_xy, counts_xy = \
-#     #     _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
-#
-#     unique_values_x = np.unique(sample_x, return_counts=False)
-#     unique_values_y = np.unique(sample_y, return_counts=False)
-#
-#     for x in unique_values_x:
-#         for y in unique_values_y:
-#             conditional_frequency_of_y_given_x = \
-#                 _get_conditional_frequency_of_y_given_x(n=n,
-#                                                         x=x,
-#                                                         y=y,
-#                                                         sample_x=sample_x,
-#                                                         sample_y=sample_y)
-#             conditional_entropy -= np.log(conditional_frequency_of_y_given_x) / n
-#
-#             print(f'x={x}')
-#             print(f'y={y}')
-#             print(f'conditional_frequency_of_y_given_x={conditional_frequency_of_y_given_x}')
-#             print(f'conditional_entropy={conditional_entropy}')
-#             print()
-#
-#     return conditional_entropy
-
-
-def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
-                                              sample_y: np.ndarray) -> float:
+@numba.njit
+def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
+                                                        unique_combinations_xy: np.ndarray,
+                                                        counts_xy: np.ndarray,
+                                                        sample_x: np.ndarray,
+                                                        sample_y: np.ndarray) -> float:
     conditional_entropy = 0.0
-
-    sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
-
-    unique_combinations_xy, counts_xy = \
-        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
-
-    unique_values_x = np.unique(sample_x, return_counts=False)
-    unique_values_y = np.unique(sample_y, return_counts=False)
-
     for i in range(len(counts_xy)):
         x = unique_combinations_xy[i, 0]
         y = unique_combinations_xy[i, 1]
@@ -520,20 +472,20 @@ def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
                                                     sample_y=sample_y)
         conditional_entropy -= counts_xy[i] * np.log(conditional_frequency_of_y_given_x) / n
 
-    # for x in unique_values_x:
-    #     for y in unique_values_y:
-    #         conditional_frequency_of_y_given_x = \
-    #             _get_conditional_frequency_of_y_given_x(n=n,
-    #                                                     x=x,
-    #                                                     y=y,
-    #                                                     sample_x=sample_x,
-    #                                                     sample_y=sample_y)
-    #         conditional_entropy -= np.log(conditional_frequency_of_y_given_x) / n
-    #
-    #         print(f'x={x}')
-    #         print(f'y={y}')
-    #         print(f'conditional_frequency_of_y_given_x={conditional_frequency_of_y_given_x}')
-    #         print(f'conditional_entropy={conditional_entropy}')
-    #         print()
-
     return conditional_entropy
+
+
+def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
+                                              sample_y: np.ndarray) -> float:
+
+    sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
+
+    unique_combinations_xy, counts_xy = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    return _discrete_conditional_entropy_of_y_given_x_internal(
+                n=n,
+                unique_combinations_xy=unique_combinations_xy,
+                counts_xy=counts_xy,
+                sample_x=sample_x,
+                sample_y=sample_y)
