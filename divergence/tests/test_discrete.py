@@ -14,7 +14,9 @@ from divergence.discrete import (
     _get_count_for_combination,
     _get_index_of_value_in_1d_array,
     _get_count_for_value,
-    discrete_mutual_information
+    discrete_mutual_information,
+    discrete_joint_entropy,
+    discrete_conditional_entropy_of_y_given_x
 )
 
 
@@ -252,3 +254,40 @@ def test_compare_mutual_information_of_self_with_entropy(sample):
 def test_symmetry_of_mutual_information(sample_x, sample_y):
     assert discrete_mutual_information(sample_x, sample_y) == \
            discrete_mutual_information(sample_y, sample_x)
+
+
+def test_discrete_conditional_entropy(sample_x: np.ndarray, sample_y: np.ndarray):
+    joint_entropy = discrete_joint_entropy(sample_x=sample_x, sample_y=sample_y)
+    entropy_x = discrete_entropy(sample_x)
+    entropy_y = discrete_entropy(sample_y)
+    conditional_entropy_of_y_given_x = \
+        discrete_conditional_entropy_of_y_given_x(sample_x=sample_x,
+                                                  sample_y=sample_y)
+
+    conditional_entropy_of_x_given_y = \
+        discrete_conditional_entropy_of_y_given_x(sample_x=sample_y,
+                                                  sample_y=sample_x)
+
+    assert np.isclose(entropy_x - conditional_entropy_of_x_given_y,
+                      entropy_y - conditional_entropy_of_y_given_x)
+
+    assert np.isclose(joint_entropy, entropy_x + conditional_entropy_of_y_given_x)
+    assert np.isclose(joint_entropy, entropy_y + conditional_entropy_of_x_given_y)
+
+
+def test_discrete_mutual_information_and_conditional_entropy(sample_x: np.ndarray,
+                                                             sample_y: np.ndarray):
+    mutual_information = discrete_mutual_information(sample_x=sample_x, sample_y=sample_y)
+
+    entropy_x = discrete_entropy(sample_x)
+    entropy_y = discrete_entropy(sample_y)
+    conditional_entropy_of_y_given_x = \
+        discrete_conditional_entropy_of_y_given_x(sample_x=sample_x,
+                                                  sample_y=sample_y)
+
+    conditional_entropy_of_x_given_y = \
+        discrete_conditional_entropy_of_y_given_x(sample_x=sample_y,
+                                                  sample_y=sample_x)
+
+    assert np.isclose(mutual_information, entropy_x - conditional_entropy_of_x_given_y)
+    assert np.isclose(mutual_information, entropy_y - conditional_entropy_of_y_given_x)

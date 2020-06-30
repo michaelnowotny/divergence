@@ -359,41 +359,22 @@ def _get_count_for_value(value: numbers.Number,
 def _discrete_mutual_information_internal(n: int,
                                           unique_combinations_xy: np.ndarray,
                                           counts_xy: np.ndarray,
-                                          unique_combinations_x: np.ndarray,
+                                          unique_values_x: np.ndarray,
                                           counts_x: np.ndarray,
-                                          unique_combinations_y: np.ndarray,
+                                          unique_values_y: np.ndarray,
                                           counts_y: np.ndarray) -> float:
     mutual_information = 0.0
-    # for i in range(n):
-    #     x = sample_x[i]
-    #     y = sample_y[i]
-    #
-    #     joint_count = \
-    #         _get_count_for_combination(combination=np.array([x, y]),
-    #                                    unique_combinations=unique_combinations_xy,
-    #                                    counts=counts_xy)
-    #
-    #     x_count = _get_count_for_value(value=x,
-    #                                    unique_values=unique_combinations_x,
-    #                                    counts=counts_x)
-    #
-    #     y_count = _get_count_for_value(value=y,
-    #                                    unique_values=unique_combinations_y,
-    #                                    counts=counts_y)
-    #
-    #     mutual_information += (1.0 / n) * np.log(n * joint_count / (x_count * y_count))
-
     for i in range(counts_xy.shape[0]):
         x = unique_combinations_xy[i, 0]
         y = unique_combinations_xy[i, 1]
         joint_count = counts_xy[i]
 
         x_count = _get_count_for_value(value=x,
-                                       unique_values=unique_combinations_x,
+                                       unique_values=unique_values_x,
                                        counts=counts_x)
 
         y_count = _get_count_for_value(value=y,
-                                       unique_values=unique_combinations_y,
+                                       unique_values=unique_values_y,
                                        counts=counts_y)
 
         mutual_information += (joint_count / n) * np.log(n * joint_count / (x_count * y_count))
@@ -401,8 +382,9 @@ def _discrete_mutual_information_internal(n: int,
     return mutual_information
 
 
-def discrete_mutual_information(sample_x: np.ndarray,
-                                sample_y: np.ndarray) -> float:
+def _check_dimensions_of_two_variable_sample(sample_x: np.ndarray,
+                                             sample_y: np.ndarray) \
+        -> tp.Tuple[np.ndarray, np.ndarray, int]:
     if sample_x.ndim > 1:
         raise ValueError('sample_x must be a one dimensional array')
 
@@ -417,35 +399,141 @@ def discrete_mutual_information(sample_x: np.ndarray,
     if n != len(sample_y):
         raise ValueError('sample_x and sample_y must have the same length')
 
+    return sample_x, sample_y, n
+
+
+def discrete_mutual_information(sample_x: np.ndarray,
+                                sample_y: np.ndarray) -> float:
+    sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
+
     unique_combinations_xy, counts_xy = \
         _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
 
-    unique_combinations_x, counts_x = np.unique(sample_x, return_counts=True)
-    unique_combinations_y, counts_y = np.unique(sample_y, return_counts=True)
-
-    # print('unique_combinations_xy')
-    # print(unique_combinations_xy)
-    #
-    # print('counts_xy')
-    # print(counts_xy)
-    #
-    # print('unique_combinations_x')
-    # print(unique_combinations_x)
-    #
-    # print('counts_x')
-    # print(counts_x)
-    #
-    # print('unique_combinations_y')
-    # print(unique_combinations_y)
-    #
-    # print('counts_y')
-    # print(counts_y)
-
+    unique_values_x, counts_x = np.unique(sample_x, return_counts=True)
+    unique_values_y, counts_y = np.unique(sample_y, return_counts=True)
 
     return _discrete_mutual_information_internal(n=n,
                                                  unique_combinations_xy=unique_combinations_xy,
                                                  counts_xy=counts_xy,
-                                                 unique_combinations_x=unique_combinations_x,
+                                                 unique_values_x=unique_values_x,
                                                  counts_x=counts_x,
-                                                 unique_combinations_y=unique_combinations_y,
+                                                 unique_values_y=unique_values_y,
                                                  counts_y=counts_y)
+
+#
+# @numba.njit
+# def _discrete_joint_entropy_internal(n: int,
+#                                      counts_xy: np.ndarray) -> float:
+#     joint_entropy = 0.0
+#     for i in range(counts_xy.shape[0]):
+#         joint_count = counts_xy[i]
+#
+#         joint_entropy += (joint_count / n) * np.log(joint_count / n)
+#
+#     return joint_entropy
+#
+
+
+def discrete_joint_entropy(sample_x: np.ndarray,
+                           sample_y: np.ndarray) -> float:
+    sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
+
+    unique_combinations_xy, counts_xy = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    joint_frequency = (1.0 / n) * counts_xy
+
+    return - np.sum(joint_frequency * np.log(joint_frequency))
+
+
+def _get_conditional_frequency_of_y_given_x(n:int,
+                                            x: numbers.Number,
+                                            y: numbers.Number,
+                                            sample_x: np.ndarray,
+                                            sample_y: np.ndarray) -> float:
+    count_x = 0.0
+    count_x_and_y = 0.0
+    for i in range(n):
+        if sample_x[i] == x:
+            count_x += 1
+            if sample_y[i] == y:
+                count_x_and_y += 1
+
+    if count_x == 0:
+        raise ValueError('x value is not present in the sample')
+    else:
+        return count_x_and_y / count_x
+
+
+# def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
+#                                               sample_y: np.ndarray) -> float:
+#     conditional_entropy = 0.0
+#
+#     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
+#
+#     # unique_combinations_xy, counts_xy = \
+#     #     _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+#
+#     unique_values_x = np.unique(sample_x, return_counts=False)
+#     unique_values_y = np.unique(sample_y, return_counts=False)
+#
+#     for x in unique_values_x:
+#         for y in unique_values_y:
+#             conditional_frequency_of_y_given_x = \
+#                 _get_conditional_frequency_of_y_given_x(n=n,
+#                                                         x=x,
+#                                                         y=y,
+#                                                         sample_x=sample_x,
+#                                                         sample_y=sample_y)
+#             conditional_entropy -= np.log(conditional_frequency_of_y_given_x) / n
+#
+#             print(f'x={x}')
+#             print(f'y={y}')
+#             print(f'conditional_frequency_of_y_given_x={conditional_frequency_of_y_given_x}')
+#             print(f'conditional_entropy={conditional_entropy}')
+#             print()
+#
+#     return conditional_entropy
+
+
+def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
+                                              sample_y: np.ndarray) -> float:
+    conditional_entropy = 0.0
+
+    sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
+
+    unique_combinations_xy, counts_xy = \
+        _construct_unique_combinations_and_counts_from_two_samples(sample_x, sample_y)
+
+    unique_values_x = np.unique(sample_x, return_counts=False)
+    unique_values_y = np.unique(sample_y, return_counts=False)
+
+    for i in range(len(counts_xy)):
+        x = unique_combinations_xy[i, 0]
+        y = unique_combinations_xy[i, 1]
+
+        conditional_frequency_of_y_given_x = \
+            _get_conditional_frequency_of_y_given_x(n=n,
+                                                    x=x,
+                                                    y=y,
+                                                    sample_x=sample_x,
+                                                    sample_y=sample_y)
+        conditional_entropy -= counts_xy[i] * np.log(conditional_frequency_of_y_given_x) / n
+
+    # for x in unique_values_x:
+    #     for y in unique_values_y:
+    #         conditional_frequency_of_y_given_x = \
+    #             _get_conditional_frequency_of_y_given_x(n=n,
+    #                                                     x=x,
+    #                                                     y=y,
+    #                                                     sample_x=sample_x,
+    #                                                     sample_y=sample_y)
+    #         conditional_entropy -= np.log(conditional_frequency_of_y_given_x) / n
+    #
+    #         print(f'x={x}')
+    #         print(f'y={y}')
+    #         print(f'conditional_frequency_of_y_given_x={conditional_frequency_of_y_given_x}')
+    #         print(f'conditional_entropy={conditional_entropy}')
+    #         print()
+
+    return conditional_entropy

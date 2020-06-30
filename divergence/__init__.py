@@ -4,7 +4,9 @@ from .discrete import (
     discrete_relative_entropy,
     discrete_cross_entropy,
     discrete_jensen_shannon_divergence,
-    discrete_mutual_information
+    discrete_mutual_information,
+    discrete_joint_entropy,
+    discrete_conditional_entropy_of_y_given_x
 )
 
 
