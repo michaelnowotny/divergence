@@ -154,3 +154,53 @@ x_min = min(kde_x.support)
 x_max = max(kde_x.support)
 y_min = min(kde_y.support)
 y_max = max(kde_y.support)
+
+
+@pytest.fixture
+def mutual_information_from_bivariate_normal_samples() -> float:
+    return continuous_mutual_information_from_samples(sample_x=sample_x,
+                                                      sample_y=sample_y)
+
+
+@pytest.fixture
+def joint_entropy_of_x_and_y() -> float:
+    return joint_entropy_from_samples(sample_x, sample_y)
+
+
+@pytest.fixture
+def conditional_entropy_of_y_given_x_from_bivariate_normal_samples() -> float:
+    return conditional_entropy_from_samples(sample_x, sample_y)
+
+
+@pytest.fixture
+def conditional_entropy_of_x_given_y_from_bivariate_normal_samples() -> float:
+    return conditional_entropy_from_samples(sample_y, sample_x)
+
+
+def test_mutual_information(mutual_information_from_bivariate_normal_samples):
+    theoretical_mutual_information = mutual_information_for_bivariate_normal_distribution(rho)
+
+    assert np.isclose(theoretical_mutual_information,
+                      mutual_information_from_bivariate_normal_samples,
+                      rtol=1e-1,
+                      atol=1e-1)
+
+
+def test_joint_entropy_via_conditional_entropy_of_y_given_x(
+        joint_entropy_of_x_and_y,
+        conditional_entropy_of_y_given_x_from_bivariate_normal_samples):
+    np.isclose(entropy_from_samples(sample_x) +
+               conditional_entropy_of_y_given_x_from_bivariate_normal_samples,
+               joint_entropy_of_x_and_y,
+               rtol=1e-2,
+               atol=1e-3)
+
+
+def test_joint_entropy_via_conditional_entropy_of_x_given_y(
+        joint_entropy_of_x_and_y,
+        conditional_entropy_of_x_given_y_from_bivariate_normal_samples):
+    np.isclose(entropy_from_samples(sample_y) +
+               conditional_entropy_of_x_given_y_from_bivariate_normal_samples,
+               joint_entropy_of_x_and_y,
+               rtol=1e-2,
+               atol=1e-3)
