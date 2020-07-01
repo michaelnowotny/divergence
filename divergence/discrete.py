@@ -183,7 +183,7 @@ def discrete_cross_entropy(sample_p: np.ndarray,
     Approximate the cross entropy of the discrete distribution q relative to the discrete
     distribution p
 
-                H(p, q) = - E_p [log(q)]
+                H_q(p) = - E_p [log(q)]
 
     from samples of these distributions.
 

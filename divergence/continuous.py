@@ -240,7 +240,7 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
-                H(p, q) = - E_p [log(q)]
+                H_q(p) = - E_p [log(q)]
 
     via numerical integration from a to b.
     The argument log_fun can be used to specify the units in which the entropy is measured.
@@ -302,7 +302,7 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
-                H(p, q) = - E_p [log(q)]
+                H_q(p) = - E_p [log(q)]
 
     given by the statsmodels kde objects via numerical integration.
     The argument log_fun can be used to specify the units in which the entropy is measured.
@@ -343,7 +343,7 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
-                H(p, q) = - E_p [log(q)]
+                H_q(p) = - E_p [log(q)]
 
     from samples of the two distributions via approximation by a kernel density estimate and
     numerical integration.
@@ -935,13 +935,13 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
 
         return pxy * log_fun(pxy)
 
-    return sp.integrate.dblquad(joint_entropy_integrand,
-                                a=x_min,
-                                b=x_max,
-                                gfun=lambda x: y_min,
-                                hfun=lambda x: y_max,
-                                epsabs=eps_abs,
-                                epsrel=eps_rel)[0]
+    return - sp.integrate.dblquad(joint_entropy_integrand,
+                                  a=x_min,
+                                  b=x_max,
+                                  gfun=lambda x: y_min,
+                                  hfun=lambda x: y_max,
+                                  epsabs=eps_abs,
+                                  epsrel=eps_rel)[0]
 
 
 def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
