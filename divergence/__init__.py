@@ -61,3 +61,36 @@ def jensen_shannon_divergence_from_samples(sample_p: np.ndarray,
         return continuous_jensen_shannon_divergence_from_sample(sample_p=sample_p,
                                                                 sample_q=sample_q,
                                                                 log_fun=log_fun)
+
+
+def mutual_information_from_samples(sample_x: np.ndarray,
+                                    sample_y: np.ndarray,
+                                    discrete: bool = False) -> float:
+    if discrete:
+        return discrete_mutual_information(sample_x=sample_x,
+                                           sample_y=sample_y)
+    else:
+        return continuous_mutual_information_from_samples(sample_x=sample_x,
+                                                          sample_y=sample_y)
+
+
+def joint_entropy_from_samples(sample_x: np.ndarray,
+                               sample_y: np.ndarray,
+                               discrete: bool = False) -> float:
+    if discrete:
+        return discrete_joint_entropy(sample_x=sample_x,
+                                      sample_y=sample_y)
+    else:
+        return continuous_joint_entropy_from_samples(sample_x=sample_x,
+                                                     sample_y=sample_y)
+
+
+def conditional_entropy_from_samples(sample_x: np.ndarray,
+                                     sample_y: np.ndarray,
+                                     discrete: bool = False) -> float:
+    if discrete:
+        return discrete_conditional_entropy_of_y_given_x(sample_x=sample_x,
+                                                         sample_y=sample_y)
+    else:
+        return continuous_conditional_entropy_from_samples(sample_x=sample_x,
+                                                           sample_y=sample_y)

@@ -850,11 +850,11 @@ def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                                           eps_rel=eps_rel)
 
 
-def mutual_information_from_samples(sample_x: np.ndarray,
-                                    sample_y: np.ndarray,
-                                    log_fun: tp.Callable = np.log,
-                                    eps_abs: float = 1.49e-08,
-                                    eps_rel: float = 1.49e-08) -> float:
+def continuous_mutual_information_from_samples(sample_x: np.ndarray,
+                                               sample_y: np.ndarray,
+                                               log_fun: tp.Callable = np.log,
+                                               eps_abs: float = 1.49e-08,
+                                               eps_rel: float = 1.49e-08) -> float:
     """
     Compute mutual information of the random variables x and y with joint density p_{x, y} and
     marginal densities p_x and p_y defined as the KL divergence between the product of marginal
@@ -987,11 +987,11 @@ def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
                                                      eps_rel=eps_rel)
 
 
-def joint_entropy_from_samples(sample_x: np.ndarray,
-                               sample_y: np.ndarray,
-                               log_fun: tp.Callable = np.log,
-                               eps_abs: float = 1.49e-08,
-                               eps_rel: float = 1.49e-08) -> float:
+def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
+                                          sample_y: np.ndarray,
+                                          log_fun: tp.Callable = np.log,
+                                          eps_abs: float = 1.49e-08,
+                                          eps_rel: float = 1.49e-08) -> float:
     """
     Compute joint entropy of the random variables x and y with joint density p_{x, y} defined as
 
@@ -1137,11 +1137,11 @@ def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                                            eps_rel=eps_rel)
 
 
-def conditional_entropy_from_samples(sample_x: np.ndarray,
-                                     sample_y: np.ndarray,
-                                     log_fun: tp.Callable = np.log,
-                                     eps_abs: float = 1.49e-08,
-                                     eps_rel: float = 1.49e-08) -> float:
+def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
+                                                sample_y: np.ndarray,
+                                                log_fun: tp.Callable = np.log,
+                                                eps_abs: float = 1.49e-08,
+                                                eps_rel: float = 1.49e-08) -> float:
     """
     Compute conditional entropy of the random variables x and y with joint density p_{x, y} and
     marginal density p_x defined as
