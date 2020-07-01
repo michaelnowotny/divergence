@@ -145,7 +145,7 @@ def continuous_entropy_from_sample(sample: np.ndarray,
 
     Parameters
     ----------
-    sample: a sample of draws from the density represented as a 1-dimensional numpy array
+    sample: a sample of draws from the density represented as a 1-dimensional NumPy array
     log_fun: logarithmic function to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration

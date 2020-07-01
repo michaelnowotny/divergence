@@ -71,7 +71,7 @@ def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
                                            sorted_combined_realizations: np.ndarray) \
         -> tp.Tuple[np.ndarray, np.ndarray]:
     """
-    Construct two numpy arrays of frequencies for corresponding observations from sorted
+    Construct two NumPy arrays of frequencies for corresponding observations from sorted
     realizations and frequencies from two samples. If a realization in the sample from q is not in
     the sample from p or has frequency zero then it is not included in either of the output
     frequency arrays.
@@ -242,8 +242,8 @@ def _construct_unique_combinations_and_counts_from_two_samples(sample_x: np.ndar
 
     Parameters
     ----------
-    sample_x: a numpy array of draws of variable x
-    sample_y: a numpy array of draws of variable y
+    sample_x: a NumPy array of draws of variable x
+    sample_y: a NumPy array of draws of variable y
 
     Returns
     -------
@@ -320,7 +320,7 @@ def _get_index_of_value_in_1d_array(value: numbers.Number,
     Parameters
     ----------
     value: a number
-    array: a one-dimensional numpy array
+    array: a one-dimensional NumPy array
 
     Returns
     -------
@@ -363,6 +363,24 @@ def _discrete_mutual_information_internal(n: int,
                                           counts_x: np.ndarray,
                                           unique_values_y: np.ndarray,
                                           counts_y: np.ndarray) -> float:
+    """
+    Compute mutual information of discrete random variables x and y from
+
+    Parameters
+    ----------
+    n: sample size
+    unique_combinations_xy: NumPy array with shape (number_of_combinations, 2) of unique
+                            combinations of X and Y appearing in the sample
+    counts_xy: the number of appearances of each unique combination in the sample
+    unique_values_x: NumPy array of the unique values of x
+    counts_x: number of appearances of each unique value of x
+    unique_values_y: NumPy array of the unique values of y
+    counts_y: number of appearances of each unique value of y
+
+    Returns
+    -------
+
+    """
     mutual_information = 0.0
     for i in range(counts_xy.shape[0]):
         x = unique_combinations_xy[i, 0]
@@ -385,6 +403,18 @@ def _discrete_mutual_information_internal(n: int,
 def _check_dimensions_of_two_variable_sample(sample_x: np.ndarray,
                                              sample_y: np.ndarray) \
         -> tp.Tuple[np.ndarray, np.ndarray, int]:
+    """
+    Check that sample_x and sample_y have the same number of elements and make them vectors.
+
+    Parameters
+    ----------
+    sample_x: a NumPy array of draws of variable x
+    sample_y: a NumPy array of draws of variable y
+
+    Returns
+    -------
+
+    """
     if sample_x.ndim > 1:
         raise ValueError('sample_x must be a one dimensional array')
 
@@ -404,6 +434,23 @@ def _check_dimensions_of_two_variable_sample(sample_x: np.ndarray,
 
 def discrete_mutual_information(sample_x: np.ndarray,
                                 sample_y: np.ndarray) -> float:
+    """
+    Approximate the mutual information of x and y
+
+            I(X; Y) = D_KL(p_{x, y}|| p_x \otimes p_y) =
+            E_{p_{x, y}} \left[ \log \left( \frac{p_{x, y} (x, y)}{p_x(x) p_y(y)} \right) \right]
+
+    from a sample of both distributions.
+
+    Parameters
+    ----------
+    sample_x: a NumPy array of draws of variable x
+    sample_y: a NumPy array of draws of variable y
+
+    Returns
+    -------
+    The mutual information of x and y.
+    """
     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
 
     unique_combinations_xy, counts_xy = \
@@ -423,6 +470,22 @@ def discrete_mutual_information(sample_x: np.ndarray,
 
 def discrete_joint_entropy(sample_x: np.ndarray,
                            sample_y: np.ndarray) -> float:
+    """
+    Approximate the joint entropy of x and y
+
+       H(X, Y) = - E_{p_{x, y}} \left[ \log p_{x, y} (x, y) \right]
+
+    from a sample of both distributions.
+
+    Parameters
+    ----------
+    sample_x: a NumPy array of draws of variable x
+    sample_y: a NumPy array of draws of variable y
+
+    Returns
+    -------
+    The joint entropy between of x and y
+    """
     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
 
     unique_combinations_xy, counts_xy = \
@@ -434,11 +497,27 @@ def discrete_joint_entropy(sample_x: np.ndarray,
 
 
 @numba.njit
-def _get_conditional_frequency_of_y_given_x(n:int,
+def _get_conditional_frequency_of_y_given_x(n: int,
                                             x: numbers.Number,
                                             y: numbers.Number,
                                             sample_x: np.ndarray,
                                             sample_y: np.ndarray) -> float:
+    """
+    Given a sample of two variables X and Y, and specific values of these variables x and y,
+    determine the conditional frequency of Y=y given that X=x.
+
+    Parameters
+    ----------
+    n: sample size
+    x: value of x
+    y: value of y
+    sample_x: NumPy array containing the x-variable of the sample
+    sample_y: NumPy array containing the y-variable of the sample
+
+    Returns
+    -------
+    the conditional frequency of Y=y given that X=x
+    """
     count_x = 0.0
     count_x_and_y = 0.0
     for i in range(n):
@@ -459,6 +538,24 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
                                                         counts_xy: np.ndarray,
                                                         sample_x: np.ndarray,
                                                         sample_y: np.ndarray) -> float:
+    """
+    Compute conditional entropy of discrete random variables X and Y from NumPy arrays of samples of
+    these random variables. This function relies on pre-computed unique combinations of both
+    variables and associated counts.
+
+    Parameters
+    ----------
+    n: sample size
+    unique_combinations_xy: NumPy array with shape (number_of_combinations, 2) of unique
+                            combinations of X and Y appearing in the sample
+    counts_xy: the number of appearances of each unique combination in the sample
+    sample_x: NumPy array containing the x-variable of the sample
+    sample_y: NumPy array containing the y-variable of the sample
+
+    Returns
+    -------
+    The conditional entropy from a sample of discrete random variables
+    """
     conditional_entropy = 0.0
     for i in range(len(counts_xy)):
         x = unique_combinations_xy[i, 0]
@@ -477,7 +574,22 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
 
 def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
                                               sample_y: np.ndarray) -> float:
+    """
+    Approximate the conditional entropy of y given x
 
+        H(Y|X) = - E_{p_{x, y}} \left[ \log \frac{p_{x, y} (x, y)}{p_x(x)} \right]
+
+    from a sample of both distributions.
+
+    Parameters
+    ----------
+    sample_x: a NumPy array of draws of variable x
+    sample_y: a NumPy array of draws of variable y
+
+    Returns
+    -------
+    The conditional entropy between of y given x.
+    """
     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
 
     unique_combinations_xy, counts_xy = \
