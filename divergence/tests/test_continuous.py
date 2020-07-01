@@ -37,6 +37,10 @@ def cross_entropy_between_two_normal_distributions(mu_1: float,
                                                              log_fun=log_fun)
 
 
+def mutual_information_for_bivariate_normal_distribution(rho: float) -> float:
+    return - 0.5 * np.log(1.0 - rho**2)
+
+
 def generate_normal_sample(mu: float,
                            sigma: float,
                            n: int,
@@ -116,3 +120,37 @@ def test_relative_entropy(log_fun: tp.Callable = np.log):
                                                                         log_fun=log_fun),
                       rtol=1e-1,
                       atol=1e-1)
+
+
+# set parameters of the normal distributions x and y
+mu_x = 2
+sigma_x = 3
+mu_y = 1
+sigma_y = 2
+rho = 0.5
+
+# draw 1000 samples from each normal distribution
+n = 10000
+z = np.random.randn(n)
+sample_x = mu_x + sigma_x * z
+sample_y = mu_y + sigma_y * (rho * z + np.sqrt(1.0 - rho**2) * np.random.randn(n))
+
+# fit a non-parametric density estimate for both distributions
+kde_x = sm.nonparametric.KDEUnivariate(sample_x)
+kde_y = sm.nonparametric.KDEUnivariate(sample_y)
+kde_x.fit() # Estimate the densities
+kde_y.fit() # Estimate the densities
+kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
+
+# construct exact normal densities for x and y
+pdf_x = lambda x: sp.stats.norm.pdf(x, mu_x, sigma_x)
+pdf_y = lambda y: sp.stats.norm.pdf(y, mu_y, sigma_y)
+pdf_xy = sp.stats.multivariate_normal(mean=[mu_x, mu_y],
+                                      cov=[[sigma_x**2, rho * sigma_x * sigma_y],
+                                           [rho * sigma_x * sigma_y, sigma_y**2]]).pdf
+
+# # compute support for kernel density estimates
+x_min = min(kde_x.support)
+x_max = max(kde_x.support)
+y_min = min(kde_y.support)
+y_max = max(kde_y.support)
