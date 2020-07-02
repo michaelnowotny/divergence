@@ -11,7 +11,7 @@ The following functionality is provided:
 * Mutual Information
 
 The units in which these entropy and divergence measures are calculated can be specified by the user. 
-This is achieved by the argument `base`, to `2.0`, `10.0`, or `np.e`. 
+This is achieved by setting the argument `base`, to `2.0`, `10.0`, or `np.e`. 
 
 In a Bayesian context, relative entropy can be used as a measure of the information gained by moving 
 from a prior distribution `q` to a posterior distribution `p`.
