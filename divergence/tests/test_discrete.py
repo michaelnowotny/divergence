@@ -4,6 +4,8 @@ import pytest
 import scipy as sp
 import typing as tp
 
+from divergence.base import _select_vectorized_log_fun_for_base
+
 from divergence.discrete import (
     discrete_entropy,
     _construct_frequencies_for_one_sample,
@@ -53,9 +55,10 @@ def discrete_entropy_scipy(sample: np.ndarray, log_fun: tp.Callable = np.log) ->
                                     multinomial_sample_p_1,
                                     multinomial_sample_q_2,
                                     multinomial_sample_p_2))
-@pytest.mark.parametrize("log_fun", (np.log, np.log2, np.log10))
-def test_entropy(sample: np.ndarray, log_fun: tp.Callable):
-    entropy_from_divergence = discrete_entropy(sample=sample, log_fun=log_fun)
+@pytest.mark.parametrize("base", (np.e, 2.0, 10.0))
+def test_entropy(sample: np.ndarray, base: float):
+    log_fun = _select_vectorized_log_fun_for_base(base)
+    entropy_from_divergence = discrete_entropy(sample=sample, base=base)
     entropy_from_scipy = discrete_entropy_scipy(sample=sample, log_fun=log_fun)
     assert np.isclose(entropy_from_divergence, entropy_from_scipy)
 
@@ -148,10 +151,12 @@ def _discrete_relative_entropy_slow(sample_p: np.ndarray,
 
 @pytest.mark.parametrize("sample_p, sample_q", ((multinomial_sample_p_1, multinomial_sample_q_1),
                                                 (multinomial_sample_p_2, multinomial_sample_q_2)))
-@pytest.mark.parametrize("log_fun", (np.log, np.log2, np.log10))
+@pytest.mark.parametrize("base", (np.e, 2.0, 10.0))
 def test_compare_slow_and_fast_implementations_of_relative_entropy(sample_p: np.ndarray,
                                                                    sample_q: np.ndarray,
-                                                                   log_fun: tp.Callable):
+                                                                   base: float):
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     relative_entropy_from_slow_calculation = \
         _discrete_relative_entropy_slow(sample_p=sample_p,
                                         sample_q=sample_q,
@@ -160,7 +165,7 @@ def test_compare_slow_and_fast_implementations_of_relative_entropy(sample_p: np.
     relative_entropy_from_fast_calculation = \
         discrete_relative_entropy(sample_p=sample_p,
                                   sample_q=sample_q,
-                                  log_fun=log_fun)
+                                  base=base)
 
     assert np.isclose(relative_entropy_from_slow_calculation,
                       relative_entropy_from_fast_calculation)

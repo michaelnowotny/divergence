@@ -5,6 +5,7 @@ import statsmodels.api as sm
 import typing as tp
 
 from divergence import *
+from divergence.base import _select_vectorized_log_fun_for_base
 
 
 def entropy_of_normal_distribution(sigma: float,
@@ -87,17 +88,21 @@ combined_max = max(p_max, q_max)
 
 
 @pytest.mark.parametrize("sigma, sample", ((sigma_p, sample_p), (sigma_q, sample_q)))
-def test_entropy(sigma: float, sample: np.ndarray, log_fun: tp.Callable = np.log):
-    assert np.isclose(entropy_from_samples(sample, log_fun=log_fun, discrete=False),
+def test_entropy(sigma: float, sample: np.ndarray, base: float = np.e):
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
+    assert np.isclose(entropy_from_samples(sample, base=base, discrete=False),
                       entropy_of_normal_distribution(sigma, log_fun=log_fun),
                       rtol=1e-2,
                       atol=1e-2)
 
 
-def test_cross_entropy(log_fun: tp.Callable = np.log):
+def test_cross_entropy(base: float = np.e):
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     assert np.isclose(cross_entropy_from_samples(sample_p,
                                                  sample_q,
-                                                 log_fun=log_fun,
+                                                 base=base,
                                                  discrete=False),
                       cross_entropy_between_two_normal_distributions(mu_p,
                                                                      sigma_p,
@@ -108,10 +113,12 @@ def test_cross_entropy(log_fun: tp.Callable = np.log):
                       atol=1e-1)
 
 
-def test_relative_entropy(log_fun: tp.Callable = np.log):
+def test_relative_entropy(base: float = np.e):
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     assert np.isclose(relative_entropy_from_samples(sample_p,
                                                     sample_q,
-                                                    log_fun=log_fun,
+                                                    base=base,
                                                     discrete=False),
                       relative_entropy_between_two_normal_distributions(mu_p,
                                                                         sigma_p,

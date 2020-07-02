@@ -4,6 +4,8 @@ import scipy as sp
 import statsmodels.api as sm
 import typing as tp
 
+from divergence.base import _select_vectorized_log_fun_for_base
+
 
 def intersection(a0: float,
                  b0: float,
@@ -43,7 +45,7 @@ def intersection(a0: float,
 def entropy_from_density_with_support(pdf: tp.Callable,
                                       a: float,
                                       b: float,
-                                      log_fun: tp.Callable = np.log,
+                                      base: float = np.e,
                                       eps_abs: float = 1.49e-08,
                                       eps_rel: float = 1.49e-08) \
         -> float:
@@ -53,7 +55,7 @@ def entropy_from_density_with_support(pdf: tp.Callable,
                 H(p) = - E_p[log(p)]
 
     of the density given in pdf via numerical integration from a to b.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -61,7 +63,7 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     pdf: a function of a scalar parameter which computes the probability density at that point
     a: lower bound of the integration region
     b: upper bound of the integration region
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -73,6 +75,8 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     #     return pdf(x) * log_fun(pdf(x)) if pdf(x) > 0.0 else 0.0
     #
     # return -sp.integrate.quad(entropy_integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
+
+    log_fun = _select_vectorized_log_fun_for_base(base)
 
     def entropy_integrand_vectorized_fast(x: np.ndarray):
         p = pdf(x)
@@ -97,7 +101,7 @@ def entropy_from_density_with_support(pdf: tp.Callable,
 
 
 def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
-                     log_fun: tp.Callable = np.log,
+                     base: float = np.e,
                      eps_abs: float = 1.49e-08,
                      eps_rel: float = 1.49e-08) -> float:
     """
@@ -106,13 +110,13 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
                 H(p) = - E_p[log(p)]
 
     of the density given by the statsmodels kde object via numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     kde: statsmodels kde object representing an approximation of the density
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -125,13 +129,13 @@ def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
     return entropy_from_density_with_support(pdf=kde.evaluate,
                                              a=a,
                                              b=b,
-                                             log_fun=log_fun,
+                                             base=base,
                                              eps_abs=eps_abs,
                                              eps_rel=eps_rel)
 
 
 def continuous_entropy_from_sample(sample: np.ndarray,
-                                   log_fun: tp.Callable = np.log,
+                                   base: float = np.e,
                                    eps_abs: float = 1.49e-08,
                                    eps_rel: float = 1.49e-08) -> float:
     """
@@ -140,13 +144,13 @@ def continuous_entropy_from_sample(sample: np.ndarray,
                 H(p) = - E_p[log(p)]
 
     of a sample via approximation by a kernel density estimate and numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample: a sample of draws from the density represented as a 1-dimensional NumPy array
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -157,7 +161,7 @@ def continuous_entropy_from_sample(sample: np.ndarray,
     kde = sm.nonparametric.KDEUnivariate(sample)
     kde.fit()
     return entropy_from_kde(kde=kde,
-                            log_fun=log_fun,
+                            base=base,
                             eps_abs=eps_abs,
                             eps_rel=eps_rel)
 
@@ -168,7 +172,7 @@ def continuous_entropy_from_sample(sample: np.ndarray,
 def _cross_entropy_integrand(p: tp.Callable,
                              q: tp.Callable,
                              x: float,
-                             log_fun: tp.Callable = np.log) -> float:
+                             log_fun: tp.Callable) -> float:
     """
     Compute the integrand p(x) * log(q(x)) at a given point x for the calculation of cross entropy.
 
@@ -177,7 +181,7 @@ def _cross_entropy_integrand(p: tp.Callable,
     p: probability density function of the distribution p
     q: probability density function of the distribution q
     x: the point at which to evaluate the integrand
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -200,7 +204,7 @@ def _cross_entropy_integrand(p: tp.Callable,
 def _vectorized_cross_entropy_integrand(p: tp.Callable,
                                         q: tp.Callable,
                                         x: np.ndarray,
-                                        log_fun: tp.Callable = np.log) -> np.ndarray:
+                                        log_fun: tp.Callable) -> np.ndarray:
     """
     Compute the integrand p(x) * log(q(x)) vectorized at given points x for the calculation of cross
     entropy.
@@ -210,7 +214,7 @@ def _vectorized_cross_entropy_integrand(p: tp.Callable,
     p: probability density function of the distribution p
     q: probability density function of the distribution q
     x: the point at which to evaluate the integrand
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -234,7 +238,7 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
                                               q: tp.Callable,
                                               a: float,
                                               b: float,
-                                              log_fun: tp.Callable = np.log,
+                                              base: float = np.e,
                                               eps_abs: float = 1.49e-08,
                                               eps_rel: float = 1.49e-08) -> float:
     """
@@ -243,7 +247,7 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
                 H_q(p) = - E_p [log(q)]
 
     via numerical integration from a to b.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -252,7 +256,7 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
     q: probability density function of the distribution q
     a: lower bound of the integration region
     b: upper bound of the integration region
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -260,6 +264,7 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
     -------
     The cross entropy of the distribution q relative to the distribution p.
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
 
     return -sp.integrate.quad(lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
                               a=a,
@@ -296,7 +301,7 @@ def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
 
 def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                            q: sm.nonparametric.KDEUnivariate,
-                           log_fun: tp.Callable = np.log,
+                           base: float = np.e,
                            eps_abs: float = 1.49e-08,
                            eps_rel: float = 1.49e-08) -> float:
     """
@@ -305,14 +310,14 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                 H_q(p) = - E_p [log(q)]
 
     given by the statsmodels kde objects via numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -330,14 +335,14 @@ def cross_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                      q=q.evaluate,
                                                      a=a,
                                                      b=b,
-                                                     log_fun=log_fun,
+                                                     base=base,
                                                      eps_abs=eps_abs,
                                                      eps_rel=eps_rel)
 
 
 def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
                                          sample_q: np.ndarray,
-                                         log_fun: tp.Callable = np.log,
+                                         base: float = np.e,
                                          eps_abs: float = 1.49e-08,
                                          eps_rel: float = 1.49e-08) -> float:
     """
@@ -347,14 +352,14 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
 
     from samples of the two distributions via approximation by a kernel density estimate and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -368,7 +373,7 @@ def continuous_cross_entropy_from_sample(sample_p: np.ndarray,
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return cross_entropy_from_kde(kde_p, kde_q, log_fun=log_fun, eps_abs=eps_abs, eps_rel=eps_rel)
+    return cross_entropy_from_kde(kde_p, kde_q, base=base, eps_abs=eps_abs, eps_rel=eps_rel)
 
 
 ################################################################################
@@ -387,7 +392,7 @@ def _relative_entropy_integrand(p: tp.Callable,
     p: probability density function of the distribution p
     q: probability density function of the distribution q
     x: the point at which to evaluate the integrand
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -419,7 +424,7 @@ def _vectorized_relative_entropy_integrand(p: tp.Callable,
     p: probability density function of the distribution p
     q: probability density function of the distribution q
     x: the point at which to evaluate the integrand
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -443,7 +448,7 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
                                                  q: tp.Callable,
                                                  a: float,
                                                  b: float,
-                                                 log_fun: tp.Callable = np.log,
+                                                 base: float = np.e,
                                                  eps_abs: float = 1.49e-08,
                                                  eps_rel: float = 1.49e-08
                                                  ) -> float:
@@ -453,7 +458,7 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
                 D_KL(p||q) = E_p [log(p/q)]
 
     via numerical integration from a to b.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -462,7 +467,7 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
     q: probability density function of the distribution q
     a: lower bound of the integration region
     b: upper bound of the integration region
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -470,6 +475,8 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
     -------
     The relative entropy of the distribution q relative to the distribution p.
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     def integrand(x: float):
         return _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun)
 
@@ -491,7 +498,7 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
 
 def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                               q: sm.nonparametric.KDEUnivariate,
-                              log_fun: tp.Callable = np.log,
+                              base: float = np.e,
                               eps_abs: float = 1.49e-08,
                               eps_rel: float = 1.49e-08) -> float:
     """
@@ -500,14 +507,14 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                 D_KL(p||q) E_p [log(p/q)]
 
     given by the statsmodels kde objects via numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -524,14 +531,14 @@ def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                         q=q.evaluate,
                                                         a=a,
                                                         b=b,
-                                                        log_fun=log_fun,
+                                                        base=base,
                                                         eps_abs=eps_abs,
                                                         eps_rel=eps_rel)
 
 
 def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
                                             sample_q: np.ndarray,
-                                            log_fun: tp.Callable = np.log,
+                                            base: float = np.e,
                                             eps_abs: float = 1.49e-08,
                                             eps_rel: float = 1.49e-08) -> float:
     """
@@ -541,14 +548,14 @@ def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
 
     from samples of the two distributions via approximation by a kernel density estimate and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -563,7 +570,7 @@ def continuous_relative_entropy_from_sample(sample_p: np.ndarray,
 
     return relative_entropy_from_kde(p=kde_p,
                                      q=kde_q,
-                                     log_fun=log_fun,
+                                     base=base,
                                      eps_abs=eps_abs,
                                      eps_rel=eps_rel)
 
@@ -585,7 +592,7 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
                 D_KL(p||q) = E_p [log(p/q)]
 
     via numerical integration from a to b.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -594,7 +601,7 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
     q: probability density function of the distribution q
     a: lower bound of the integration region
     b: upper bound of the integration region
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -613,7 +620,7 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                                                           q: tp.Callable,
                                                           a: float,
                                                           b: float,
-                                                          log_fun: tp.Callable = np.log,
+                                                          base: float = np.e,
                                                           eps_abs: float = 1.49e-08,
                                                           eps_rel: float = 1.49e-08) \
         -> float:
@@ -623,7 +630,7 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
                 JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
 
     via numerical integration from a to b.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -632,7 +639,7 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
     q: probability density function of the distribution q
     a: lower bound of the integration region
     b: upper bound of the integration region
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -641,6 +648,8 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
     The Jensen-Shannon divergence between distributions p and q.
 
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     m = lambda x: 0.5 * (p(x) + q(x))
     D_PM = _relative_entropy_from_densities_with_support_for_shannon_divergence(
                 p=p,
@@ -665,7 +674,7 @@ def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
 
 def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                        q: sm.nonparametric.KDEUnivariate,
-                                       log_fun: tp.Callable = np.log,
+                                       base: float = np.e,
                                        eps_abs: float = 1.49e-08,
                                        eps_rel: float = 1.49e-08) \
         -> float:
@@ -675,14 +684,14 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                 JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
 
     given by the statsmodels kde objects via numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -697,14 +706,14 @@ def jensen_shannon_divergence_from_kde(p: sm.nonparametric.KDEUnivariate,
                                                                  q=q.evaluate,
                                                                  a=a,
                                                                  b=b,
-                                                                 log_fun=log_fun,
+                                                                 base=base,
                                                                  eps_abs=eps_abs,
                                                                  eps_rel=eps_rel)
 
 
 def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
                                                      sample_q: np.ndarray,
-                                                     log_fun: tp.Callable = np.log,
+                                                     base: float = np.e,
                                                      eps_abs: float = 1.49e-08,
                                                      eps_rel: float = 1.49e-08) -> float:
     """
@@ -714,14 +723,14 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
 
     from samples of the two distributions via approximation by a kernel density estimate and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -737,7 +746,7 @@ def continuous_jensen_shannon_divergence_from_sample(sample_p: np.ndarray,
 
     return jensen_shannon_divergence_from_kde(kde_p,
                                               kde_q,
-                                              log_fun=log_fun,
+                                              base=base,
                                               eps_abs=eps_abs,
                                               eps_rel=eps_rel)
 
@@ -752,7 +761,7 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
                                                    x_max: float,
                                                    y_min: float,
                                                    y_max: float,
-                                                   log_fun: tp.Callable = np.log,
+                                                   base: float = np.e,
                                                    eps_abs: float = 1.49e-08,
                                                    eps_rel: float = 1.49e-08
                                                    ) -> float:
@@ -765,7 +774,7 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
             E_{p_{x, y}} \left[ \log \left( \frac{p_{x, y} (x, y)}{p_x(x) p_y(y)} \right) \right]
 
     via numerical integration on a rectangular domain aligned with the axes.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -777,7 +786,7 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
     x_max: upper bound of the integration domain for x
     y_min: lower bound of the integration domain for y
     y_max: upper bound of the integration domain for y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -785,6 +794,8 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
     -------
     The mutual information of the random variables x and y
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     def mutual_information_integrand(x: float, y: float):
         pxy = pdf_xy((x, y))
         px = pdf_x(x)
@@ -804,7 +815,7 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
 def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                 kde_y: sm.nonparametric.KDEUnivariate,
                                 kde_xy: sp.stats.kde.gaussian_kde,
-                                log_fun: tp.Callable = np.log,
+                                base: float = np.e,
                                 eps_abs: float = 1.49e-08,
                                 eps_rel: float = 1.49e-08) -> float:
     """
@@ -817,7 +828,7 @@ def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
 
     given by the statsmodels kde objects for the marginal densities and a SciPy gaussian_kde object
     for the joint density via numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -825,7 +836,7 @@ def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
     kde_x: statsmodels kde object approximating the marginal density of x
     kde_y: statsmodels kde object approximating the marginal density of y
     kde_xy: SciPy gaussian_kde object approximating the joint density of x and y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -845,14 +856,14 @@ def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                                           x_max=x_max,
                                                           y_min=y_min,
                                                           y_max=y_max,
-                                                          log_fun=log_fun,
+                                                          base=base,
                                                           eps_abs=eps_abs,
                                                           eps_rel=eps_rel)
 
 
 def continuous_mutual_information_from_samples(sample_x: np.ndarray,
                                                sample_y: np.ndarray,
-                                               log_fun: tp.Callable = np.log,
+                                               base: float = np.e,
                                                eps_abs: float = 1.49e-08,
                                                eps_rel: float = 1.49e-08) -> float:
     """
@@ -865,14 +876,14 @@ def continuous_mutual_information_from_samples(sample_x: np.ndarray,
 
     from samples of the two distributions via approximation by kernel density estimates and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_x: x-component of the sample from the joint density p_{x, y}
     sample_y: y-component of the sample from the joint density p_{x, y}
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -890,7 +901,7 @@ def continuous_mutual_information_from_samples(sample_x: np.ndarray,
     return mutual_information_from_kde(kde_x=kde_x,
                                        kde_y=kde_y,
                                        kde_xy=kde_xy,
-                                       log_fun=log_fun,
+                                       base=base,
                                        eps_abs=eps_abs,
                                        eps_rel=eps_rel)
 
@@ -903,7 +914,7 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
                                               x_max: float,
                                               y_min: float,
                                               y_max: float,
-                                              log_fun: tp.Callable = np.log,
+                                              base: float = np.e,
                                               eps_abs: float = 1.49e-08,
                                               eps_rel: float = 1.49e-08) -> float:
     """
@@ -912,7 +923,7 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
             H(X, Y) = - E_{p_{x, y}} \left[ \log p_{x, y} (x, y) \right]
 
     via numerical integration on a rectangular domain aligned with the axes.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -922,7 +933,7 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
     x_max: upper bound of the integration domain for x
     y_min: lower bound of the integration domain for y
     y_max: upper bound of the integration domain for y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -930,6 +941,8 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
     -------
     The joint entropy of the random variables x and y
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     def joint_entropy_integrand(x: float, y: float):
         pxy = pdf_xy((x, y))
 
@@ -949,7 +962,7 @@ def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
                            x_max: float,
                            y_min: float,
                            y_max: float,
-                           log_fun: tp.Callable = np.log,
+                           base: float = np.e,
                            eps_abs: float = 1.49e-08,
                            eps_rel: float = 1.49e-08) -> float:
     """
@@ -958,7 +971,7 @@ def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
             H(X, Y) = - E_{p_{x, y}} \left[ \log p_{x, y} (x, y) \right]
 
     via numerical integration, where the joint density is given by a SciPy gaussian_kde object.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -968,7 +981,7 @@ def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
     x_max: upper bound of the integration domain for x
     y_min: lower bound of the integration domain for y
     y_max: upper bound of the integration domain for y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -982,14 +995,14 @@ def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
                                                      x_max=x_max,
                                                      y_min=y_min,
                                                      y_max=y_max,
-                                                     log_fun=log_fun,
+                                                     base=base,
                                                      eps_abs=eps_abs,
                                                      eps_rel=eps_rel)
 
 
 def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
                                           sample_y: np.ndarray,
-                                          log_fun: tp.Callable = np.log,
+                                          base: float = np.e,
                                           eps_abs: float = 1.49e-08,
                                           eps_rel: float = 1.49e-08) -> float:
     """
@@ -999,14 +1012,14 @@ def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
 
     from samples of the two distributions via approximation by kernel density estimates and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_x: x-component of the sample from the joint density p_{x, y}
     sample_y: y-component of the sample from the joint density p_{x, y}
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -1014,6 +1027,8 @@ def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
     -------
     The joint entropy of the random variables x and y
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     kde_x = sm.nonparametric.KDEUnivariate(sample_x)
     kde_x.fit()
     kde_y = sm.nonparametric.KDEUnivariate(sample_y)
@@ -1031,7 +1046,7 @@ def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
                                   x_max=x_max,
                                   y_min=y_min,
                                   y_max=y_max,
-                                  log_fun=log_fun,
+                                  base=base,
                                   eps_abs=eps_abs,
                                   eps_rel=eps_rel)
 
@@ -1045,7 +1060,7 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
                                                     x_max: float,
                                                     y_min: float,
                                                     y_max: float,
-                                                    log_fun: tp.Callable = np.log,
+                                                    base: float = np.e,
                                                     eps_abs: float = 1.49e-08,
                                                     eps_rel: float = 1.49e-08
                                                     ) -> float:
@@ -1056,7 +1071,7 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
             H(Y|X) = - E_{p_{x, y}} \left[ \log \frac{p_{x, y} (x, y)}{p_x(x)} \right]
 
     via numerical integration on a rectangular domain aligned with the axes.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -1067,7 +1082,7 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
     x_max: upper bound of the integration domain for x
     y_min: lower bound of the integration domain for y
     y_max: upper bound of the integration domain for y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -1075,6 +1090,8 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
     -------
     The conditional entropy of the random variables x and y
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
     def conditional_entropy_integrand(x: float, y: float):
         pxy = pdf_xy((x, y))
         px = pdf_x(x)
@@ -1094,7 +1111,7 @@ def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                  kde_xy: sp.stats.kde.gaussian_kde,
                                  y_min: float,
                                  y_max: float,
-                                 log_fun: tp.Callable = np.log,
+                                 base: float = np.e,
                                  eps_abs: float = 1.49e-08,
                                  eps_rel: float = 1.49e-08) -> float:
     """
@@ -1105,7 +1122,7 @@ def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
 
     via numerical integration, where the marginal density of x is given by a statsmodels kde object
     and the joint density by a SciPy gaussian_kde object.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
@@ -1115,7 +1132,7 @@ def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
     kde_xy: SciPy gaussian_kde object approximating the joint density of x and y
     y_min: lower bound of the integration domain for y
     y_max: upper bound of the integration domain for y
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -1132,14 +1149,14 @@ def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
                                                            x_max=x_max,
                                                            y_min=y_min,
                                                            y_max=y_max,
-                                                           log_fun=log_fun,
+                                                           base=base,
                                                            eps_abs=eps_abs,
                                                            eps_rel=eps_rel)
 
 
 def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
                                                 sample_y: np.ndarray,
-                                                log_fun: tp.Callable = np.log,
+                                                base: float = np.e,
                                                 eps_abs: float = 1.49e-08,
                                                 eps_rel: float = 1.49e-08) -> float:
     """
@@ -1150,14 +1167,14 @@ def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
 
     from samples of the two distributions via approximation by kernel density estimates and
     numerical integration.
-    The argument log_fun can be used to specify the units in which the entropy is measured.
+    The argument base can be used to specify the units in which the entropy is measured.
     The default choice is the natural logarithm.
 
     Parameters
     ----------
     sample_x: x-component of the sample from the joint density p_{x, y}
     sample_y: y-component of the sample from the joint density p_{x, y}
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
 
@@ -1176,6 +1193,6 @@ def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
                                         kde_xy=kde_xy,
                                         y_min=min(kde_y.support),
                                         y_max=max(kde_y.support),
-                                        log_fun=log_fun,
+                                        base=base,
                                         eps_abs=eps_abs,
                                         eps_rel=eps_rel)

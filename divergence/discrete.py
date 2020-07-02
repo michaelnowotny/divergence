@@ -3,7 +3,10 @@ import numbers
 import numpy as np
 import typing as tp
 
-from divergence.base import _select_vectorized_log_fun_for_base, Logarithm
+from divergence.base import (
+    _select_vectorized_log_fun_for_base,
+    Logarithm
+)
 
 
 def _construct_counts_for_one_sample(sample: np.ndarray) -> np.ndarray:
@@ -43,7 +46,8 @@ def _construct_frequencies_for_one_sample(sample: np.ndarray) -> np.ndarray:
     return _construct_counts_for_one_sample(sample) / len(sample)
 
 
-def discrete_entropy(sample: np.ndarray, log_fun: tp.Callable = np.log) -> float:
+def discrete_entropy(sample: np.ndarray,
+                     base: float = np.e) -> float:
     """
     Approximate the entropy of a discrete distribution
 
@@ -54,13 +58,14 @@ def discrete_entropy(sample: np.ndarray, log_fun: tp.Callable = np.log) -> float
     Parameters
     ----------
     sample: a sample from the discrete distribution
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
     An approximation of the entropy of the discrete distribution from which the sample is drawn.
 
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
     frequencies = _construct_frequencies_for_one_sample(sample)
     return - np.sum(frequencies * log_fun(frequencies))
 
@@ -139,7 +144,7 @@ def _construct_frequencies_for_two_samples(sorted_p_realizations: np.ndarray,
 
 def discrete_relative_entropy(sample_p: np.ndarray,
                               sample_q: np.ndarray,
-                              log_fun: tp.Callable = np.log):
+                              base: float = np.e):
     """
     Approximate the relative entropy of the discrete distribution q relative to the discrete
     distribution p
@@ -152,13 +157,14 @@ def discrete_relative_entropy(sample_p: np.ndarray,
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
     The relative entropy of the distribution q relative to the distribution p.
 
     """
+    log_fun = _select_vectorized_log_fun_for_base(base)
     combined_sample = np.hstack((sample_p, sample_q))
     unique_combined = np.unique(combined_sample)
 
@@ -180,7 +186,7 @@ def discrete_relative_entropy(sample_p: np.ndarray,
 
 def discrete_cross_entropy(sample_p: np.ndarray,
                            sample_q: np.ndarray,
-                           log_fun: tp.Callable = np.log):
+                           base: float = np.e):
     """
     Approximate the cross entropy of the discrete distribution q relative to the discrete
     distribution p
@@ -193,7 +199,7 @@ def discrete_cross_entropy(sample_p: np.ndarray,
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -202,14 +208,14 @@ def discrete_cross_entropy(sample_p: np.ndarray,
     """
     return discrete_relative_entropy(sample_p=sample_p,
                                      sample_q=sample_q,
-                                     log_fun=log_fun) + \
+                                     base=base) + \
            discrete_entropy(sample=sample_p,
-                            log_fun=log_fun)
+                            base=base)
 
 
 def discrete_jensen_shannon_divergence(sample_p: np.ndarray,
                                        sample_q: np.ndarray,
-                                       log_fun: tp.Callable = np.log):
+                                       base: float = np.e):
     """
     Approximate the Jensen-Shannon divergence between discrete distributions p and q
 
@@ -221,7 +227,7 @@ def discrete_jensen_shannon_divergence(sample_p: np.ndarray,
     ----------
     sample_p: sample from the distribution p
     sample_q: sample from the distribution q
-    log_fun: logarithmic function to control the units of measurement for the result
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -229,8 +235,8 @@ def discrete_jensen_shannon_divergence(sample_p: np.ndarray,
 
     """
     m = np.hstack((sample_p, sample_q))
-    D_PM = discrete_relative_entropy(sample_p=sample_p, sample_q=m, log_fun=log_fun)
-    D_QM = discrete_relative_entropy(sample_p=sample_q, sample_q=m, log_fun=log_fun)
+    D_PM = discrete_relative_entropy(sample_p=sample_p, sample_q=m, base=base)
+    D_QM = discrete_relative_entropy(sample_p=sample_q, sample_q=m, base=base)
 
     return 0.5 * D_PM + 0.5 * D_QM
 
