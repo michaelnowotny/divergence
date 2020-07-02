@@ -3,16 +3,7 @@ import numbers
 import numpy as np
 import typing as tp
 
-
-def _select_vectorized_log_fun_for_base(base: float) -> tp.Callable:
-    if base == 2:
-        return np.log2
-    if base == np.e:
-        return np.log
-    if base == 10:
-        return np.log10
-
-    raise ValueError('base not supported')
+from divergence.base import _select_vectorized_log_fun_for_base, Logarithm
 
 
 def _construct_counts_for_one_sample(sample: np.ndarray) -> np.ndarray:
@@ -364,25 +355,6 @@ def _get_count_for_value(value: numbers.Number,
     """
 
     return counts[_get_index_of_value_in_1d_array(value, unique_values)]
-
-
-spec = [('base', numba.float64)]
-
-
-@numba.jitclass(spec)
-class Logarithm:
-    def __init__(self, base):
-        self.base = base
-
-    def log(self, x):
-        if self.base == 2:
-            return np.log2(x)
-        if self.base == np.e:
-            return np.log(x)
-        if self.base == 10:
-            return np.log10(x)
-
-        raise ValueError('base not supported')
 
 
 @numba.njit
