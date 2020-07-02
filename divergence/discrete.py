@@ -4,6 +4,17 @@ import numpy as np
 import typing as tp
 
 
+def _select_vectorized_log_fun_for_base(base: float) -> tp.Callable:
+    if base == 2:
+        return np.log2
+    if base == np.e:
+        return np.log
+    if base == 10:
+        return np.log10
+
+    raise ValueError('base not supported')
+
+
 def _construct_counts_for_one_sample(sample: np.ndarray) -> np.ndarray:
     """
     Compute the count (i.e. number of occurrences) for each realization in the sample.
@@ -355,6 +366,25 @@ def _get_count_for_value(value: numbers.Number,
     return counts[_get_index_of_value_in_1d_array(value, unique_values)]
 
 
+spec = [('base', numba.float64)]
+
+
+@numba.jitclass(spec)
+class Logarithm:
+    def __init__(self, base):
+        self.base = base
+
+    def log(self, x):
+        if self.base == 2:
+            return np.log2(x)
+        if self.base == np.e:
+            return np.log(x)
+        if self.base == 10:
+            return np.log10(x)
+
+        raise ValueError('base not supported')
+
+
 @numba.njit
 def _discrete_mutual_information_internal(n: int,
                                           unique_combinations_xy: np.ndarray,
@@ -362,7 +392,8 @@ def _discrete_mutual_information_internal(n: int,
                                           unique_values_x: np.ndarray,
                                           counts_x: np.ndarray,
                                           unique_values_y: np.ndarray,
-                                          counts_y: np.ndarray) -> float:
+                                          counts_y: np.ndarray,
+                                          base: float = np.e) -> float:
     """
     Compute mutual information of discrete random variables x and y from
 
@@ -381,6 +412,9 @@ def _discrete_mutual_information_internal(n: int,
     -------
 
     """
+
+    logarithm = Logarithm(base)
+
     mutual_information = 0.0
     for i in range(counts_xy.shape[0]):
         x = unique_combinations_xy[i, 0]
@@ -395,7 +429,7 @@ def _discrete_mutual_information_internal(n: int,
                                        unique_values=unique_values_y,
                                        counts=counts_y)
 
-        mutual_information += (joint_count / n) * np.log(n * joint_count / (x_count * y_count))
+        mutual_information += (joint_count / n) * logarithm.log(n * joint_count / (x_count * y_count))
 
     return mutual_information
 
@@ -433,7 +467,8 @@ def _check_dimensions_of_two_variable_sample(sample_x: np.ndarray,
 
 
 def discrete_mutual_information(sample_x: np.ndarray,
-                                sample_y: np.ndarray) -> float:
+                                sample_y: np.ndarray,
+                                base: float = np.e) -> float:
     """
     Approximate the mutual information of x and y
 
@@ -465,11 +500,13 @@ def discrete_mutual_information(sample_x: np.ndarray,
                                                  unique_values_x=unique_values_x,
                                                  counts_x=counts_x,
                                                  unique_values_y=unique_values_y,
-                                                 counts_y=counts_y)
+                                                 counts_y=counts_y,
+                                                 base=base)
 
 
 def discrete_joint_entropy(sample_x: np.ndarray,
-                           sample_y: np.ndarray) -> float:
+                           sample_y: np.ndarray,
+                           base: float = np.e) -> float:
     """
     Approximate the joint entropy of x and y
 
@@ -486,6 +523,8 @@ def discrete_joint_entropy(sample_x: np.ndarray,
     -------
     The joint entropy between of x and y
     """
+
+    log_fun = _select_vectorized_log_fun_for_base(base)
     sample_x, sample_y, n = _check_dimensions_of_two_variable_sample(sample_x, sample_y)
 
     unique_combinations_xy, counts_xy = \
@@ -493,7 +532,7 @@ def discrete_joint_entropy(sample_x: np.ndarray,
 
     joint_frequency = (1.0 / n) * counts_xy
 
-    return - np.sum(joint_frequency * np.log(joint_frequency))
+    return - np.sum(joint_frequency * log_fun(joint_frequency))
 
 
 @numba.njit
@@ -537,7 +576,8 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
                                                         unique_combinations_xy: np.ndarray,
                                                         counts_xy: np.ndarray,
                                                         sample_x: np.ndarray,
-                                                        sample_y: np.ndarray) -> float:
+                                                        sample_y: np.ndarray,
+                                                        base: float = np.e) -> float:
     """
     Compute conditional entropy of discrete random variables X and Y from NumPy arrays of samples of
     these random variables. This function relies on pre-computed unique combinations of both
@@ -556,6 +596,9 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
     -------
     The conditional entropy from a sample of discrete random variables
     """
+
+    logarithm = Logarithm(base)
+
     conditional_entropy = 0.0
     for i in range(len(counts_xy)):
         x = unique_combinations_xy[i, 0]
@@ -567,13 +610,14 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
                                                     y=y,
                                                     sample_x=sample_x,
                                                     sample_y=sample_y)
-        conditional_entropy -= counts_xy[i] * np.log(conditional_frequency_of_y_given_x) / n
+        conditional_entropy -= counts_xy[i] * logarithm.log(conditional_frequency_of_y_given_x) / n
 
     return conditional_entropy
 
 
 def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
-                                              sample_y: np.ndarray) -> float:
+                                              sample_y: np.ndarray,
+                                              base: float = np.e) -> float:
     """
     Approximate the conditional entropy of y given x
 
@@ -600,4 +644,5 @@ def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
                 unique_combinations_xy=unique_combinations_xy,
                 counts_xy=counts_xy,
                 sample_x=sample_x,
-                sample_y=sample_y)
+                sample_y=sample_y,
+                base=base)
