@@ -1,4 +1,9 @@
-from cocos.scientific.kde import gaussian_kde as cocos_gaussian_kde
+from cocos.numerics.data_types import NumericArray
+from cocos.scientific.kde import (
+    gaussian_kde as cocos_gaussian_kde,
+    evaluate_gaussian_kde_in_batches
+)
+
 from cubature import cubature
 import numpy as np
 import quadpy
@@ -1220,14 +1225,15 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
         if arg.ndim == 1:
             x, y = arg
             pxy = pdf_xy((x, y))
+            px = pdf_x(x)
         elif arg.ndim == 2:
             x = arg[:, 0]
             pxy = pdf_xy(arg.T)
+            px = pdf_x(x)
+        else:
+            raise ValueError('the number of axes in arg must be either 1 or 2')
 
-        px = pdf_x(x)
-        res = np.asscalar(pxy * log_fun(pxy / px))
-
-        return res
+        return pxy * log_fun(pxy / px)
 
     return - cubature(func=conditional_entropy_integrand,
                       ndim=2,
@@ -1235,7 +1241,7 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
                       xmin=np.array([x_min, y_min]),
                       xmax=np.array([x_max, y_max]),
                       adaptive='p',
-                      vectorized=False,
+                      vectorized=True,
                       abserr=eps_abs,
                       relerr=eps_rel)[0].item()
 
@@ -1362,6 +1368,8 @@ def continuous_conditional_entropy_from_samples_gpu(
     base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
+    maximum_number_of_elements_per_batch:
+        maximum number of data points times evaluation points to process in a single batch
 
     Returns
     -------
@@ -1386,21 +1394,38 @@ def continuous_conditional_entropy_from_samples_gpu(
     y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
     # print(f'support_2 = {y_min_2}-{y_max_2}')
 
-    return conditional_entropy_from_densities_with_support(pdf_x=kde_x.evaluate,
-                                                           pdf_xy=kde_xy.evaluate,
-                                                           x_min=x_min,
-                                                           x_max=x_max,
-                                                           y_min=y_min,
-                                                           y_max=y_max,
-                                                           base=base,
-                                                           eps_abs=eps_abs,
-                                                           eps_rel=eps_rel,
-                                                           gpu=True)
+    log_fun = _select_vectorized_log_fun_for_base(base, gpu=True)
 
-    # return conditional_entropy_from_kde(kde_x=kde_x,
-    #                                     kde_xy=kde_xy,
-    #                                     y_min=y_min,
-    #                                     y_max=y_max,
-    #                                     base=base,
-    #                                     eps_abs=eps_abs,
-    #                                     eps_rel=eps_rel)
+    def conditional_entropy_integrand(arg: NumericArray):
+        # print(f'arg.shape={arg.shape}')
+        if arg.ndim == 1:
+            x, y = arg
+            pxy = kde_xy.evaluate((x, y))
+        elif arg.ndim == 2:
+            x = arg[:, 0]
+            if maximum_number_of_elements_per_batch == -1:
+                pxy = kde_xy.evaluate(arg.T)
+            else:
+                pxy = evaluate_gaussian_kde_in_batches(kde_xy,
+                                                       arg.T,
+                                                       maximum_number_of_elements_per_batch
+                                                       =maximum_number_of_elements_per_batch)
+        else:
+            raise ValueError('the number of axes in arg must be either 1 or 2')
+
+        px = kde_x.evaluate(x)
+        # print(f'x.shape={x.shape}')
+        # print(f'px.shape={px.shape}')
+        # print(f'pxy.shape={pxy.shape}')
+        integrand = np.array(pxy * log_fun(pxy / px))
+        return integrand
+
+    return - cubature(func=conditional_entropy_integrand,
+                      ndim=2,
+                      fdim=1,
+                      xmin=np.array([x_min, y_min]),
+                      xmax=np.array([x_max, y_max]),
+                      adaptive='p',
+                      vectorized=True,
+                      abserr=eps_abs,
+                      relerr=eps_rel)[0].item()
