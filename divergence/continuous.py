@@ -1027,19 +1027,19 @@ def continuous_joint_entropy_from_samples(sample_x: np.ndarray,
     -------
     The joint entropy of the random variables x and y
     """
-    log_fun = _select_vectorized_log_fun_for_base(base)
-
-    kde_x = sm.nonparametric.KDEUnivariate(sample_x)
-    kde_x.fit()
-    kde_y = sm.nonparametric.KDEUnivariate(sample_y)
-    kde_y.fit()
+    # kde_x = sm.nonparametric.KDEUnivariate(sample_x)
+    # kde_x.fit()
+    # kde_y = sm.nonparametric.KDEUnivariate(sample_y)
+    # kde_y.fit()
+    # x_min = min(kde_x.support)
+    # x_max = max(kde_x.support)
+    # y_min = min(kde_y.support)
+    # y_max = max(kde_y.support)
 
     kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
 
-    x_min = min(kde_x.support)
-    x_max = max(kde_x.support)
-    y_min = min(kde_y.support)
-    y_max = max(kde_y.support)
+    x_min, x_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
+    y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
 
     return joint_entropy_from_kde(kde_xy=kde_xy,
                                   x_min=x_min,
@@ -1184,15 +1184,41 @@ def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
     """
     kde_x = sm.nonparametric.KDEUnivariate(sample_x)
     kde_x.fit()
-    kde_y = sm.nonparametric.KDEUnivariate(sample_y)
-    kde_y.fit()
+    # kde_y = sm.nonparametric.KDEUnivariate(sample_y)
+    # kde_y.fit()
+    # y_min = min(kde_y.support)
+    # y_max = max(kde_y.support)
+    # print(f'support = {y_min}-{y_max}')
 
     kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
 
+    y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
+    # print(f'support_2 = {y_min_2}-{y_max_2}')
+
     return conditional_entropy_from_kde(kde_x=kde_x,
                                         kde_xy=kde_xy,
-                                        y_min=min(kde_y.support),
-                                        y_max=max(kde_y.support),
+                                        y_min=y_min,
+                                        y_max=y_max,
                                         base=base,
                                         eps_abs=eps_abs,
                                         eps_rel=eps_rel)
+
+
+def _get_min_and_max_support_for_scotts_bw_rule(x: np.ndarray,
+                                                cut: float = 3) \
+        -> tp.Tuple[float, float]:
+    bw = sm.nonparametric.bandwidths.bw_scott(x)
+    a = np.min(x) - cut * bw
+    b = np.max(x) + cut * bw
+
+    return a, b
+
+
+def _get_min_and_max_support_for_silverman_bw_rule(x: np.ndarray,
+                                                   cut: float = 3) \
+        -> tp.Tuple[float, float]:
+    bw = sm.nonparametric.bandwidths.bw_silverman(x)
+    a = np.min(x) - cut * bw
+    b = np.max(x) + cut * bw
+
+    return a, b
