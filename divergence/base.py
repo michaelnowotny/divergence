@@ -1,16 +1,26 @@
 import typing as tp
 
+import cocos.numerics as cn
 import numba
 import numpy as np
 
 
-def _select_vectorized_log_fun_for_base(base: float) -> tp.Callable:
+def _select_vectorized_log_fun_for_base(base: float, gpu: bool = False) -> tp.Callable:
     if base == 2:
-        return np.log2
+        if gpu:
+            return cn.log2
+        else:
+            return np.log2
     if base == np.e:
-        return np.log
+        if gpu:
+            return cn.log
+        else:
+            return np.log
     if base == 10:
-        return np.log10
+        if gpu:
+            return cn.log10
+        else:
+            return np.log10
 
     raise ValueError('base not supported')
 

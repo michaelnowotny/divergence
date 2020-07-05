@@ -23,6 +23,8 @@ VERSION = "0.4.2"
 
 # What packages are required for this module to be executed?
 REQUIRED = [
+    "cocos",
+    "cubature",
     "numba",
     "numpy",
     "pytest",

@@ -1,3 +1,5 @@
+from cocos.scientific.kde import gaussian_kde as cocos_gaussian_kde
+from cubature import cubature
 import numpy as np
 import quadpy
 import scipy as sp
@@ -5,6 +7,26 @@ import statsmodels.api as sm
 import typing as tp
 
 from divergence.base import _select_vectorized_log_fun_for_base
+
+
+def _get_min_and_max_support_for_scotts_bw_rule(x: np.ndarray,
+                                                cut: float = 3) \
+        -> tp.Tuple[float, float]:
+    bw = sm.nonparametric.bandwidths.bw_scott(x)
+    a = np.min(x) - cut * bw
+    b = np.max(x) + cut * bw
+
+    return a, b
+
+
+def _get_min_and_max_support_for_silverman_bw_rule(x: np.ndarray,
+                                                   cut: float = 3) \
+        -> tp.Tuple[float, float]:
+    bw = sm.nonparametric.bandwidths.bw_silverman(x)
+    a = np.min(x) - cut * bw
+    b = np.max(x) + cut * bw
+
+    return a, b
 
 
 def intersection(a0: float,
@@ -74,7 +96,7 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     # def entropy_integrand(x: float):
     #     return pdf(x) * log_fun(pdf(x)) if pdf(x) > 0.0 else 0.0
     #
-    # return -sp.integrate.quad(entropy_integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
+    # return - sp.integrate.quad(entropy_integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
 
     log_fun = _select_vectorized_log_fun_for_base(base)
 
@@ -93,11 +115,21 @@ def entropy_from_density_with_support(pdf: tp.Callable,
     #
     #     return result
 
-    return quadpy.line_segment.integrate_adaptive(f=entropy_integrand_vectorized_fast,
-                                                  intervals=[a, b],
-                                                  eps_abs=eps_abs,
-                                                  eps_rel=eps_rel,
-                                                  kronrod_degree=10)[0]
+    # return quadpy.line_segment.integrate_adaptive(f=entropy_integrand_vectorized_fast,
+    #                                               intervals=[a, b],
+    #                                               eps_abs=eps_abs,
+    #                                               eps_rel=eps_rel,
+    #                                               kronrod_degree=10)[0]
+
+    return cubature(func=entropy_integrand_vectorized_fast,
+                    ndim=1,
+                    fdim=1,
+                    xmin=np.array([a]),
+                    xmax=np.array([b]),
+                    vectorized=False,
+                    adaptive='p',
+                    abserr=eps_abs,
+                    relerr=eps_rel)[0].item()
 
 
 def entropy_from_kde(kde: sm.nonparametric.KDEUnivariate,
@@ -231,7 +263,7 @@ def _vectorized_cross_entropy_integrand(p: tp.Callable,
     if np.any(q_zero_but_p_positive_index):
         raise ValueError(f'q(x) is zero at x={x[q_zero_but_p_positive_index]} but p(x) is not')
 
-    return -np.where(p_positive_index, px * log_fun(qx), 0.0)
+    return - np.where(p_positive_index, px * log_fun(qx), 0.0)
 
 
 def cross_entropy_from_densities_with_support(p: tp.Callable,
@@ -266,20 +298,30 @@ def cross_entropy_from_densities_with_support(p: tp.Callable,
     """
     log_fun = _select_vectorized_log_fun_for_base(base)
 
-    return -sp.integrate.quad(lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
-                              a=a,
-                              b=b,
-                              epsabs=eps_abs,
-                              epsrel=eps_rel)[0]
+    # return - sp.integrate.quad(lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+    #                           a=a,
+    #                           b=b,
+    #                           epsabs=eps_abs,
+    #                           epsrel=eps_rel)[0]
 
-    # return (quadpy
-    #         .line_segment
-    #         .integrate_adaptive(
-    #             f=lambda x: _vectorized_cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
-    #             intervals=[a, b],
-    #             eps_abs=eps_abs,
-    #             eps_rel=eps_rel,
-    #             kronrod_degree=15)[0])
+    # return - (quadpy
+    #           .line_segment
+    #           .integrate_adaptive(
+    #               f=lambda x: _vectorized_cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+    #               intervals=[a, b],
+    #               eps_abs=eps_abs,
+    #               eps_rel=eps_rel,
+    #               kronrod_degree=15)[0])
+
+    return - cubature(func=lambda x: _cross_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun),
+                      ndim=1,
+                      fdim=1,
+                      xmin=np.array([a]),
+                      xmax=np.array([b]),
+                      vectorized=False,
+                      adaptive='p',
+                      abserr=eps_abs,
+                      relerr=eps_rel)[0].item()
 
 
 def _does_support_overlap(p: sm.nonparametric.KDEUnivariate,
@@ -480,11 +522,11 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
     def integrand(x: float):
         return _relative_entropy_integrand(p=p, q=q, x=x, log_fun=log_fun)
 
-    return sp.integrate.quad(integrand,
-                             a=a,
-                             b=b,
-                             epsabs=eps_abs,
-                             epsrel=eps_rel)[0]
+    # return sp.integrate.quad(integrand,
+    #                          a=a,
+    #                          b=b,
+    #                          epsabs=eps_abs,
+    #                          epsrel=eps_rel)[0]
 
     # return (quadpy
     #         .line_segment
@@ -494,6 +536,16 @@ def relative_entropy_from_densities_with_support(p: tp.Callable,
     #             eps_abs=eps_abs,
     #             eps_rel=eps_rel,
     #             kronrod_degree=10)[0])
+
+    return cubature(func=integrand,
+                    ndim=1,
+                    fdim=1,
+                    xmin=np.array([a]),
+                    xmax=np.array([b]),
+                    vectorized=False,
+                    adaptive='p',
+                    abserr=eps_abs,
+                    relerr=eps_rel)[0].item()
 
 
 def relative_entropy_from_kde(p: sm.nonparametric.KDEUnivariate,
@@ -613,7 +665,17 @@ def _relative_entropy_from_densities_with_support_for_shannon_divergence(
     def integrand(x):
         return p(x) * log_fun(p(x) / q(x)) if p(x) > 0.0 else 0.0
 
-    return sp.integrate.quad(integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
+    # return sp.integrate.quad(integrand, a=a, b=b, epsabs=eps_abs, epsrel=eps_rel)[0]
+
+    return cubature(func=integrand,
+                    ndim=1,
+                    fdim=1,
+                    xmin=np.array([a]),
+                    xmax=np.array([b]),
+                    vectorized=False,
+                    adaptive='p',
+                    abserr=eps_abs,
+                    relerr=eps_rel)[0].item()
 
 
 def jensen_shannon_divergence_from_densities_with_support(p: tp.Callable,
@@ -796,20 +858,46 @@ def mutual_information_from_densities_with_support(pdf_x: tp.Callable,
     """
     log_fun = _select_vectorized_log_fun_for_base(base)
 
-    def mutual_information_integrand(x: float, y: float):
-        pxy = pdf_xy((x, y))
+    # def mutual_information_integrand(x: float, y: float):
+    #     pxy = pdf_xy((x, y))
+    #     px = pdf_x(x)
+    #     py = pdf_y(y)
+    #
+    #     return pxy * log_fun(pxy / (px * py))
+
+    # return sp.integrate.dblquad(mutual_information_integrand,
+    #                             a=x_min,
+    #                             b=x_max,
+    #                             gfun=lambda x: y_min,
+    #                             hfun=lambda x: y_max,
+    #                             epsabs=eps_abs,
+    #                             epsrel=eps_rel)[0]
+
+    def mutual_information_integrand(arg: np.ndarray):
+        if arg.ndim == 1:
+            x, y = arg
+            pxy = pdf_xy((x, y))
+        elif arg.ndim == 2:
+            x = arg[:, 0]
+            y = arg[:, 1]
+            pxy = pdf_xy(arg.T)
+        else:
+            raise ValueError('arg must be a numpy array with one or two axes')
+
         px = pdf_x(x)
         py = pdf_y(y)
 
         return pxy * log_fun(pxy / (px * py))
 
-    return sp.integrate.dblquad(mutual_information_integrand,
-                                a=x_min,
-                                b=x_max,
-                                gfun=lambda x: y_min,
-                                hfun=lambda x: y_max,
-                                epsabs=eps_abs,
-                                epsrel=eps_rel)[0]
+    return cubature(func=mutual_information_integrand,
+                    ndim=2,
+                    fdim=1,
+                    xmin=np.array([x_min, y_min]),
+                    xmax=np.array([x_max, y_max]),
+                    adaptive='p',
+                    vectorized=False,
+                    abserr=eps_abs,
+                    relerr=eps_rel)[0].item()
 
 
 def mutual_information_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
@@ -943,18 +1031,34 @@ def joint_entropy_from_densities_with_support(pdf_xy: tp.Callable,
     """
     log_fun = _select_vectorized_log_fun_for_base(base)
 
-    def joint_entropy_integrand(x: float, y: float):
+    # def joint_entropy_integrand(x: float, y: float):
+    #     pxy = pdf_xy((x, y))
+    #
+    #     return pxy * log_fun(pxy)
+    #
+    # return - sp.integrate.dblquad(joint_entropy_integrand,
+    #                               a=x_min,
+    #                               b=x_max,
+    #                               gfun=lambda x: y_min,
+    #                               hfun=lambda x: y_max,
+    #                               epsabs=eps_abs,
+    #                               epsrel=eps_rel)[0]
+
+    def joint_entropy_integrand(arg: np.ndarray):
+        x, y = arg
         pxy = pdf_xy((x, y))
 
         return pxy * log_fun(pxy)
 
-    return - sp.integrate.dblquad(joint_entropy_integrand,
-                                  a=x_min,
-                                  b=x_max,
-                                  gfun=lambda x: y_min,
-                                  hfun=lambda x: y_max,
-                                  epsabs=eps_abs,
-                                  epsrel=eps_rel)[0]
+    return - cubature(func=joint_entropy_integrand,
+                      ndim=2,
+                      fdim=1,
+                      xmin=np.array([x_min, y_min]),
+                      xmax=np.array([x_max, y_max]),
+                      adaptive='p',
+                      vectorized=False,
+                      abserr=eps_abs,
+                      relerr=eps_rel)[0].item()
 
 
 def joint_entropy_from_kde(kde_xy: sp.stats.kde.gaussian_kde,
@@ -1062,7 +1166,8 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
                                                     y_max: float,
                                                     base: float = np.e,
                                                     eps_abs: float = 1.49e-08,
-                                                    eps_rel: float = 1.49e-08
+                                                    eps_rel: float = 1.49e-08,
+                                                    gpu: bool = False
                                                     ) -> float:
     """
     Compute conditional entropy of the random variables x and y with joint density p_{x, y} and
@@ -1090,21 +1195,49 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
     -------
     The conditional entropy of the random variables x and y
     """
-    log_fun = _select_vectorized_log_fun_for_base(base)
+    log_fun = _select_vectorized_log_fun_for_base(base, gpu=gpu)
 
-    def conditional_entropy_integrand(x: float, y: float):
-        pxy = pdf_xy((x, y))
+    # def conditional_entropy_integrand(x: float, y: float):
+    #     pxy = pdf_xy((x, y))
+    #     px = pdf_x(x)
+    #     # print(f'type(pxy) = {type(pxy)}')
+    #     # print(f'type(px) = {type(px)}')
+    #     # print(f'type(log_fun(pxy / px)) = {type(log_fun(pxy / px))}')
+    #     res = np.asscalar(pxy * log_fun(pxy / px))
+    #     # print(f'{res.shape}')
+    #
+    #     return res
+    #
+    # return - sp.integrate.dblquad(conditional_entropy_integrand,
+    #                               a=x_min,
+    #                               b=x_max,
+    #                               gfun=lambda x: y_min,
+    #                               hfun=lambda x: y_max,
+    #                               epsabs=eps_abs,
+    #                               epsrel=eps_rel)[0]
+
+    def conditional_entropy_integrand(arg: np.ndarray):
+        if arg.ndim == 1:
+            x, y = arg
+            pxy = pdf_xy((x, y))
+        elif arg.ndim == 2:
+            x = arg[:, 0]
+            pxy = pdf_xy(arg.T)
+
         px = pdf_x(x)
+        res = np.asscalar(pxy * log_fun(pxy / px))
 
-        return pxy * log_fun(pxy / px)
+        return res
 
-    return - sp.integrate.dblquad(conditional_entropy_integrand,
-                                  a=x_min,
-                                  b=x_max,
-                                  gfun=lambda x: y_min,
-                                  hfun=lambda x: y_max,
-                                  epsabs=eps_abs,
-                                  epsrel=eps_rel)[0]
+    return - cubature(func=conditional_entropy_integrand,
+                      ndim=2,
+                      fdim=1,
+                      xmin=np.array([x_min, y_min]),
+                      xmax=np.array([x_max, y_max]),
+                      adaptive='p',
+                      vectorized=False,
+                      abserr=eps_abs,
+                      relerr=eps_rel)[0].item()
 
 
 def conditional_entropy_from_kde(kde_x: sm.nonparametric.KDEUnivariate,
@@ -1204,21 +1337,70 @@ def continuous_conditional_entropy_from_samples(sample_x: np.ndarray,
                                         eps_rel=eps_rel)
 
 
-def _get_min_and_max_support_for_scotts_bw_rule(x: np.ndarray,
-                                                cut: float = 3) \
-        -> tp.Tuple[float, float]:
-    bw = sm.nonparametric.bandwidths.bw_scott(x)
-    a = np.min(x) - cut * bw
-    b = np.max(x) + cut * bw
+def continuous_conditional_entropy_from_samples_gpu(
+        sample_x: np.ndarray,
+        sample_y: np.ndarray,
+        base: float = np.e,
+        eps_abs: float = 1.49e-08,
+        eps_rel: float = 1.49e-08,
+        maximum_number_of_elements_per_batch: int = -1) -> float:
+    """
+    Compute conditional entropy of the random variables x and y with joint density p_{x, y} and
+    marginal density p_x defined as
 
-    return a, b
+            H(Y|X) = - E_{p_{x, y}} \left[ \log \frac{p_{x, y} (x, y)}{p_x(x)} \right]
 
+    from samples of the two distributions via approximation by kernel density estimates and
+    numerical integration.
+    The argument base can be used to specify the units in which the entropy is measured.
+    The default choice is the natural logarithm.
 
-def _get_min_and_max_support_for_silverman_bw_rule(x: np.ndarray,
-                                                   cut: float = 3) \
-        -> tp.Tuple[float, float]:
-    bw = sm.nonparametric.bandwidths.bw_silverman(x)
-    a = np.min(x) - cut * bw
-    b = np.max(x) + cut * bw
+    Parameters
+    ----------
+    sample_x: x-component of the sample from the joint density p_{x, y}
+    sample_y: y-component of the sample from the joint density p_{x, y}
+    base: the base of the logarithm used to control the units of measurement for the result
+    eps_abs: absolute error tolerance for numerical integration
+    eps_rel: relative error tolerance for numerical integration
 
-    return a, b
+    Returns
+    -------
+    The conditional entropy of the random variables x and y
+    """
+    kde_x = cocos_gaussian_kde(sample_x, gpu=True)
+    kde_xy = cocos_gaussian_kde(np.vstack((sample_x.reshape((1, -1)),
+                                           sample_y.reshape((1, -1)))),
+                                gpu=True)
+
+    # kde_x = sm.nonparametric.KDEUnivariate(sample_x)
+    # kde_x.fit()
+    # kde_y = sm.nonparametric.KDEUnivariate(sample_y)
+    # kde_y.fit()
+    # y_min = min(kde_y.support)
+    # y_max = max(kde_y.support)
+    # print(f'support = {y_min}-{y_max}')
+
+    # kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
+
+    x_min, x_max = _get_min_and_max_support_for_silverman_bw_rule(sample_x)
+    y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
+    # print(f'support_2 = {y_min_2}-{y_max_2}')
+
+    return conditional_entropy_from_densities_with_support(pdf_x=kde_x.evaluate,
+                                                           pdf_xy=kde_xy.evaluate,
+                                                           x_min=x_min,
+                                                           x_max=x_max,
+                                                           y_min=y_min,
+                                                           y_max=y_max,
+                                                           base=base,
+                                                           eps_abs=eps_abs,
+                                                           eps_rel=eps_rel,
+                                                           gpu=True)
+
+    # return conditional_entropy_from_kde(kde_x=kde_x,
+    #                                     kde_xy=kde_xy,
+    #                                     y_min=y_min,
+    #                                     y_max=y_max,
+    #                                     base=base,
+    #                                     eps_abs=eps_abs,
+    #                                     eps_rel=eps_rel)
