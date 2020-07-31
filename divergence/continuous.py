@@ -1112,6 +1112,7 @@ def conditional_entropy_from_densities_with_support(pdf_x: tp.Callable,
     base: the base of the logarithm used to control the units of measurement for the result
     eps_abs: absolute error tolerance for numerical integration
     eps_rel: relative error tolerance for numerical integration
+    gpu: whether to use the gpu for evaluation of the kernel density estimate
 
     Returns
     -------

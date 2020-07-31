@@ -385,6 +385,7 @@ def _discrete_mutual_information_internal(n: int,
     counts_x: number of appearances of each unique value of x
     unique_values_y: NumPy array of the unique values of y
     counts_y: number of appearances of each unique value of y
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -459,6 +460,7 @@ def discrete_mutual_information(sample_x: np.ndarray,
     ----------
     sample_x: a NumPy array of draws of variable x
     sample_y: a NumPy array of draws of variable y
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -496,6 +498,7 @@ def discrete_joint_entropy(sample_x: np.ndarray,
     ----------
     sample_x: a NumPy array of draws of variable x
     sample_y: a NumPy array of draws of variable y
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -569,6 +572,7 @@ def _discrete_conditional_entropy_of_y_given_x_internal(n: int,
     counts_xy: the number of appearances of each unique combination in the sample
     sample_x: NumPy array containing the x-variable of the sample
     sample_y: NumPy array containing the y-variable of the sample
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
@@ -607,6 +611,7 @@ def discrete_conditional_entropy_of_y_given_x(sample_x: np.ndarray,
     ----------
     sample_x: a NumPy array of draws of variable x
     sample_y: a NumPy array of draws of variable y
+    base: the base of the logarithm used to control the units of measurement for the result
 
     Returns
     -------
