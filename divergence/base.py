@@ -28,7 +28,7 @@ def _select_vectorized_log_fun_for_base(base: float, gpu: bool = False) -> tp.Ca
 spec = [('base', numba.float64)]
 
 
-@numba.jitclass(spec)
+@numba.experimental.jitclass(spec)
 class Logarithm:
     def __init__(self, base):
         self.base = base

@@ -25,7 +25,7 @@ from a prior distribution `q` to a posterior distribution `p`.
 ## Examples
 See the Jupyter notebook [Divergence](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb).
 
-##References: 
+## References: 
 #### [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
 #### [2] Shannon, Claude Elwood (July 1948). "A Mathematical Theory of Communication". Bell System Technical Journal. 27 (3): 379–423
 #### [3] https://en.wikipedia.org/wiki/Cross_entropy
