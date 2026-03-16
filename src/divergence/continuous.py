@@ -827,8 +827,8 @@ def mutual_information_from_densities_with_support(
     log_fun = _select_vectorized_log_fun_for_base(base)
 
     def mutual_information_integrand(arg: np.ndarray):
-        x, y = arg
-        pxy = np.asarray(pdf_xy(np.array([[x], [y]]))).item()
+        x, y = arg[0], arg[1]
+        pxy = np.asarray(pdf_xy(arg)).item()
         px = np.asarray(pdf_x(np.atleast_1d(x))).item()
         py = np.asarray(pdf_y(np.atleast_1d(y))).item()
 
@@ -888,10 +888,13 @@ def mutual_information_from_kde(
     y_min = min(kde_y.support)
     y_max = max(kde_y.support)
 
+    def _kde_xy_pdf(xy):
+        return kde_xy.pdf(np.asarray(xy).reshape(2, -1))
+
     return mutual_information_from_densities_with_support(
         pdf_x=kde_x.evaluate,
         pdf_y=kde_y.evaluate,
-        pdf_xy=kde_xy.pdf,
+        pdf_xy=_kde_xy_pdf,
         x_min=x_min,
         x_max=x_max,
         y_min=y_min,
@@ -991,8 +994,7 @@ def joint_entropy_from_densities_with_support(
     log_fun = _select_vectorized_log_fun_for_base(base)
 
     def joint_entropy_integrand(arg: np.ndarray):
-        x, y = arg
-        pxy = np.asarray(pdf_xy(np.array([[x], [y]]))).item()
+        pxy = np.asarray(pdf_xy(arg)).item()
 
         if pxy > 0.0:
             return pxy * log_fun(pxy)
@@ -1046,8 +1048,11 @@ def joint_entropy_from_kde(
     The joint entropy of the random variables x and y
     """
 
+    def _kde_xy_pdf(xy):
+        return kde_xy.pdf(np.asarray(xy).reshape(2, -1))
+
     return joint_entropy_from_densities_with_support(
-        pdf_xy=kde_xy.pdf,
+        pdf_xy=_kde_xy_pdf,
         x_min=x_min,
         x_max=x_max,
         y_min=y_min,
@@ -1156,8 +1161,8 @@ def conditional_entropy_from_densities_with_support(
     log_fun = _select_vectorized_log_fun_for_base(base)
 
     def conditional_entropy_integrand(arg: np.ndarray):
-        x, y = arg
-        pxy = np.asarray(pdf_xy(np.array([[x], [y]]))).item()
+        x = arg[0]
+        pxy = np.asarray(pdf_xy(arg)).item()
         px = np.asarray(pdf_x(np.atleast_1d(x))).item()
 
         if pxy > 0.0 and px > 0.0:
@@ -1215,9 +1220,12 @@ def conditional_entropy_from_kde(
     x_min = min(kde_x.support)
     x_max = max(kde_x.support)
 
+    def _kde_xy_pdf(xy):
+        return kde_xy.pdf(np.asarray(xy).reshape(2, -1))
+
     return conditional_entropy_from_densities_with_support(
         pdf_x=kde_x.evaluate,
-        pdf_xy=kde_xy.pdf,
+        pdf_xy=_kde_xy_pdf,
         x_min=x_min,
         x_max=x_max,
         y_min=y_min,
