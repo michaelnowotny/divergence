@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="divergence-logo.jpg" alt="Divergence" width="400">
+  <img src="https://raw.githubusercontent.com/michaelnowotny/divergence/master/divergence-logo.jpg" alt="Divergence" width="400">
 </p>
 
 <h1 align="center">Divergence</h1>
