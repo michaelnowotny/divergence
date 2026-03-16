@@ -1,5 +1,10 @@
 # Divergence
 
+[![Tests](https://github.com/michaelnowotny/divergence/actions/workflows/test.yml/badge.svg)](https://github.com/michaelnowotny/divergence/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/divergence)](https://pypi.org/project/divergence/)
+[![Python](https://img.shields.io/pypi/pyversions/divergence)](https://pypi.org/project/divergence/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Divergence is a Python package to compute statistical measures of entropy and divergence from probability distributions and samples.
 
 The following functionality is provided:
