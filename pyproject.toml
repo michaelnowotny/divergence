@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "divergence"
+dynamic = ["version"]
+description = "Information Theoretic Measures of Entropy and Divergence"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    {name = "Michael Christoph Nowotny", email = "nowotnym@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+    "cubature",
+    "numba",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "statsmodels",
+]
+
+[project.optional-dependencies]
+dev = [
+    "hypothesis",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://github.com/michaelnowotny/divergence"
+Repository = "https://github.com/michaelnowotny/divergence"
+
+[tool.setuptools_scm]
+fallback_version = "0.5.0.dev0"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]  # line length in docstrings handled by formatter
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
