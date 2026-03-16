@@ -1,26 +1,38 @@
-# Divergence
+<p align="center">
+  <img src="divergence-logo.jpg" alt="Divergence" width="400">
+</p>
 
-[![Tests](https://github.com/michaelnowotny/divergence/actions/workflows/test.yml/badge.svg)](https://github.com/michaelnowotny/divergence/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/divergence)](https://pypi.org/project/divergence/)
-[![Python](https://img.shields.io/pypi/pyversions/divergence)](https://pypi.org/project/divergence/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<h1 align="center">Divergence</h1>
+<p align="center"><em>The Dissolution of Uncertainty — One Bit at a Time</em></p>
 
-Divergence is a Python package to compute statistical measures of entropy and divergence from probability distributions and samples.
+<p align="center">
+  <a href="https://github.com/michaelnowotny/divergence/actions/workflows/test.yml"><img src="https://github.com/michaelnowotny/divergence/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+  <a href="https://pypi.org/project/divergence/"><img src="https://img.shields.io/pypi/v/divergence" alt="PyPI"></a>
+  <a href="https://pypi.org/project/divergence/"><img src="https://img.shields.io/pypi/pyversions/divergence" alt="Python"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
-The following functionality is provided:
-* (Information) Entropy [1], [2]
-* Cross Entropy [3]
-* Relative Entropy or Kullback-Leibler (KL-) Divergence [4], [5]
-* Jensen-Shannon Divergence [6]
-* Joint Entropy [7]
-* Conditional Entropy [8]
-* Mutual Information [9]
+---
 
-The units in which these entropy and divergence measures are calculated can be specified by the user.
-This is achieved by setting the argument `base`, to `2.0`, `10.0`, or `np.e`.
+Divergence is a Python package for computing information-theoretic measures of entropy and divergence from probability distributions and samples.
 
-In a Bayesian context, relative entropy can be used as a measure of the information gained by moving
-from a prior distribution `q` to a posterior distribution `p`.
+In 1948, Claude Shannon published ["A Mathematical Theory of Communication"](https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf), laying the foundation for information theory and giving us a rigorous way to quantify uncertainty. Divergence puts Shannon's toolkit — and the extensions built upon it over the following decades — into your hands.
+
+## What You Can Compute
+
+| Measure | Discrete | Continuous | What it tells you |
+|---------|:--------:|:----------:|-------------------|
+| **Entropy** | yes | yes | How much uncertainty a distribution carries |
+| **Cross Entropy** | yes | yes | The cost of encoding one distribution using another's code |
+| **KL Divergence** | yes | yes | How much information is lost when approximating one distribution with another |
+| **Jensen-Shannon Divergence** | yes | yes | A symmetric, bounded measure of distributional difference |
+| **Mutual Information** | yes | yes | How much knowing one variable tells you about another |
+| **Joint Entropy** | yes | yes | The total uncertainty in a pair of variables |
+| **Conditional Entropy** | yes | yes | The remaining uncertainty in one variable after observing another |
+
+All measures support configurable logarithm bases: `base=np.e` (nats, default), `base=2` (bits), `base=10` (hartleys).
+
+In a Bayesian context, relative entropy can be used as a measure of the information gained by moving from a prior distribution *q* to a posterior distribution *p*.
 
 ## Installation
 
@@ -28,21 +40,29 @@ from a prior distribution `q` to a posterior distribution `p`.
 pip install divergence
 ```
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
+```python
+import numpy as np
+from divergence import entropy_from_samples, relative_entropy_from_samples
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (a fast Python package manager):
+# How much uncertainty does this distribution carry?
+sample = np.random.normal(0, 1, size=10000)
+h = entropy_from_samples(sample, discrete=False)
 
-```bash
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# How different are these two distributions?
+p = np.random.normal(0, 1, size=10000)
+q = np.random.normal(0.5, 1.2, size=10000)
+kl = relative_entropy_from_samples(p, q, discrete=False)
 ```
 
-### Setup
+## Explore the Notebook
+
+The interactive [Divergence notebook](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb) walks through every measure with explanations, historical context, and worked examples — a self-contained introduction to information theory through code.
+
+## Development Setup
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) (a fast Python package manager):
 
 ```bash
 git clone https://github.com/michaelnowotny/divergence.git
@@ -56,51 +76,35 @@ uv pip install -e ".[dev]"
 
 ### Run the Notebook
 
-The quickest way to explore the package is through the interactive notebook:
-
 ```bash
 ./scripts/lab
 ```
 
-This script ensures Jupyter Lab runs inside the project's virtual environment with
-all dependencies correctly installed — no version conflicts, no wrong Python.
+This script ensures Jupyter Lab runs inside the project's virtual environment with all dependencies correctly installed — no version conflicts, no wrong Python.
 
-Alternatively, if you prefer to launch Jupyter manually:
-
-```bash
-source .venv/bin/activate
-uv pip install jupyterlab matplotlib seaborn
-jupyter lab notebooks/
-```
-
-> **Important:** Always launch Jupyter from within the activated `.venv` environment.
-> Running `jupyter lab` from a system Python or different environment will fail to
-> find the `divergence` package.
+> **Tip:** Always launch Jupyter from within the activated `.venv` environment.
+> Running `jupyter lab` from a system Python or different environment will fail to find the `divergence` package.
 
 ### Run Tests and Linting
 
 ```bash
-source .venv/bin/activate
-pytest                              # Run all tests
+pytest                              # All 122 tests (~18s)
 pytest tests/test_discrete.py       # Discrete tests only (fast, ~2s)
-pytest tests/test_continuous.py     # Continuous tests (slow, ~8min)
 
 ruff check src/ tests/              # Lint
 ruff format src/ tests/             # Format
 ```
 
-## Examples
-
-See the Jupyter notebook [Divergence](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb).
-
 ## References
 
-1. https://en.wikipedia.org/wiki/Entropy_(information_theory)
-2. Shannon, Claude Elwood (July 1948). "A Mathematical Theory of Communication". Bell System Technical Journal. 27 (3): 379-423
-3. https://en.wikipedia.org/wiki/Cross_entropy
-4. https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
-5. Kullback, S.; Leibler, R.A. (1951). "On information and sufficiency". Annals of Mathematical Statistics. 22 (1): 79-86
-6. https://en.wikipedia.org/wiki/Jensen-Shannon_divergence
-7. https://en.wikipedia.org/wiki/Joint_entropy
-8. https://en.wikipedia.org/wiki/Conditional_entropy
-9. https://en.wikipedia.org/wiki/Mutual_information
+1. Shannon, C. E. (1948). ["A Mathematical Theory of Communication."](https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf) *Bell System Technical Journal*, 27(3), 379-423.
+2. Kullback, S. & Leibler, R. A. (1951). "On Information and Sufficiency." *Annals of Mathematical Statistics*, 22(1), 79-86.
+3. Cover, T. M. & Thomas, J. A. (2006). *Elements of Information Theory*, 2nd edition. Wiley.
+4. [Entropy (information theory)](https://en.wikipedia.org/wiki/Entropy_(information_theory)) — Wikipedia
+5. [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) — Wikipedia
+6. [Jensen-Shannon divergence](https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence) — Wikipedia
+7. [Mutual information](https://en.wikipedia.org/wiki/Mutual_information) — Wikipedia
+
+## License
+
+MIT
