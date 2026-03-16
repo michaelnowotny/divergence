@@ -7,13 +7,12 @@ name = "divergence"
 dynamic = ["version"]
 description = "Information Theoretic Measures of Entropy and Divergence"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.10"
 authors = [
     {name = "Michael Christoph Nowotny", email = "nowotnym@gmail.com"},
 ]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -42,7 +41,7 @@ dev = [
 Homepage = "https://github.com/michaelnowotny/divergence"
 Repository = "https://github.com/michaelnowotny/divergence"
 
-[tool.setuptools-scm]
+[tool.setuptools_scm]
 fallback_version = "0.5.0.dev0"
 
 [tool.setuptools.packages.find]
