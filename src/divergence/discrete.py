@@ -104,18 +104,14 @@ def _construct_frequencies_for_two_samples(
     q_target_index = 0
 
     p_frequencies = np.zeros(
-
-            len(
-                sorted_p_realizations,
-            )
-
+        len(
+            sorted_p_realizations,
+        )
     )
     q_frequencies = np.zeros(
-
-            len(
-                sorted_p_realizations,
-            )
-
+        len(
+            sorted_p_realizations,
+        )
     )
 
     for combined_index in range(len(sorted_combined_realizations)):

@@ -83,11 +83,15 @@ kde_q = sm.nonparametric.KDEUnivariate(sample_q)
 kde_p.fit()
 kde_q.fit()
 
+
 # construct exact normal densities for p and q
 def pdf_p(x):
     return sp.stats.norm.pdf(x, mu_p, sigma_p)
+
+
 def pdf_q(x):
     return sp.stats.norm.pdf(x, mu_q, sigma_q)
+
 
 # compute support for kernel density estimates
 p_min = min(kde_p.support)
@@ -156,11 +160,16 @@ kde_x.fit()  # Estimate the densities
 kde_y.fit()  # Estimate the densities
 kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
 
+
 # construct exact normal densities for x and y
 def pdf_x(x):
     return sp.stats.norm.pdf(x, mu_x, sigma_x)
+
+
 def pdf_y(y):
     return sp.stats.norm.pdf(y, mu_y, sigma_y)
+
+
 pdf_xy = sp.stats.multivariate_normal(
     mean=[mu_x, mu_y],
     cov=[[sigma_x**2, rho * sigma_x * sigma_y], [rho * sigma_x * sigma_y, sigma_y**2]],

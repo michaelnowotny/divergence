@@ -6,6 +6,15 @@ import statsmodels.api as sm
 from cubature import cubature
 
 from divergence.base import _select_vectorized_log_fun_for_base
+from divergence.fast import (
+    conditional_entropy_resubstitution,
+    cross_entropy_from_kde_grid,
+    entropy_from_kde_grid,
+    jensen_shannon_divergence_from_kde_grid,
+    joint_entropy_resubstitution,
+    mutual_information_resubstitution,
+    relative_entropy_from_kde_grid,
+)
 
 
 def _get_min_and_max_support_for_scotts_bw_rule(
@@ -113,34 +122,25 @@ def entropy_from_density_with_support(
 def entropy_from_kde(
     kde: sm.nonparametric.KDEUnivariate,
     base: float = np.e,
-    eps_abs: float = 1.49e-08,
-    eps_rel: float = 1.49e-08,
 ) -> float:
     """
     Compute the entropy
 
                 H(p) = - E_p[log(p)]
 
-    of the density given by the statsmodels kde object via numerical integration.
-    The argument base can be used to specify the units in which the entropy is measured.
-    The default choice is the natural logarithm.
+    of the density given by the statsmodels kde object using grid integration
+    over the KDE's pre-computed support.
 
     Parameters
     ----------
     kde: statsmodels kde object representing an approximation of the density
     base: the base of the logarithm used to control the units of measurement for the result
-    eps_abs: absolute error tolerance for numerical integration
-    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
     The entropy of the density approximated by the kde
     """
-    a = min(kde.support)
-    b = max(kde.support)
-    return entropy_from_density_with_support(
-        pdf=kde.evaluate, a=a, b=b, base=base, eps_abs=eps_abs, eps_rel=eps_rel
-    )
+    return entropy_from_kde_grid(kde, base=base)
 
 
 def continuous_entropy_from_sample(
@@ -171,7 +171,7 @@ def continuous_entropy_from_sample(
     """
     kde = sm.nonparametric.KDEUnivariate(sample)
     kde.fit()
-    return entropy_from_kde(kde=kde, base=base, eps_abs=eps_abs, eps_rel=eps_rel)
+    return entropy_from_kde(kde=kde, base=base)
 
 
 ################################################################################
@@ -313,25 +313,19 @@ def cross_entropy_from_kde(
     p: sm.nonparametric.KDEUnivariate,
     q: sm.nonparametric.KDEUnivariate,
     base: float = np.e,
-    eps_abs: float = 1.49e-08,
-    eps_rel: float = 1.49e-08,
 ) -> float:
     """
     Compute the cross entropy of the distribution q relative to the distribution p
 
                 H_q(p) = - E_p [log(q)]
 
-    given by the statsmodels kde objects via numerical integration.
-    The argument base can be used to specify the units in which the entropy is measured.
-    The default choice is the natural logarithm.
+    given by the statsmodels kde objects using grid integration.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     base: the base of the logarithm used to control the units of measurement for the result
-    eps_abs: absolute error tolerance for numerical integration
-    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -340,18 +334,7 @@ def cross_entropy_from_kde(
     if not _does_support_overlap(p, q):
         raise ValueError("The support of p and q does not overlap.")
 
-    a = min(min(p.support), min(q.support))
-    b = max(max(p.support), max(q.support))
-
-    return cross_entropy_from_densities_with_support(
-        p=p.evaluate,
-        q=q.evaluate,
-        a=a,
-        b=b,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
-    )
+    return cross_entropy_from_kde_grid(p, q, base=base)
 
 
 def continuous_cross_entropy_from_sample(
@@ -389,9 +372,7 @@ def continuous_cross_entropy_from_sample(
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return cross_entropy_from_kde(
-        kde_p, kde_q, base=base, eps_abs=eps_abs, eps_rel=eps_rel
-    )
+    return cross_entropy_from_kde(kde_p, kde_q, base=base)
 
 
 ################################################################################
@@ -516,25 +497,19 @@ def relative_entropy_from_kde(
     p: sm.nonparametric.KDEUnivariate,
     q: sm.nonparametric.KDEUnivariate,
     base: float = np.e,
-    eps_abs: float = 1.49e-08,
-    eps_rel: float = 1.49e-08,
 ) -> float:
     """
     Compute the relative entropy of the distribution q relative to the distribution p
 
-                D_KL(p||q) E_p [log(p/q)]
+                D_KL(p||q) = E_p [log(p/q)]
 
-    given by the statsmodels kde objects via numerical integration.
-    The argument base can be used to specify the units in which the entropy is measured.
-    The default choice is the natural logarithm.
+    given by the statsmodels kde objects using grid integration.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     base: the base of the logarithm used to control the units of measurement for the result
-    eps_abs: absolute error tolerance for numerical integration
-    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
@@ -543,17 +518,7 @@ def relative_entropy_from_kde(
     if not _does_support_overlap(p, q):
         raise ValueError("The support of p and q does not overlap.")
 
-    a = min(min(p.support), min(q.support))
-    b = max(max(p.support), max(q.support))
-    return relative_entropy_from_densities_with_support(
-        p=p.evaluate,
-        q=q.evaluate,
-        a=a,
-        b=b,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
-    )
+    return relative_entropy_from_kde_grid(p, q, base=base)
 
 
 def continuous_relative_entropy_from_sample(
@@ -590,9 +555,7 @@ def continuous_relative_entropy_from_sample(
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return relative_entropy_from_kde(
-        p=kde_p, q=kde_q, base=base, eps_abs=eps_abs, eps_rel=eps_rel
-    )
+    return relative_entropy_from_kde(p=kde_p, q=kde_q, base=base)
 
 
 ################################################################################
@@ -687,6 +650,7 @@ def jensen_shannon_divergence_from_densities_with_support(
 
     def m(x):
         return 0.5 * (p(x) + q(x))
+
     D_PM = _relative_entropy_from_densities_with_support_for_shannon_divergence(
         p=p, q=m, a=a, b=b, log_fun=log_fun, eps_abs=eps_abs, eps_rel=eps_rel
     )
@@ -702,42 +666,26 @@ def jensen_shannon_divergence_from_kde(
     p: sm.nonparametric.KDEUnivariate,
     q: sm.nonparametric.KDEUnivariate,
     base: float = np.e,
-    eps_abs: float = 1.49e-08,
-    eps_rel: float = 1.49e-08,
 ) -> float:
     """
     Compute the Jensen-Shannon divergence between distributions p and q
 
                 JSD(p||q) = 0.5 * (D_KL(p||m) + D_KL(q||m)), with m = 0.5 * (p + q)
 
-    given by the statsmodels kde objects via numerical integration.
-    The argument base can be used to specify the units in which the entropy is measured.
-    The default choice is the natural logarithm.
+    given by the statsmodels kde objects using grid integration.
 
     Parameters
     ----------
     p: statsmodels kde object approximating the probability density function of the distribution p
     q: statsmodels kde object approximating the probability density function of the distribution q
     base: the base of the logarithm used to control the units of measurement for the result
-    eps_abs: absolute error tolerance for numerical integration
-    eps_rel: relative error tolerance for numerical integration
 
     Returns
     -------
     The Jensen-Shannon divergence between distributions p and q.
 
     """
-    a = min(min(p.support), min(q.support))
-    b = max(max(p.support), max(q.support))
-    return jensen_shannon_divergence_from_densities_with_support(
-        p=p.evaluate,
-        q=q.evaluate,
-        a=a,
-        b=b,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
-    )
+    return jensen_shannon_divergence_from_kde_grid(p, q, base=base)
 
 
 def continuous_jensen_shannon_divergence_from_sample(
@@ -775,9 +723,7 @@ def continuous_jensen_shannon_divergence_from_sample(
     kde_q = sm.nonparametric.KDEUnivariate(sample_q)
     kde_q.fit()
 
-    return jensen_shannon_divergence_from_kde(
-        kde_p, kde_q, base=base, eps_abs=eps_abs, eps_rel=eps_rel
-    )
+    return jensen_shannon_divergence_from_kde(kde_p, kde_q, base=base)
 
 
 ################################################################################
@@ -937,20 +883,8 @@ def continuous_mutual_information_from_samples(
     -------
     The mutual information of the random variables x and y
     """
-    kde_x = sm.nonparametric.KDEUnivariate(sample_x)
-    kde_x.fit()
-    kde_y = sm.nonparametric.KDEUnivariate(sample_y)
-    kde_y.fit()
-
-    kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
-
-    return mutual_information_from_kde(
-        kde_x=kde_x,
-        kde_y=kde_y,
-        kde_xy=kde_xy,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
+    return mutual_information_resubstitution(
+        sample_x=sample_x, sample_y=sample_y, base=base
     )
 
 
@@ -1092,30 +1026,7 @@ def continuous_joint_entropy_from_samples(
     -------
     The joint entropy of the random variables x and y
     """
-    # kde_x = sm.nonparametric.KDEUnivariate(sample_x)
-    # kde_x.fit()
-    # kde_y = sm.nonparametric.KDEUnivariate(sample_y)
-    # kde_y.fit()
-    # x_min = min(kde_x.support)
-    # x_max = max(kde_x.support)
-    # y_min = min(kde_y.support)
-    # y_max = max(kde_y.support)
-
-    kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
-
-    x_min, x_max = _get_min_and_max_support_for_silverman_bw_rule(sample_x)
-    y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
-
-    return joint_entropy_from_kde(
-        kde_xy=kde_xy,
-        x_min=x_min,
-        x_max=x_max,
-        y_min=y_min,
-        y_max=y_max,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
-    )
+    return joint_entropy_resubstitution(sample_x=sample_x, sample_y=sample_y, base=base)
 
 
 ################################################################################
@@ -1266,18 +1177,6 @@ def continuous_conditional_entropy_from_samples(
     -------
     The conditional entropy of the random variables x and y
     """
-    kde_x = sm.nonparametric.KDEUnivariate(sample_x)
-    kde_x.fit()
-
-    kde_xy = sp.stats.gaussian_kde([sample_x, sample_y])
-    y_min, y_max = _get_min_and_max_support_for_silverman_bw_rule(sample_y)
-
-    return conditional_entropy_from_kde(
-        kde_x=kde_x,
-        kde_xy=kde_xy,
-        y_min=y_min,
-        y_max=y_max,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
+    return conditional_entropy_resubstitution(
+        sample_x=sample_x, sample_y=sample_y, base=base
     )
