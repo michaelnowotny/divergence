@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Launch Jupyter Lab in the project's virtual environment.
+# This guarantees notebooks use the correct Python with divergence installed.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Virtual environment not found. Creating one..."
+    uv venv "$VENV_DIR" --python 3.12
+fi
+
+echo "Activating virtual environment..."
+source "$VENV_DIR/bin/activate"
+
+# Ensure divergence and jupyter are installed
+if ! python -c "import divergence" 2>/dev/null; then
+    echo "Installing divergence..."
+    uv pip install -e "$PROJECT_ROOT[dev]"
+fi
+
+if ! python -c "import jupyterlab" 2>/dev/null; then
+    echo "Installing Jupyter Lab and visualization packages..."
+    uv pip install jupyterlab matplotlib seaborn
+fi
+
+echo ""
+echo "Starting Jupyter Lab..."
+echo "  Python:    $(python --version)"
+echo "  Venv:      $VENV_DIR"
+echo "  Notebooks: $PROJECT_ROOT/notebooks"
+echo ""
+
+exec jupyter lab --notebook-dir="$PROJECT_ROOT/notebooks"

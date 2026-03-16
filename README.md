@@ -28,24 +28,65 @@ from a prior distribution `q` to a posterior distribution `p`.
 pip install divergence
 ```
 
-## Development Setup
+## Getting Started
 
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
+### Prerequisites
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (a fast Python package manager):
 
 ```bash
-# Create virtual environment and install with dev dependencies
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### Setup
+
+```bash
+git clone https://github.com/michaelnowotny/divergence.git
+cd divergence
+
+# Create an isolated virtual environment and install everything
 uv venv .venv --python 3.12
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 uv pip install -e ".[dev]"
+```
 
-# Run tests
-pytest
+### Run the Notebook
 
-# Run linter
-ruff check src/ tests/
+The quickest way to explore the package is through the interactive notebook:
 
-# Run formatter
-ruff format src/ tests/
+```bash
+./scripts/lab
+```
+
+This script ensures Jupyter Lab runs inside the project's virtual environment with
+all dependencies correctly installed — no version conflicts, no wrong Python.
+
+Alternatively, if you prefer to launch Jupyter manually:
+
+```bash
+source .venv/bin/activate
+uv pip install jupyterlab matplotlib seaborn
+jupyter lab notebooks/
+```
+
+> **Important:** Always launch Jupyter from within the activated `.venv` environment.
+> Running `jupyter lab` from a system Python or different environment will fail to
+> find the `divergence` package.
+
+### Run Tests and Linting
+
+```bash
+source .venv/bin/activate
+pytest                              # Run all tests
+pytest tests/test_discrete.py       # Discrete tests only (fast, ~2s)
+pytest tests/test_continuous.py     # Continuous tests (slow, ~8min)
+
+ruff check src/ tests/              # Lint
+ruff format src/ tests/             # Format
 ```
 
 ## Examples
