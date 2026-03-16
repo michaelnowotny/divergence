@@ -12,6 +12,7 @@ from divergence.fast import (
     entropy_from_kde_grid,
     jensen_shannon_divergence_from_kde_grid,
     joint_entropy_resubstitution,
+    mutual_information_from_kde_fast,
     mutual_information_resubstitution,
     relative_entropy_from_kde_grid,
 )
@@ -829,25 +830,8 @@ def mutual_information_from_kde(
     -------
     The mutual information of the random variables x and y
     """
-    x_min = min(kde_x.support)
-    x_max = max(kde_x.support)
-    y_min = min(kde_y.support)
-    y_max = max(kde_y.support)
-
-    def _kde_xy_pdf(xy):
-        return kde_xy.pdf(np.asarray(xy).reshape(2, -1))
-
-    return mutual_information_from_densities_with_support(
-        pdf_x=kde_x.evaluate,
-        pdf_y=kde_y.evaluate,
-        pdf_xy=_kde_xy_pdf,
-        x_min=x_min,
-        x_max=x_max,
-        y_min=y_min,
-        y_max=y_max,
-        base=base,
-        eps_abs=eps_abs,
-        eps_rel=eps_rel,
+    return mutual_information_from_kde_fast(
+        kde_x=kde_x, kde_y=kde_y, kde_xy=kde_xy, base=base
     )
 
 

@@ -1,7 +1,9 @@
 """Fast estimators for continuous information-theoretic measures.
 
+Grid estimators: integrate over the KDE's pre-computed grid using the trapezoidal
+rule, with interpolation (np.interp) instead of expensive KDE re-evaluation.
+
 Resubstitution estimators: evaluate the KDE at the sample points and average.
-Grid estimators: integrate over the KDE's pre-computed grid using the trapezoidal rule.
 
 These are orders of magnitude faster than cubature-based integration for the
 `*_from_sample()` and `*_from_kde()` functions, while producing comparable accuracy.
@@ -12,6 +14,17 @@ import scipy as sp
 import statsmodels.api as sm
 
 from divergence.base import _select_vectorized_log_fun_for_base
+
+
+def _interp_kde_density(
+    kde: sm.nonparametric.KDEUnivariate, points: np.ndarray
+) -> np.ndarray:
+    """Interpolate a KDE's pre-computed density onto new points.
+
+    O(M) via np.interp instead of O(N*M) from kde.evaluate().
+    Returns 0 for points outside the KDE's support range.
+    """
+    return np.interp(points, kde.support, kde.density, left=0.0, right=0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -29,7 +42,6 @@ def entropy_from_kde_grid(
     log_fun = _select_vectorized_log_fun_for_base(base)
     p = kde.density
     support = kde.support
-    # Avoid log(0): only integrate where p > 0
     mask = p > 0
     integrand = np.where(mask, -p * log_fun(p), 0.0)
     return float(np.trapezoid(integrand, support))
@@ -42,15 +54,16 @@ def cross_entropy_from_kde_grid(
 ) -> float:
     r"""Compute cross entropy H_q(p) = -E_p[log q] using KDE grids.
 
-    Evaluates q's density on p's support grid, then integrates.
+    Interpolates q's density onto p's support grid (O(M) via np.interp),
+    then integrates with the trapezoidal rule.
     """
     log_fun = _select_vectorized_log_fun_for_base(base)
     support = kde_p.support
     p = kde_p.density
-    q = kde_q.evaluate(support)
+    q = _interp_kde_density(kde_q, support)
 
     mask = p > 0
-    q_safe = np.where(q > 0, q, 1.0)  # avoid log(0); result zeroed by p mask
+    q_safe = np.where(q > 0, q, 1.0)
     integrand = np.where(mask, -p * log_fun(q_safe), 0.0)
     return float(np.trapezoid(integrand, support))
 
@@ -64,7 +77,7 @@ def relative_entropy_from_kde_grid(
     log_fun = _select_vectorized_log_fun_for_base(base)
     support = kde_p.support
     p = kde_p.density
-    q = kde_q.evaluate(support)
+    q = _interp_kde_density(kde_q, support)
 
     mask = p > 0
     q_safe = np.where(q > 0, q, 1.0)
@@ -79,8 +92,7 @@ def jensen_shannon_divergence_from_kde_grid(
 ) -> float:
     r"""Compute JSD(p || q) = 0.5 * D_KL(p||m) + 0.5 * D_KL(q||m) using KDE grids.
 
-    The mixture density m = 0.5*(p + q) is evaluated on a common support
-    spanning both KDEs.
+    Builds a common support grid and interpolates both KDEs onto it.
     """
     log_fun = _select_vectorized_log_fun_for_base(base)
 
@@ -90,14 +102,16 @@ def jensen_shannon_divergence_from_kde_grid(
     n_grid = max(len(kde_p.support), len(kde_q.support))
     support = np.linspace(a, b, n_grid)
 
-    p = kde_p.evaluate(support)
-    q = kde_q.evaluate(support)
+    p = _interp_kde_density(kde_p, support)
+    q = _interp_kde_density(kde_q, support)
     m = 0.5 * (p + q)
 
     m_safe = np.where(m > 0, m, 1.0)
+    p_safe = np.where(p > 0, p, 1.0)
+    q_safe = np.where(q > 0, q, 1.0)
 
-    kl_pm = np.where(p > 0, p * log_fun(p / m_safe), 0.0)
-    kl_qm = np.where(q > 0, q * log_fun(q / m_safe), 0.0)
+    kl_pm = np.where(p > 0, p * log_fun(p_safe / m_safe), 0.0)
+    kl_qm = np.where(q > 0, q * log_fun(q_safe / m_safe), 0.0)
 
     return float(
         0.5 * np.trapezoid(kl_pm, support) + 0.5 * np.trapezoid(kl_qm, support)
@@ -129,8 +143,9 @@ def mutual_information_resubstitution(
     kde_xy = sp.stats.gaussian_kde(np.vstack([sample_x, sample_y]))
 
     # Evaluate at sample points
-    px = kde_x.evaluate(sample_x)
-    py = kde_y.evaluate(sample_y)
+    # Use interp for marginals (fast), gaussian_kde.evaluate for joint (BLAS)
+    px = _interp_kde_density(kde_x, sample_x)
+    py = _interp_kde_density(kde_y, sample_y)
     pxy = kde_xy.evaluate(np.vstack([sample_x, sample_y]))
 
     # Only include points where all densities are positive
@@ -140,6 +155,44 @@ def mutual_information_resubstitution(
 
     ratios = pxy[mask] / (px[mask] * py[mask])
     return float(np.mean(log_fun(ratios)))
+
+
+def mutual_information_from_kde_fast(
+    kde_x: sm.nonparametric.KDEUnivariate,
+    kde_y: sm.nonparametric.KDEUnivariate,
+    kde_xy: sp.stats.gaussian_kde,
+    base: float = np.e,
+    n_grid: int = 100,
+) -> float:
+    r"""Compute I(X;Y) using a 2D grid + trapezoidal rule.
+
+    Evaluates the joint and marginal KDEs on a meshgrid and integrates.
+    Much faster than cubature for KDE-based densities.
+    """
+    log_fun = _select_vectorized_log_fun_for_base(base)
+
+    x_grid = np.linspace(kde_x.support[0], kde_x.support[-1], n_grid)
+    y_grid = np.linspace(kde_y.support[0], kde_y.support[-1], n_grid)
+    xx, yy = np.meshgrid(x_grid, y_grid)
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+
+    # Evaluate densities on the grid
+    pxy = kde_xy.evaluate(positions).reshape(n_grid, n_grid)
+    px = _interp_kde_density(kde_x, x_grid)
+    py = _interp_kde_density(kde_y, y_grid)
+    px_grid, py_grid = np.meshgrid(px, py)
+
+    # Compute integrand: pxy * log(pxy / (px * py))
+    denom = px_grid * py_grid
+    mask = (pxy > 0) & (denom > 0)
+    integrand = np.where(
+        mask, pxy * log_fun(pxy / np.where(denom > 0, denom, 1.0)), 0.0
+    )
+
+    # 2D trapezoidal integration
+    dx = x_grid[1] - x_grid[0]
+    dy = y_grid[1] - y_grid[0]
+    return float(np.trapezoid(np.trapezoid(integrand, dx=dy, axis=0), dx=dx))
 
 
 def joint_entropy_resubstitution(
@@ -180,7 +233,7 @@ def conditional_entropy_resubstitution(
     kde_x.fit()
     kde_xy = sp.stats.gaussian_kde(np.vstack([sample_x, sample_y]))
 
-    px = kde_x.evaluate(sample_x)
+    px = _interp_kde_density(kde_x, sample_x)
     pxy = kde_xy.evaluate(np.vstack([sample_x, sample_y]))
 
     mask = (px > 0) & (pxy > 0)
