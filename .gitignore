@@ -131,3 +131,6 @@ dmypy.json
 
 # Internal planning docs
 MODERNIZATION_PLAN.md
+
+# Executed notebooks
+*_executed.ipynb
