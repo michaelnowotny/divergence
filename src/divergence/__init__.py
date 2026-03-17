@@ -1,6 +1,14 @@
 import numpy as np
 
 from ._types import TestResult
+from .bayesian import (
+    bayesian_surprise,
+    chain_divergence,
+    information_gain,
+    model_divergence,
+    prior_sensitivity,
+    uncertainty_decomposition,
+)
 from .continuous import (
     conditional_entropy_from_densities_with_support,
     conditional_entropy_from_kde,
@@ -62,6 +70,9 @@ from .testing import two_sample_test
 __all__ = [
     # Two-sample testing
     "TestResult",
+    # Bayesian diagnostics (ArviZ integration)
+    "bayesian_surprise",
+    "chain_divergence",
     # f-divergences
     "chi_squared_divergence",
     "conditional_entropy_from_densities_with_support",
@@ -94,6 +105,7 @@ __all__ = [
     # Unified API
     "entropy_from_samples",
     "f_divergence",
+    "information_gain",
     "intersection",
     "jeffreys_divergence",
     "jensen_shannon_divergence_from_densities_with_support",
@@ -107,9 +119,11 @@ __all__ = [
     "knn_kl_divergence",
     "ksg_mutual_information",
     "maximum_mean_discrepancy",
+    "model_divergence",
     "mutual_information_from_densities_with_support",
     "mutual_information_from_kde",
     "mutual_information_from_samples",
+    "prior_sensitivity",
     "relative_entropy_from_densities_with_support",
     "relative_entropy_from_kde",
     "relative_entropy_from_samples",
@@ -120,6 +134,7 @@ __all__ = [
     "squared_hellinger_distance",
     "total_variation_distance",
     "two_sample_test",
+    "uncertainty_decomposition",
     "wasserstein_distance",
 ]
 

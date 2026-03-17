@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Divergence is a Python package for computing statistical measures of entropy and divergence from probability distributions and samples. It supports entropy, cross entropy, KL divergence, Jensen-Shannon divergence, joint entropy, conditional entropy, and mutual information for both discrete and continuous distributions.
+Divergence is a Python package for computing statistical measures of entropy and divergence from probability distributions and samples. It supports Shannon measures (entropy, cross entropy, KL divergence, Jensen-Shannon divergence, joint entropy, conditional entropy, mutual information), f-divergences (total variation, Hellinger, chi-squared, Jeffreys, Cressie-Read), Rényi entropy/divergence, integral probability metrics (MMD, energy distance, Wasserstein, sliced Wasserstein), kNN estimators (Kozachenko-Leonenko entropy, KSG mutual information, kNN KL divergence), and two-sample testing — for both discrete and continuous distributions.
 
 ## Development Environment Setup
 
@@ -52,6 +52,13 @@ ruff format src/ tests/         # Format
 - **`src/divergence/base.py`** — Shared utility: log function selection (`log`, `log2`, `log10`) based on `base` parameter, plus Numba `Logarithm` jitclass for use in JIT-compiled code.
 - **`src/divergence/discrete.py`** — Discrete distribution measures. Uses Numba `@njit` for performance-critical frequency counting and internal computation functions.
 - **`src/divergence/continuous.py`** — Continuous distribution measures. Uses `cubature` for N-dimensional numerical integration and `statsmodels` for kernel density estimation.
+- **`src/divergence/f_divergences.py`** — General f-divergence engine + TV, Hellinger, chi-squared, Jeffreys, Cressie-Read. Both discrete (frequency-based) and continuous (KDE grid integration) paths.
+- **`src/divergence/renyi.py`** — Rényi entropy and divergence parameterized by order alpha, with limit cases.
+- **`src/divergence/ipms.py`** — Integral probability metrics: energy distance, Wasserstein-p, MMD, sliced Wasserstein.
+- **`src/divergence/knn.py`** — kNN-based estimators: Kozachenko-Leonenko entropy, KSG mutual information, kNN KL divergence. Uses scipy cKDTree.
+- **`src/divergence/testing.py`** — Two-sample permutation tests with MMD/energy/kNN methods.
+- **`src/divergence/bayesian.py`** — ArviZ integration for Bayesian diagnostics (information gain, chain divergence, uncertainty decomposition, Bayesian surprise).
+- **`src/divergence/_types.py`** — Shared NamedTuple types (TestResult).
 - **`tests/`** — Top-level test directory (outside the package).
 
 ### Key Design Patterns
@@ -62,4 +69,18 @@ ruff format src/ tests/         # Format
 
 ### Dependencies
 
-Core: numpy, scipy, numba, statsmodels, cubature. Dev: pytest, hypothesis, pytest-cov, ruff.
+Core: numpy, scipy, numba, statsmodels, cubature. Dev: pytest, hypothesis, pytest-cov, ruff. Optional: arviz (for Bayesian diagnostics), xarray.
+
+### ArviZ Integration (arviz >= 1.0.0)
+
+**IMPORTANT**: We target ArviZ 1.0.0+ which uses `xarray.DataTree` (not the legacy `InferenceData` class from ArviZ 0.x). The API changed substantially:
+
+- `az.from_dict()` takes a **single nested dict** with group names as keys: `az.from_dict({"posterior": {"mu": arr}, "prior": {"mu": arr}})`
+- The return type is `xarray.DataTree`, not `arviz.InferenceData`
+- Groups are accessed as children: `idata["posterior"]` returns a DataTree node
+- Variables within groups: `idata["posterior"]["mu"].values` returns numpy array with shape `(chain, draw, ...)`
+- Check group existence: `"posterior" in idata.children`
+- List variables: `list(idata["posterior"].ds.data_vars)`
+- `az.extract(idata, group="posterior", combined=True)` flattens chains/draws into a single sample dimension
+
+ArviZ is an **optional dependency** — all bayesian.py functions use lazy imports and raise ImportError with installation instructions if arviz is not installed.

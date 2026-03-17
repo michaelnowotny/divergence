@@ -30,11 +30,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+bayesian = [
+    "arviz>=1.0",
+    "xarray>=2024.1",
+]
 dev = [
+    "arviz>=1.0",
     "hypothesis",
     "pytest",
     "pytest-cov",
     "ruff",
+    "xarray>=2024.1",
 ]
 
 [project.urls]
