@@ -109,16 +109,21 @@ def _get_divergence_fn(
 def _get_groups(idata: tp.Any) -> list[str]:
     """Return group names from an InferenceData or DataTree object.
 
-    Handles both ArviZ InferenceData (which has a ``.groups()`` method)
-    and raw xarray DataTree (which has a ``.children`` mapping).
+    Handles both ArviZ ``InferenceData`` (which may have a ``.groups()``
+    method) and raw ``xarray.DataTree`` (which has a ``.children``
+    mapping).  For ``DataTree``, ``.groups`` returns path strings like
+    ``('/', '/posterior', '/prior')``; this function strips the leading
+    ``/`` and filters out the root.
     """
     # xarray DataTree: .children is a Mapping of child name -> DataTree
     if hasattr(idata, "children"):
         return list(idata.children)
-    # ArviZ InferenceData: .groups() is a method returning a list of str
+    # ArviZ InferenceData: .groups() may be a method or a tuple property
     if hasattr(idata, "groups"):
         groups = idata.groups
-        return list(groups()) if callable(groups) else list(groups)
+        raw = list(groups()) if callable(groups) else list(groups)
+        # DataTree.groups returns paths like ('/', '/posterior', '/prior')
+        return [g.strip("/") for g in raw if g != "/"]
     return list(idata.keys())
 
 
@@ -144,17 +149,37 @@ def _get_var_names(
     """
     if var_names is not None:
         for v in var_names:
-            if v not in dataset.ds.data_vars:
+            if v not in dataset.data_vars:
                 raise KeyError(f"Variable '{v}' not found in dataset")
-            if dataset2 is not None and v not in dataset2.ds.data_vars:
+            if dataset2 is not None and v not in dataset2.data_vars:
                 raise KeyError(f"Variable '{v}' not found in second dataset")
         return list(var_names)
 
-    vars1 = set(dataset.ds.data_vars)
+    vars1 = set(dataset.data_vars)
     if dataset2 is not None:
-        vars2 = set(dataset2.ds.data_vars)
+        vars2 = set(dataset2.data_vars)
         return sorted(vars1 & vars2)
     return sorted(vars1)
+
+
+def _get_values(dataset: tp.Any, var_name: str) -> np.ndarray:
+    """Extract variable values in ``(chain, draw, ...)`` order.
+
+    ArviZ backends may produce dimensions in either ``(chain, draw)`` or
+    ``(draw, chain)`` order.  This helper inspects the xarray dimension
+    names and transposes if necessary to guarantee ``(chain, draw, ...)``
+    output.
+    """
+    var = dataset[var_name]
+    arr = var.values
+    dims = tuple(var.dims) if hasattr(var, "dims") else ()
+
+    # Detect (draw, chain, ...) order and transpose to (chain, draw, ...)
+    if len(dims) >= 2 and dims[0] == "draw" and dims[1] == "chain":
+        # Move axis 1 (chain) to position 0
+        arr = np.moveaxis(arr, 1, 0)
+
+    return arr
 
 
 def _flatten_samples(dataset: tp.Any, var_name: str) -> np.ndarray:
@@ -163,7 +188,7 @@ def _flatten_samples(dataset: tp.Any, var_name: str) -> np.ndarray:
     Returns shape ``(n_samples,)`` for scalar params or
     ``(n_samples, K)`` for vector params with K components.
     """
-    arr = dataset[var_name].values  # (chain, draw, ...)
+    arr = _get_values(dataset, var_name)  # (chain, draw, ...)
     n_chains, n_draws = arr.shape[:2]
     trailing = arr.shape[2:]
     if trailing:
@@ -369,7 +394,7 @@ def chain_divergence(
 
     results: dict[str, np.ndarray] = {}
     for name in names:
-        arr = dataset[name].values  # (chain, draw, ...)
+        arr = _get_values(dataset, name)  # (chain, draw, ...)
         n_chains = arr.shape[0]
         matrix = np.zeros((n_chains, n_chains))
 
@@ -463,7 +488,7 @@ def bayesian_surprise(
     ll_group = idata[log_likelihood_group]
 
     # Resolve variable name
-    ll_vars = list(ll_group.ds.data_vars)
+    ll_vars = list(ll_group.data_vars)
     if var_name is not None:
         if var_name not in ll_vars:
             raise ValueError(
@@ -478,7 +503,7 @@ def bayesian_surprise(
 
     results: dict[str, np.ndarray] = {}
     for name in names:
-        ll = ll_group[name].values  # (chain, draw, obs...)
+        ll = _get_values(ll_group, name)  # (chain, draw, obs...)
         # Flatten chain and draw into sample dimension
         n_chains, n_draws = ll.shape[:2]
         obs_shape = ll.shape[2:]
@@ -625,8 +650,8 @@ def prior_sensitivity(
 
     # Resolve var_names: intersection of posterior, prior, and reference
     if var_names is None:
-        post_vars = set(posterior.ds.data_vars)
-        prior_vars = set(prior.ds.data_vars)
+        post_vars = set(posterior.data_vars)
+        prior_vars = set(prior.data_vars)
         ref_vars = set(reference_prior_samples.keys())
         names = sorted(post_vars & prior_vars & ref_vars)
     else:
@@ -749,7 +774,7 @@ def uncertainty_decomposition(
 
     results: dict[str, dict[str, float]] = {}
     for name in names:
-        arr = dataset[name].values  # (chain, draw, obs...)
+        arr = _get_values(dataset, name)  # (chain, draw, obs...)
         if arr.ndim < 3:
             raise ValueError(
                 f"Variable '{name}' has shape {arr.shape} — need at least "
@@ -897,7 +922,7 @@ def chain_ksd(
 
     results: dict[str, ChainKSDResult] = {}
     for name in names:
-        arr = dataset[name].values  # (chain, draw, ...)
+        arr = _get_values(dataset, name)  # (chain, draw, ...)
         n_chains, n_draws = arr.shape[:2]
         trailing = arr.shape[2:]
 
@@ -1033,7 +1058,7 @@ def chain_two_sample_test(
 
     results: dict[str, ChainTestResult] = {}
     for name in names:
-        arr = dataset[name].values  # (chain, draw, ...)
+        arr = _get_values(dataset, name)  # (chain, draw, ...)
         n_chains = arr.shape[0]
 
         # Extract per-chain samples
@@ -1169,7 +1194,7 @@ def mixing_diagnostic(
 
     results: dict[str, MixingDiagnostic] = {}
     for name in names:
-        arr = dataset[name].values  # (chain, draw, ...)
+        arr = _get_values(dataset, name)  # (chain, draw, ...)
         n_chains, n_draws = arr.shape[:2]
         trailing = arr.shape[2:]
 
