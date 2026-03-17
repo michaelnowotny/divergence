@@ -127,6 +127,13 @@ class TestKNNEntropy:
         np.testing.assert_allclose(h_k5, h_k10, rtol=0.2)
         np.testing.assert_allclose(h_k3, h_k10, rtol=0.2)
 
+    def test_nonnegative(self):
+        """Differential entropy of a normal should be positive."""
+        rng = np.random.default_rng(42)
+        samples = rng.standard_normal(3000)
+        h = knn_entropy(samples, k=5)
+        assert h > 0
+
 
 # ===========================================================================
 # TestKSGMutualInformation
@@ -177,6 +184,18 @@ class TestKSGMutualInformation:
         with pytest.raises(ValueError, match="algorithm must be 1 or 2"):
             ksg_mutual_information(x, y, algorithm=3)
 
+    def test_base_scaling(self):
+        """MI in bits = MI in nats / ln(2)."""
+        rng = np.random.default_rng(42)
+        n = 3000
+        rho = 0.5
+        z = rng.standard_normal(n)
+        x = z
+        y = rho * z + np.sqrt(1 - rho**2) * rng.standard_normal(n)
+        mi_nats = ksg_mutual_information(x, y, k=5, base=np.e)
+        mi_bits = ksg_mutual_information(x, y, k=5, base=2.0)
+        assert mi_bits == pytest.approx(mi_nats / np.log(2), rel=1e-6)
+
 
 # ===========================================================================
 # TestKNNKLDivergence
@@ -202,3 +221,12 @@ class TestKNNKLDivergence:
         expected = analytical_normal_kl(mu1=0.0, sigma1=1.0, mu2=1.0, sigma2=1.5)
         estimated = knn_kl_divergence(normal_01_samples, normal_shifted_samples, k=5)
         np.testing.assert_allclose(estimated, expected, rtol=0.3)
+
+    def test_base_scaling(self):
+        """KL in bits = KL in nats / ln(2)."""
+        rng = np.random.default_rng(42)
+        p = rng.normal(0, 1, 2000)
+        q = rng.normal(0.5, 1.2, 2000)
+        kl_nats = knn_kl_divergence(p, q, k=5, base=np.e)
+        kl_bits = knn_kl_divergence(p, q, k=5, base=2.0)
+        assert kl_bits == pytest.approx(kl_nats / np.log(2), rel=1e-6)

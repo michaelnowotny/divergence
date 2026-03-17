@@ -184,6 +184,12 @@ class TestRenyiEntropy:
             h = renyi_entropy(sample, alpha=alpha, base=np.e, discrete=True)
             assert h >= -1e-10, f"H_{alpha} = {h} is negative"
 
+    def test_invalid_alpha_raises(self):
+        """Alpha < 0 should raise ValueError."""
+        sample = np.array([0, 1, 2, 1, 0])
+        with pytest.raises(ValueError):
+            renyi_entropy(sample, alpha=-1, discrete=True)
+
 
 # ---------------------------------------------------------------------------
 # TestRenyiDivergence
@@ -266,3 +272,27 @@ class TestRenyiDivergence:
                 f"D_{alphas[i]} = {divergences[i]} > D_{alphas[i + 1]} = "
                 f"{divergences[i + 1]}"
             )
+
+    def test_base_scaling(self, discrete_samples):
+        """Renyi divergence in bits = nats / ln(2)."""
+        d_nats = renyi_divergence(
+            discrete_samples["sample_p"],
+            discrete_samples["sample_q"],
+            alpha=2,
+            base=np.e,
+            discrete=True,
+        )
+        d_bits = renyi_divergence(
+            discrete_samples["sample_p"],
+            discrete_samples["sample_q"],
+            alpha=2,
+            base=2,
+            discrete=True,
+        )
+        assert d_bits == pytest.approx(d_nats / np.log(2), rel=1e-6)
+
+    def test_invalid_alpha_raises(self):
+        """Alpha <= 0 should raise ValueError."""
+        sample = np.array([0, 1, 2, 1, 0])
+        with pytest.raises(ValueError):
+            renyi_divergence(sample, sample, alpha=-1, discrete=True)

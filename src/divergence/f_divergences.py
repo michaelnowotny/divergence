@@ -149,6 +149,12 @@ def f_divergence(
     float
         The estimated f-divergence D_f(P || Q).
 
+    Raises
+    ------
+    ValueError
+        If ``discrete=True`` and P has positive mass where Q has zero mass
+        (P is not absolutely continuous with respect to Q).
+
     Notes
     -----
     Different choices of f yield well-known divergences:
@@ -575,6 +581,11 @@ def cressie_read_divergence(
     -------
     float
         Cressie-Read divergence, in [0, +inf).
+
+    Raises
+    ------
+    ValueError
+        If ``discrete=True`` and P has positive mass where Q has zero mass.
 
     Notes
     -----
