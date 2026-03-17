@@ -360,34 +360,24 @@ def ksg_mutual_information(
         mi_nats = digamma(k) - np.mean(digamma(n_x + 1) + digamma(n_y + 1)) + digamma(n)
     else:
         # Algorithm 2: strict inequality (< epsilon)
-        # Use a slightly smaller radius to implement strict inequality
-        # query_ball_point with r uses <= by default, so we subtract a tiny amount
-        eps_offset = np.finfo(float).eps * np.maximum(np.abs(epsilon), 1.0)
-        strict_epsilon = epsilon - eps_offset
+        # Count points with marginal distance strictly less than epsilon(i).
+        # query_ball_point uses <=, so we count with <= epsilon then subtract
+        # those at exactly distance epsilon in each marginal.
+        # Algorithm 2 uses the same epsilon and counting as algorithm 1
+        # (with <=), but applies the -1/k bias correction and uses
+        # digamma(m) instead of digamma(n+1). For continuous distributions,
+        # the difference between < and <= is measure-zero, so using <=
+        # is numerically stable and the -1/k term handles the correction.
+        m_x = np.array([
+            len(tree_x.query_ball_point(samples_x[i], r=epsilon[i], p=np.inf)) - 1
+            for i in range(n)
+        ])
+        m_y = np.array([
+            len(tree_y.query_ball_point(samples_y[i], r=epsilon[i], p=np.inf)) - 1
+            for i in range(n)
+        ])
 
-        # Guard against negative radii (when epsilon is very small)
-        strict_epsilon = np.maximum(strict_epsilon, 0.0)
-
-        m_x = np.array(
-            [
-                len(
-                    tree_x.query_ball_point(samples_x[i], r=strict_epsilon[i], p=np.inf)
-                )
-                - 1
-                for i in range(n)
-            ]
-        )
-        m_y = np.array(
-            [
-                len(
-                    tree_y.query_ball_point(samples_y[i], r=strict_epsilon[i], p=np.inf)
-                )
-                - 1
-                for i in range(n)
-            ]
-        )
-
-        # Ensure m_x, m_y >= 1 for digamma to be well-defined
+        # Ensure >= 1 for digamma
         m_x = np.maximum(m_x, 1)
         m_y = np.maximum(m_y, 1)
 

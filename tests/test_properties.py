@@ -6,7 +6,6 @@ tests miss.
 """
 
 import numpy as np
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -143,17 +142,9 @@ class TestDiscreteRelativeEntropy:
     @given(sample=discrete_sample)
     @settings(max_examples=20, deadline=None)
     def test_identity(self, sample):
-        """D_KL(P||P) = 0.
-
-        Note: _construct_frequencies_for_two_samples has a known bug where
-        it can raise ValueError when both samples are identical but have
-        certain value distributions. This is tracked for fixing.
-        """
-        try:
-            kl = discrete_relative_entropy(sample, sample)
-            assert np.isclose(kl, 0.0, atol=1e-10)
-        except ValueError:
-            pytest.xfail("Known bug in _construct_frequencies_for_two_samples")
+        """D_KL(P||P) = 0."""
+        kl = discrete_relative_entropy(sample, sample)
+        assert np.isclose(kl, 0.0, atol=1e-10)
 
     @given(samples=paired_discrete_samples())
     @settings(max_examples=20, deadline=None)
