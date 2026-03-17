@@ -103,10 +103,26 @@ def _get_divergence_fn(
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+def _get_groups(idata: tp.Any) -> list[str]:
+    """Return group names from an InferenceData or DataTree object.
+
+    Handles both ArviZ InferenceData (which has a ``.groups()`` method)
+    and raw xarray DataTree (which has a ``.children`` mapping).
+    """
+    # xarray DataTree: .children is a Mapping of child name -> DataTree
+    if hasattr(idata, "children"):
+        return list(idata.children)
+    # ArviZ InferenceData: .groups() is a method returning a list of str
+    if hasattr(idata, "groups"):
+        groups = idata.groups
+        return list(groups()) if callable(groups) else list(groups)
+    return list(idata.keys())
+
+
 def _validate_group(idata: tp.Any, group: str) -> None:
     """Check that *idata* contains *group*, raise with available groups."""
-    if group not in idata.children:
-        available = [c for c in idata.children]
+    available = _get_groups(idata)
+    if group not in available:
         raise ValueError(
             f"InferenceData does not contain group '{group}'. "
             f"Available groups: {available}"
