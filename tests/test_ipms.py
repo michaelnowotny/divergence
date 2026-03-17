@@ -139,6 +139,14 @@ class TestWasserstein:
         w_qr = wasserstein_distance(samples_q, samples_r, p=1)
         assert w_pr <= w_pq + w_qr + 1e-10
 
+    def test_invalid_p_raises(self):
+        """p < 1 should raise ValueError."""
+        rng = np.random.default_rng(42)
+        p_samp = rng.normal(0, 1, 100)
+        q_samp = rng.normal(0, 1, 100)
+        with pytest.raises(ValueError, match="p must be"):
+            wasserstein_distance(p_samp, q_samp, p=0)
+
 
 # ---------------------------------------------------------------------------
 # Maximum Mean Discrepancy
@@ -202,6 +210,23 @@ class TestMMD:
     def test_multidimensional(self, mmd_samples_2d_p, mmd_samples_2d_q):
         mmd2 = maximum_mean_discrepancy(mmd_samples_2d_p, mmd_samples_2d_q)
         assert mmd2 > 0.01
+
+    def test_symmetric(self):
+        """MMD(P,Q) should approximately equal MMD(Q,P)."""
+        rng = np.random.default_rng(42)
+        p = rng.normal(0, 1, 500)
+        q = rng.normal(1, 1, 500)
+        mmd_pq = maximum_mean_discrepancy(p, q)
+        mmd_qp = maximum_mean_discrepancy(q, p)
+        assert mmd_pq == pytest.approx(mmd_qp, rel=0.1)
+
+    def test_invalid_kernel_raises(self):
+        """Invalid kernel name should raise ValueError."""
+        rng = np.random.default_rng(42)
+        p = rng.normal(0, 1, 100)
+        q = rng.normal(0, 1, 100)
+        with pytest.raises(ValueError, match="rbf"):
+            maximum_mean_discrepancy(p, q, kernel="invalid")
 
 
 # ---------------------------------------------------------------------------

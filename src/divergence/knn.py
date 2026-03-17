@@ -13,6 +13,17 @@ knn_kl_divergence
     Wang et al. (2009) KL divergence estimator using kNN distances.
 ksg_mutual_information
     Kraskov-Stogbauer-Grassberger mutual information estimator (algorithms 1 and 2).
+
+References
+----------
+.. [1] Kozachenko, L. F., & Leonenko, N. N. (1987). "Sample estimate of the
+   entropy of a random vector." *Problems of Information Transmission*, 23(2),
+   9-16.
+.. [2] Wang, Q., Kulkarni, S. R., & Verdu, S. (2009). "Divergence estimation
+   for multidimensional densities via k-nearest-neighbor distances." *IEEE
+   Transactions on Information Theory*, 55(5), 2392-2405.
+.. [3] Kraskov, A., Stogbauer, H., & Grassberger, P. (2004). "Estimating
+   mutual information." *Physical Review E*, 69(6), 066138.
 """
 
 import numpy as np
@@ -89,6 +100,11 @@ def knn_entropy(
     -------
     float
         Estimated differential entropy.
+
+    Raises
+    ------
+    ValueError
+        If ``samples`` has more than 2 dimensions.
 
     Notes
     -----
@@ -198,7 +214,8 @@ def knn_kl_divergence(
     >>> p = rng.normal(0, 1, size=3000)
     >>> q = rng.normal(0, 1, size=3000)
     >>> knn_kl_divergence(p, q, k=5)  # Should be close to 0
-    ...
+    >>> abs(knn_kl_divergence(p, q, k=5)) < 0.5
+    True
 
     References
     ----------

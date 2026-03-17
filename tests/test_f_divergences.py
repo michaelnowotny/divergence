@@ -282,6 +282,16 @@ class TestJeffreys:
         kl_qp = _kl_from_frequencies(freq_q, freq_p)
         assert dj == pytest.approx(kl_pq + kl_qp, rel=1e-10)
 
+    def test_base_scaling(self, discrete_samples):
+        """Jeffreys in bits = Jeffreys in nats / ln(2)."""
+        dj_nats = jeffreys_divergence(
+            discrete_samples["p"], discrete_samples["q"], discrete=True, base=np.e
+        )
+        dj_bits = jeffreys_divergence(
+            discrete_samples["p"], discrete_samples["q"], discrete=True, base=2.0
+        )
+        assert dj_bits == pytest.approx(dj_nats / np.log(2), rel=1e-10)
+
 
 # ---------------------------------------------------------------------------
 # General f-divergence
@@ -314,6 +324,14 @@ class TestFDivergenceGeneral:
         s = np.array([0, 1, 2, 1, 0])
         fd = f_divergence(s, s, lambda t: (t - 1) ** 2, discrete=True)
         assert fd == pytest.approx(0.0, abs=1e-10)
+
+    def test_continuous_path(self):
+        """f-divergence with f(t)=(t-1)^2 should work for continuous data."""
+        rng = np.random.default_rng(42)
+        p = rng.normal(0, 1, 5000)
+        q = rng.normal(0.5, 1, 5000)
+        fd = f_divergence(p, q, lambda t: (t - 1) ** 2)
+        assert fd >= -0.01  # non-negative (approximately)
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +373,27 @@ class TestCressieRead:
             discrete_samples["p"], discrete_samples["q"], discrete=True
         )
         assert cr == pytest.approx(chi2 / 2, rel=1e-6)
+
+    def test_continuous_path(self):
+        """Cressie-Read should work for continuous data."""
+        rng = np.random.default_rng(42)
+        p = rng.normal(0, 1, 5000)
+        q = rng.normal(0.5, 1, 5000)
+        cr = cressie_read_divergence(p, q, lambda_param=2 / 3)
+        assert cr >= -0.01
+
+    def test_lambda_minus1_reverse_kl(self):
+        """lambda = -1 should give reverse KL."""
+        p = np.array([0, 0, 0, 1, 1, 1, 1, 2, 2, 2])
+        q = np.array([0, 0, 1, 1, 1, 2, 2, 2, 2, 2])
+        cr = cressie_read_divergence(p, q, lambda_param=-1.0, discrete=True)
+        # Should equal KL(Q||P) — reverse KL
+        from divergence.f_divergences import _aligned_frequencies
+
+        freq_p, freq_q = _aligned_frequencies(p, q)
+        mask = (freq_q > 0) & (freq_p > 0)
+        rkl = float(np.sum(np.where(mask, freq_q * np.log(freq_q / freq_p), 0.0)))
+        assert cr == pytest.approx(rkl, rel=1e-4)
 
 
 # ---------------------------------------------------------------------------

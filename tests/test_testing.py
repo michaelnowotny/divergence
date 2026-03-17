@@ -118,3 +118,15 @@ class TestTwoSampleTest:
                 different_distributions["q"],
                 method="invalid",
             )
+
+    def test_method_kl_knn(self, different_distributions):
+        """kl_knn method should detect different distributions."""
+        result = two_sample_test(
+            different_distributions["p"],
+            different_distributions["q"],
+            method="kl_knn",
+            n_permutations=100,
+            seed=42,
+            k=3,
+        )
+        assert result.p_value < 0.05

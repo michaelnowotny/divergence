@@ -5,6 +5,14 @@ metrics: energy distance, Wasserstein distance, maximum mean discrepancy (MMD),
 and sliced Wasserstein distance. Unlike information-theoretic divergences, these
 metrics operate directly on sample point clouds and do not require density
 estimation or logarithm base selection.
+
+References
+----------
+.. [1] A. Muller, "Integral probability metrics and their generating classes of
+   functions," Advances in Applied Probability, 29(2), 429-443, 1997.
+.. [2] B. K. Sriperumbudur, K. Fukumizu, A. Gretton, B. Scholkopf, G. R. G.
+   Lanckriet, "On the empirical estimation of integral probability metrics,"
+   Electronic Journal of Statistics, 6, 1550-1599, 2012.
 """
 
 import numpy as np
