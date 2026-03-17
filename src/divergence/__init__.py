@@ -9,6 +9,7 @@ from .bayesian import (
     prior_sensitivity,
     uncertainty_decomposition,
 )
+from .causal import transfer_entropy
 from .continuous import (
     conditional_entropy_from_densities_with_support,
     conditional_entropy_from_kde,
@@ -61,10 +62,17 @@ from .knn import (
     knn_kl_divergence,
     ksg_mutual_information,
 )
+from .multivariate import (
+    normalized_mutual_information,
+    total_correlation,
+    variation_of_information,
+)
 from .renyi import (
     renyi_divergence,
     renyi_entropy,
 )
+from .score_based import fisher_divergence, kernel_stein_discrepancy
+from .sinkhorn import sinkhorn_divergence
 from .testing import two_sample_test
 
 __all__ = [
@@ -105,6 +113,8 @@ __all__ = [
     # Unified API
     "entropy_from_samples",
     "f_divergence",
+    # Score-based measures
+    "fisher_divergence",
     "information_gain",
     "intersection",
     "jeffreys_divergence",
@@ -114,6 +124,8 @@ __all__ = [
     "joint_entropy_from_densities_with_support",
     "joint_entropy_from_kde",
     "joint_entropy_from_samples",
+    # Score-based measures
+    "kernel_stein_discrepancy",
     # kNN estimators
     "knn_entropy",
     "knn_kl_divergence",
@@ -123,6 +135,8 @@ __all__ = [
     "mutual_information_from_densities_with_support",
     "mutual_information_from_kde",
     "mutual_information_from_samples",
+    # Multivariate dependence
+    "normalized_mutual_information",
     "prior_sensitivity",
     "relative_entropy_from_densities_with_support",
     "relative_entropy_from_kde",
@@ -130,11 +144,19 @@ __all__ = [
     # Rényi family
     "renyi_divergence",
     "renyi_entropy",
+    # Sinkhorn divergence
+    "sinkhorn_divergence",
     "sliced_wasserstein_distance",
     "squared_hellinger_distance",
+    # Multivariate dependence
+    "total_correlation",
     "total_variation_distance",
+    # Causal/temporal
+    "transfer_entropy",
     "two_sample_test",
     "uncertainty_decomposition",
+    # Multivariate dependence
+    "variation_of_information",
     "wasserstein_distance",
 ]
 
