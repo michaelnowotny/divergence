@@ -130,7 +130,7 @@ def _construct_frequencies_for_two_samples(
 
         if (
             sorted_q_realizations[q_source_index] != realization
-            or sorted_q_realizations[q_source_index] == 0.0
+            or sorted_q_frequencies[q_source_index] == 0.0
         ):
             raise ValueError("q(x) is zero but p(x) is not")
             # if sorted_p_frequencies[p_source_index] != 0.0:  # we know that is true

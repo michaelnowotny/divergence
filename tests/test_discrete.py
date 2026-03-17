@@ -355,3 +355,20 @@ def test_discrete_mutual_information_and_conditional_entropy(
 
     assert np.isclose(mutual_information, entropy_x - conditional_entropy_of_x_given_y)
     assert np.isclose(mutual_information, entropy_y - conditional_entropy_of_y_given_x)
+
+
+def test_relative_entropy_with_zero_valued_categories():
+    """Regression test: discrete_relative_entropy should work when category
+    labels include 0, as long as both distributions have the same support.
+
+    Previously, _construct_frequencies_for_two_samples compared the
+    realization *value* to 0.0 instead of the realization *frequency*,
+    causing a spurious ValueError for any distribution with a category
+    labeled 0.
+    """
+    p = np.array([0, 0, 0, 1, 1, 1, 1, 2, 2, 2])
+    q = np.array([0, 0, 1, 1, 1, 2, 2, 2, 2, 2])
+    # Should not raise — both have categories {0, 1, 2}
+    kl = discrete_relative_entropy(p, q)
+    assert isinstance(kl, float)
+    assert kl >= 0

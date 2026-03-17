@@ -58,3 +58,6 @@ ignore = ["E501"]  # line length in docstrings handled by formatter
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::pytest.PytestCollectionWarning:.*_types.*",
+]
