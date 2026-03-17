@@ -8,15 +8,13 @@ dynamic = ["version"]
 description = "Information Theoretic Measures of Entropy and Divergence"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [
     {name = "Michael Christoph Nowotny", email = "nowotnym@gmail.com"},
 ]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -54,7 +52,7 @@ fallback_version = "0.5.0.dev0"
 where = ["src"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py312"
 line-length = 88
 src = ["src", "tests"]
 
