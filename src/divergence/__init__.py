@@ -1,5 +1,6 @@
 import numpy as np
 
+from ._types import TestResult
 from .continuous import (
     conditional_entropy_from_densities_with_support,
     conditional_entropy_from_kde,
@@ -33,8 +34,36 @@ from .discrete import (
     discrete_mutual_information,
     discrete_relative_entropy,
 )
+from .f_divergences import (
+    chi_squared_divergence,
+    cressie_read_divergence,
+    f_divergence,
+    jeffreys_divergence,
+    squared_hellinger_distance,
+    total_variation_distance,
+)
+from .ipms import (
+    energy_distance,
+    maximum_mean_discrepancy,
+    sliced_wasserstein_distance,
+    wasserstein_distance,
+)
+from .knn import (
+    knn_entropy,
+    knn_kl_divergence,
+    ksg_mutual_information,
+)
+from .renyi import (
+    renyi_divergence,
+    renyi_entropy,
+)
+from .testing import two_sample_test
 
 __all__ = [
+    # Two-sample testing
+    "TestResult",
+    # f-divergences
+    "chi_squared_divergence",
     "conditional_entropy_from_densities_with_support",
     "conditional_entropy_from_kde",
     "conditional_entropy_from_samples",
@@ -46,6 +75,7 @@ __all__ = [
     "continuous_joint_entropy_from_samples",
     "continuous_mutual_information_from_samples",
     "continuous_relative_entropy_from_sample",
+    "cressie_read_divergence",
     "cross_entropy_from_densities_with_support",
     "cross_entropy_from_kde",
     "cross_entropy_from_samples",
@@ -57,23 +87,40 @@ __all__ = [
     "discrete_joint_entropy",
     "discrete_mutual_information",
     "discrete_relative_entropy",
+    # IPMs
+    "energy_distance",
     "entropy_from_density_with_support",
     "entropy_from_kde",
     # Unified API
     "entropy_from_samples",
+    "f_divergence",
     "intersection",
+    "jeffreys_divergence",
     "jensen_shannon_divergence_from_densities_with_support",
     "jensen_shannon_divergence_from_kde",
     "jensen_shannon_divergence_from_samples",
     "joint_entropy_from_densities_with_support",
     "joint_entropy_from_kde",
     "joint_entropy_from_samples",
+    # kNN estimators
+    "knn_entropy",
+    "knn_kl_divergence",
+    "ksg_mutual_information",
+    "maximum_mean_discrepancy",
     "mutual_information_from_densities_with_support",
     "mutual_information_from_kde",
     "mutual_information_from_samples",
     "relative_entropy_from_densities_with_support",
     "relative_entropy_from_kde",
     "relative_entropy_from_samples",
+    # Rényi family
+    "renyi_divergence",
+    "renyi_entropy",
+    "sliced_wasserstein_distance",
+    "squared_hellinger_distance",
+    "total_variation_distance",
+    "two_sample_test",
+    "wasserstein_distance",
 ]
 
 
