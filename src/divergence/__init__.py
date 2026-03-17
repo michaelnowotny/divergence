@@ -1,10 +1,13 @@
 import numpy as np
 
-from ._types import TestResult
+from ._types import ChainKSDResult, ChainTestResult, MixingDiagnostic, TestResult
 from .bayesian import (
     bayesian_surprise,
     chain_divergence,
+    chain_ksd,
+    chain_two_sample_test,
     information_gain,
+    mixing_diagnostic,
     model_divergence,
     prior_sensitivity,
     uncertainty_decomposition,
@@ -76,11 +79,17 @@ from .sinkhorn import sinkhorn_divergence
 from .testing import two_sample_test
 
 __all__ = [
-    # Two-sample testing
+    # Result types
+    "ChainKSDResult",
+    "ChainTestResult",
+    "MixingDiagnostic",
     "TestResult",
     # Bayesian diagnostics (ArviZ integration)
     "bayesian_surprise",
     "chain_divergence",
+    # Convergence diagnostics
+    "chain_ksd",
+    "chain_two_sample_test",
     # f-divergences
     "chi_squared_divergence",
     "conditional_entropy_from_densities_with_support",
@@ -131,6 +140,8 @@ __all__ = [
     "knn_kl_divergence",
     "ksg_mutual_information",
     "maximum_mean_discrepancy",
+    # Convergence diagnostics
+    "mixing_diagnostic",
     "model_divergence",
     "mutual_information_from_densities_with_support",
     "mutual_information_from_kde",

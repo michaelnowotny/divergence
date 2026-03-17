@@ -12,7 +12,10 @@ az = pytest.importorskip("arviz")
 from divergence.bayesian import (  # noqa: E402
     bayesian_surprise,
     chain_divergence,
+    chain_ksd,
+    chain_two_sample_test,
     information_gain,
+    mixing_diagnostic,
     model_divergence,
     prior_sensitivity,
     uncertainty_decomposition,
@@ -300,3 +303,208 @@ class TestModelDivergence:
         idata2 = az.from_dict({"posterior": {"mu": rng.normal(0, 1, (2, 500))}})
         with pytest.raises(ValueError, match="does not contain group"):
             model_divergence(idata1, idata2)
+
+
+# ---------------------------------------------------------------------------
+# Convergence Diagnostic Fixtures
+# ---------------------------------------------------------------------------
+def _standard_normal_score(x):
+    """Score function for N(0, 1): s(x) = -x."""
+    return -x
+
+
+@pytest.fixture(scope="module")
+def converged_chains_idata():
+    """4 chains all from N(0, 1) — well-mixed, independent RNG."""
+    _rng = np.random.default_rng(123)
+    return az.from_dict({"posterior": {"mu": _rng.normal(0, 1, (4, 500))}})
+
+
+@pytest.fixture(scope="module")
+def divergent_chains_idata(rng):
+    """4 chains: chains 0,1 from N(0,1), chains 2,3 from N(5,1)."""
+    chains = np.empty((4, 500))
+    chains[0] = rng.normal(0, 1, 500)
+    chains[1] = rng.normal(0, 1, 500)
+    chains[2] = rng.normal(5, 1, 500)
+    chains[3] = rng.normal(5, 1, 500)
+    return az.from_dict({"posterior": {"mu": chains}})
+
+
+@pytest.fixture(scope="module")
+def nonstationary_idata(rng):
+    """Chains with a linear trend: mean drifts from 0 to 5 over the run."""
+    n_draws = 500
+    t = np.linspace(0, 5, n_draws)
+    chains = np.empty((2, n_draws))
+    for c in range(2):
+        chains[c] = t + 0.3 * rng.standard_normal(n_draws)
+    return az.from_dict({"posterior": {"mu": chains}})
+
+
+@pytest.fixture(scope="module")
+def single_chain_idata(rng):
+    """Single chain for edge case testing."""
+    return az.from_dict({"posterior": {"mu": rng.normal(0, 1, (1, 500))}})
+
+
+# ---------------------------------------------------------------------------
+# TestChainKSD
+# ---------------------------------------------------------------------------
+class TestChainKSD:
+    """Tests for chain_ksd convergence diagnostic."""
+
+    def test_matching_score_low_ksd(self, converged_chains_idata):
+        """Chains from N(0,1) with correct score -> KSD near 0."""
+        result = chain_ksd(
+            converged_chains_idata, _standard_normal_score, var_names=["mu"]
+        )
+        for v in result["mu"].ksd_per_chain:
+            assert v < 0.15
+
+    def test_wrong_score_positive_ksd(self, converged_chains_idata):
+        """N(0,1) chains with N(5,1) score -> positive KSD."""
+        wrong_score = lambda x: -(x - 5.0)  # noqa: E731
+        result = chain_ksd(converged_chains_idata, wrong_score, var_names=["mu"])
+        assert result["mu"].ksd_pooled > 0.5
+
+    def test_split_produces_arrays(self, converged_chains_idata):
+        """split=True should fill ksd_split_first and ksd_split_second."""
+        result = chain_ksd(converged_chains_idata, _standard_normal_score, split=True)
+        r = result["mu"]
+        assert r.ksd_split_first is not None
+        assert r.ksd_split_second is not None
+        assert r.ksd_split_first.shape == (4,)
+        assert r.ksd_split_second.shape == (4,)
+
+    def test_no_split(self, converged_chains_idata):
+        """split=False should return None for split fields."""
+        result = chain_ksd(converged_chains_idata, _standard_normal_score, split=False)
+        assert result["mu"].ksd_split_first is None
+        assert result["mu"].ksd_split_second is None
+
+    def test_single_chain(self, single_chain_idata):
+        """Should work with a single chain."""
+        result = chain_ksd(single_chain_idata, _standard_normal_score)
+        assert result["mu"].ksd_per_chain.shape == (1,)
+        assert isinstance(result["mu"].ksd_pooled, float)
+
+    def test_rbf_kernel(self, converged_chains_idata):
+        """RBF kernel should also work."""
+        result = chain_ksd(
+            converged_chains_idata,
+            _standard_normal_score,
+            kernel="rbf",
+            var_names=["mu"],
+        )
+        assert all(np.isfinite(result["mu"].ksd_per_chain))
+
+
+# ---------------------------------------------------------------------------
+# TestChainTwoSampleTest
+# ---------------------------------------------------------------------------
+class TestChainTwoSampleTest:
+    """Tests for chain_two_sample_test convergence diagnostic."""
+
+    def test_converged_high_pvalues(self, converged_chains_idata):
+        """Well-mixed chains should have high p-values."""
+        result = chain_two_sample_test(
+            converged_chains_idata,
+            var_names=["mu"],
+            n_permutations=200,
+            seed=42,
+        )
+        assert result["mu"].min_p_value > 0.01
+        assert not result["mu"].any_significant
+
+    def test_divergent_low_pvalues(self, divergent_chains_idata):
+        """Divergent chains should have low p-values for cross-group pairs."""
+        result = chain_two_sample_test(
+            divergent_chains_idata,
+            var_names=["mu"],
+            n_permutations=200,
+            seed=42,
+        )
+        assert result["mu"].any_significant
+        assert result["mu"].min_p_value < 0.05
+
+    def test_matrix_shape(self, converged_chains_idata):
+        """Output matrices should be (n_chains, n_chains)."""
+        result = chain_two_sample_test(
+            converged_chains_idata,
+            var_names=["mu"],
+            n_permutations=50,
+            seed=42,
+        )
+        assert result["mu"].p_value_matrix.shape == (4, 4)
+        assert result["mu"].statistic_matrix.shape == (4, 4)
+
+    def test_matrix_symmetry(self, converged_chains_idata):
+        """P-value and statistic matrices should be symmetric."""
+        result = chain_two_sample_test(
+            converged_chains_idata,
+            var_names=["mu"],
+            n_permutations=50,
+            seed=42,
+        )
+        np.testing.assert_array_equal(
+            result["mu"].p_value_matrix, result["mu"].p_value_matrix.T
+        )
+
+    def test_diagonal_pvalues_one(self, converged_chains_idata):
+        """Diagonal p-values should be 1.0."""
+        result = chain_two_sample_test(
+            converged_chains_idata,
+            var_names=["mu"],
+            n_permutations=50,
+            seed=42,
+        )
+        np.testing.assert_array_equal(np.diag(result["mu"].p_value_matrix), 1.0)
+
+    def test_energy_method(self, divergent_chains_idata):
+        """Energy distance method should also detect divergent chains."""
+        result = chain_two_sample_test(
+            divergent_chains_idata,
+            var_names=["mu"],
+            method="energy",
+            n_permutations=200,
+            seed=42,
+        )
+        assert result["mu"].any_significant
+
+
+# ---------------------------------------------------------------------------
+# TestMixingDiagnostic
+# ---------------------------------------------------------------------------
+class TestMixingDiagnostic:
+    """Tests for mixing_diagnostic convergence diagnostic."""
+
+    def test_stationary_low_te(self, converged_chains_idata):
+        """Stationary chains should have low stationarity TE."""
+        result = mixing_diagnostic(converged_chains_idata, var_names=["mu"])
+        for te in result["mu"].stationarity_te:
+            assert te < 0.3
+
+    def test_nonstationary_higher_cross_te(self, nonstationary_idata):
+        """Non-stationary chains sharing a trend should have elevated cross-chain TE."""
+        result = mixing_diagnostic(nonstationary_idata, var_names=["mu"])
+        # Chains sharing a common trend have high cross-chain TE
+        assert np.mean(result["mu"].cross_chain_te) > 0.05
+
+    def test_independent_low_cross_te(self, converged_chains_idata):
+        """Independent chains should have low cross-chain TE."""
+        result = mixing_diagnostic(converged_chains_idata, var_names=["mu"])
+        for te in result["mu"].cross_chain_te:
+            assert te < 0.3
+
+    def test_output_shapes(self, converged_chains_idata):
+        """Output arrays should have correct shapes."""
+        result = mixing_diagnostic(converged_chains_idata, var_names=["mu"])
+        assert result["mu"].stationarity_te.shape == (4,)
+        assert result["mu"].cross_chain_te.shape == (3,)
+
+    def test_single_chain_cross_te(self, single_chain_idata):
+        """Single chain should produce empty cross-chain TE."""
+        result = mixing_diagnostic(single_chain_idata, var_names=["mu"])
+        assert result["mu"].cross_chain_te.shape == (0,)
+        assert result["mu"].stationarity_te.shape == (1,)

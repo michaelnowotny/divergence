@@ -22,6 +22,9 @@ from __future__ import annotations
 import typing as tp
 
 import numpy as np
+
+if tp.TYPE_CHECKING:
+    from divergence._types import ChainKSDResult, ChainTestResult, MixingDiagnostic
 from scipy.special import logsumexp
 
 from divergence.f_divergences import (
@@ -785,4 +788,430 @@ def uncertainty_decomposition(
             "aleatoric": aleatoric,
             "epistemic": epistemic,
         }
+    return results
+
+
+# ---------------------------------------------------------------------------
+# MCMC Convergence Diagnostics
+# ---------------------------------------------------------------------------
+def chain_ksd(
+    idata: tp.Any,
+    score_fn: tp.Callable[[np.ndarray], np.ndarray],
+    *,
+    var_names: list[str] | None = None,
+    group: str = "posterior",
+    kernel: str = "imq",
+    bandwidth: float | None = None,
+    split: bool = True,
+) -> dict[str, ChainKSDResult]:
+    r"""Compute per-chain kernel Stein discrepancy against the target.
+
+    Unlike :func:`chain_divergence`, which tests whether chains agree
+    *with each other*, this function tests whether each chain has
+    converged to the **correct target distribution**.  It is the only
+    diagnostic that can detect the situation where *all* chains have
+    converged to the *wrong* distribution.
+
+    The KSD requires only the *score function*
+    :math:`\nabla \log \pi(x)` of the target, which is available as a
+    byproduct of gradient-based MCMC (HMC, NUTS).
+
+    Parameters
+    ----------
+    idata : DataTree or InferenceData
+        ArviZ inference data containing the specified *group*.
+    score_fn : callable
+        Score function of the target distribution.  Takes an array of
+        shape ``(n, d)`` and returns an array of shape ``(n, d)`` with
+        :math:`\nabla_x \log \pi(x)` at each point.  For scalar
+        parameters (``d = 1``), the input and output shapes may be
+        ``(n, 1)``.
+    var_names : list of str, optional
+        Parameters to analyze.  If ``None``, all parameters in the
+        group are used.
+    group : str, optional
+        InferenceData group.  Default is ``"posterior"``.
+    kernel : str, optional
+        Kernel for the Stein operator: ``"imq"`` (inverse multiquadric,
+        default) or ``"rbf"`` (Gaussian).  The IMQ kernel provides
+        provable convergence control guarantees [1]_.
+    bandwidth : float or None, optional
+        Kernel bandwidth / scale parameter.  If ``None``, the median
+        heuristic is used.
+    split : bool, optional
+        If ``True`` (default), additionally compute KSD for the first
+        and second halves of each chain.  This is analogous to
+        split-:math:`\hat{R}` and can detect non-stationarity: if the
+        first-half KSD is much larger than the second-half KSD, the
+        chain was still converging during the first half.
+
+    Returns
+    -------
+    dict[str, ChainKSDResult]
+        Maps parameter names to :class:`~divergence.ChainKSDResult`
+        named tuples with fields ``ksd_per_chain``,
+        ``ksd_split_first``, ``ksd_split_second``, and ``ksd_pooled``.
+
+    Raises
+    ------
+    ImportError
+        If ArviZ is not installed.
+    ValueError
+        If the specified group is missing from *idata*.
+
+    Notes
+    -----
+    For the IMQ kernel :math:`k(x,y) = (c^2 + \|x-y\|^2)^{-1/2}`,
+    Gorham and Mackey (2017) [1]_ proved that
+    :math:`\mathrm{KSD}(\mu_n, \pi) \to 0` implies
+    :math:`\mu_n \Rightarrow \pi` (weak convergence) and tightness of
+    :math:`\{\mu_n\}`.  This is strictly stronger than what
+    :math:`\hat{R}` can guarantee.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import arviz as az
+    >>> rng = np.random.default_rng(42)
+    >>> idata = az.from_dict({
+    ...     "posterior": {"mu": rng.normal(0, 1, (4, 500))}
+    ... })
+    >>> result = chain_ksd(idata, lambda x: -x)
+    >>> result["mu"].ksd_pooled < 0.1
+    True
+
+    References
+    ----------
+    .. [1] Gorham, J. & Mackey, L. (2017). "Measuring sample quality
+       with kernels." *ICML*.
+    .. [2] Liu, Q., Lee, J., & Jordan, M. (2016). "A kernelized Stein
+       discrepancy for goodness-of-fit tests." *ICML*.
+    """
+    from divergence._types import ChainKSDResult
+    from divergence.score_based import kernel_stein_discrepancy
+
+    _import_arviz()
+    _validate_group(idata, group)
+    dataset = idata[group]
+    names = _get_var_names(dataset, var_names)
+
+    results: dict[str, ChainKSDResult] = {}
+    for name in names:
+        arr = dataset[name].values  # (chain, draw, ...)
+        n_chains, n_draws = arr.shape[:2]
+        trailing = arr.shape[2:]
+
+        ksd_per_chain = np.empty(n_chains)
+        ksd_split_first = np.empty(n_chains) if split else None
+        ksd_split_second = np.empty(n_chains) if split else None
+
+        for c in range(n_chains):
+            chain_samples = arr[c]  # (draw, ...)
+            if trailing:
+                chain_samples = chain_samples.reshape(n_draws, -1)
+            ksd_per_chain[c] = kernel_stein_discrepancy(
+                chain_samples, score_fn, kernel=kernel, bandwidth=bandwidth
+            )
+
+            if split:
+                mid = n_draws // 2
+                first = arr[c, :mid]
+                second = arr[c, mid:]
+                if trailing:
+                    first = first.reshape(mid, -1)
+                    second = second.reshape(n_draws - mid, -1)
+                ksd_split_first[c] = kernel_stein_discrepancy(
+                    first, score_fn, kernel=kernel, bandwidth=bandwidth
+                )
+                ksd_split_second[c] = kernel_stein_discrepancy(
+                    second, score_fn, kernel=kernel, bandwidth=bandwidth
+                )
+
+        # Pooled: all chains combined
+        pooled = _flatten_samples(dataset, name)
+        ksd_pooled = kernel_stein_discrepancy(
+            pooled, score_fn, kernel=kernel, bandwidth=bandwidth
+        )
+
+        results[name] = ChainKSDResult(
+            ksd_per_chain=ksd_per_chain,
+            ksd_split_first=ksd_split_first,
+            ksd_split_second=ksd_split_second,
+            ksd_pooled=float(ksd_pooled),
+        )
+    return results
+
+
+def chain_two_sample_test(
+    idata: tp.Any,
+    *,
+    var_names: list[str] | None = None,
+    method: str = "mmd",
+    group: str = "posterior",
+    n_permutations: int = 500,
+    seed: int | None = None,
+) -> dict[str, ChainTestResult]:
+    r"""Pairwise two-sample permutation tests between MCMC chains.
+
+    Upgrades :func:`chain_divergence` from raw divergence magnitudes to
+    **calibrated p-values**.  A small p-value for chains *i* and *j*
+    indicates that they are sampling from detectably different
+    distributions, suggesting a convergence failure.
+
+    Parameters
+    ----------
+    idata : DataTree or InferenceData
+        ArviZ inference data containing the specified *group*.
+    var_names : list of str, optional
+        Parameters to analyze.  If ``None``, all parameters are used.
+    method : str, optional
+        Test statistic: ``"mmd"`` (default), ``"energy"``, or
+        ``"kl_knn"``.  These correspond to the methods supported by
+        :func:`~divergence.two_sample_test`.
+    group : str, optional
+        InferenceData group.  Default is ``"posterior"``.
+    n_permutations : int, optional
+        Number of permutations for the null distribution.  Default is
+        500.  Higher values give more precise p-values at increased
+        computational cost.
+    seed : int or None, optional
+        Base random seed for reproducibility.  Per-pair seeds are
+        derived as ``seed + i * n_chains + j`` to ensure statistical
+        independence across chain pairs while remaining reproducible.
+
+    Returns
+    -------
+    dict[str, ChainTestResult]
+        Maps parameter names to :class:`~divergence.ChainTestResult`
+        named tuples with fields ``p_value_matrix``,
+        ``statistic_matrix``, ``min_p_value``, and ``any_significant``.
+
+    Raises
+    ------
+    ImportError
+        If ArviZ is not installed.
+    ValueError
+        If the specified group is missing or *method* is invalid.
+
+    Notes
+    -----
+    For well-mixed chains, all pairwise p-values should be large
+    (> 0.05).  If any pair has a small p-value, the chains are
+    sampling from detectably different distributions, indicating a
+    convergence problem.
+
+    The MMD test statistic is recommended as the default because it is
+    symmetric, works in any dimension, and is consistent against all
+    alternatives when using a characteristic kernel.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import arviz as az
+    >>> rng = np.random.default_rng(42)
+    >>> idata = az.from_dict({
+    ...     "posterior": {"mu": rng.normal(0, 1, (4, 500))}
+    ... })
+    >>> result = chain_two_sample_test(idata, n_permutations=200, seed=42)
+    >>> result["mu"].any_significant
+    False
+
+    References
+    ----------
+    .. [1] Gretton, A. et al. (2012). "A kernel two-sample test."
+       *JMLR*, 13, 723-773.
+    .. [2] Szekely, G. J. & Rizzo, M. L. (2004). "Testing for equal
+       distributions in high dimension." *InterStat*.
+    """
+    from divergence._types import ChainTestResult
+    from divergence.testing import two_sample_test
+
+    _import_arviz()
+    _validate_group(idata, group)
+    dataset = idata[group]
+    names = _get_var_names(dataset, var_names)
+
+    results: dict[str, ChainTestResult] = {}
+    for name in names:
+        arr = dataset[name].values  # (chain, draw, ...)
+        n_chains = arr.shape[0]
+
+        # Extract per-chain samples
+        chain_samples = []
+        for c in range(n_chains):
+            s = arr[c]  # (draw, ...) or (draw,)
+            if s.ndim > 1:
+                s = s.reshape(s.shape[0], -1)
+            chain_samples.append(s)
+
+        p_matrix = np.ones((n_chains, n_chains))
+        s_matrix = np.zeros((n_chains, n_chains))
+
+        for i in range(n_chains):
+            for j in range(i + 1, n_chains):
+                pair_seed = seed + i * n_chains + j if seed is not None else None
+                test_result = two_sample_test(
+                    chain_samples[i],
+                    chain_samples[j],
+                    method=method,
+                    n_permutations=n_permutations,
+                    seed=pair_seed,
+                )
+                p_matrix[i, j] = test_result.p_value
+                p_matrix[j, i] = test_result.p_value
+                s_matrix[i, j] = test_result.statistic
+                s_matrix[j, i] = test_result.statistic
+
+        triu_idx = np.triu_indices(n_chains, k=1)
+        min_p = float(np.min(p_matrix[triu_idx])) if n_chains > 1 else 1.0
+
+        results[name] = ChainTestResult(
+            p_value_matrix=p_matrix,
+            statistic_matrix=s_matrix,
+            min_p_value=min_p,
+            any_significant=min_p < 0.05,
+        )
+    return results
+
+
+def mixing_diagnostic(
+    idata: tp.Any,
+    *,
+    var_names: list[str] | None = None,
+    group: str = "posterior",
+    lag: int = 1,
+    knn_k: int = 5,
+) -> dict[str, MixingDiagnostic]:
+    r"""Diagnose chain mixing using transfer entropy.
+
+    Applies :func:`~divergence.transfer_entropy` to detect two types
+    of mixing failure:
+
+    1. **Non-stationarity within chains**: If the first half of a chain
+       predicts the second half (transfer entropy > 0), the chain has
+       not yet reached its stationary distribution.
+
+    2. **Spurious dependence between chains**: If one chain's trace
+       predicts another's (transfer entropy > 0), the chains are not
+       truly independent — indicating shared non-stationarity or
+       coupling artifacts.
+
+    Parameters
+    ----------
+    idata : DataTree or InferenceData
+        ArviZ inference data containing the specified *group*.
+    var_names : list of str, optional
+        Parameters to analyze.  If ``None``, all parameters are used.
+    group : str, optional
+        InferenceData group.  Default is ``"posterior"``.
+    lag : int, optional
+        Embedding dimension for the target series in the transfer
+        entropy computation.  Default is 1.
+    knn_k : int, optional
+        Number of nearest neighbors for the kNN entropy estimator
+        used internally by transfer entropy.  Default is 5.
+
+    Returns
+    -------
+    dict[str, MixingDiagnostic]
+        Maps parameter names to :class:`~divergence.MixingDiagnostic`
+        named tuples with fields ``stationarity_te`` (shape
+        ``(n_chains,)``) and ``cross_chain_te`` (shape
+        ``(n_chains - 1,)``).
+
+    Raises
+    ------
+    ImportError
+        If ArviZ is not installed.
+    ValueError
+        If the group is missing or chains are too short for the
+        requested embedding dimensions.
+
+    Notes
+    -----
+    For **vector parameters** (shape ``(chain, draw, K)``), transfer
+    entropy is computed for each of the *K* components separately and
+    the results are averaged.  This avoids the curse of dimensionality
+    in kNN entropy estimation.
+
+    Transfer entropy is related to Granger causality: for jointly
+    Gaussian processes the two are equivalent [2]_.  The key advantage
+    is that TE is fully nonparametric — it detects any form of directed
+    statistical dependence.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import arviz as az
+    >>> rng = np.random.default_rng(42)
+    >>> idata = az.from_dict({
+    ...     "posterior": {"mu": rng.normal(0, 1, (4, 500))}
+    ... })
+    >>> result = mixing_diagnostic(idata)
+    >>> result["mu"].stationarity_te.shape
+    (4,)
+
+    References
+    ----------
+    .. [1] Schreiber, T. (2000). "Measuring information transfer."
+       *Physical Review Letters*, 85(2), 461-464.
+    .. [2] Barnett, L., Barrett, A. B., & Seth, A. K. (2009). "Granger
+       causality and transfer entropy are equivalent for Gaussian
+       variables." *Physical Review Letters*, 103(23), 238701.
+    """
+    from divergence._types import MixingDiagnostic
+    from divergence.causal import transfer_entropy
+
+    _import_arviz()
+    _validate_group(idata, group)
+    dataset = idata[group]
+    names = _get_var_names(dataset, var_names)
+
+    results: dict[str, MixingDiagnostic] = {}
+    for name in names:
+        arr = dataset[name].values  # (chain, draw, ...)
+        n_chains, n_draws = arr.shape[:2]
+        trailing = arr.shape[2:]
+
+        # Validate chain length
+        min_half = max(1, lag) + knn_k + 2
+        if n_draws // 2 < min_half:
+            raise ValueError(
+                f"Variable '{name}' has {n_draws} draws per chain. "
+                f"Need at least {2 * min_half} for lag={lag}, knn_k={knn_k}."
+            )
+
+        def _te_1d(source: np.ndarray, target: np.ndarray) -> float:
+            return transfer_entropy(source, target, k=1, lag=lag, knn_k=knn_k)
+
+        def _te_maybe_multivariate(source: np.ndarray, target: np.ndarray) -> float:
+            if source.ndim == 1:
+                return _te_1d(source, target)
+            n_components = source.shape[1]
+            te_vals = [_te_1d(source[:, i], target[:, i]) for i in range(n_components)]
+            return float(np.mean(te_vals))
+
+        # Stationarity: TE from first half to second half of each chain
+        stationarity_te = np.empty(n_chains)
+        for c in range(n_chains):
+            trace = arr[c]  # (draw, ...)
+            if trailing:
+                trace = trace.reshape(n_draws, -1)
+            mid = n_draws // 2
+            stationarity_te[c] = _te_maybe_multivariate(trace[:mid], trace[mid:])
+
+        # Cross-chain: TE between consecutive chain pairs
+        cross_chain_te = np.empty(max(n_chains - 1, 0))
+        for c in range(n_chains - 1):
+            trace_a = arr[c]
+            trace_b = arr[c + 1]
+            if trailing:
+                trace_a = trace_a.reshape(n_draws, -1)
+                trace_b = trace_b.reshape(n_draws, -1)
+            cross_chain_te[c] = _te_maybe_multivariate(trace_a, trace_b)
+
+        results[name] = MixingDiagnostic(
+            stationarity_te=stationarity_te,
+            cross_chain_te=cross_chain_te,
+        )
     return results

@@ -16,6 +16,8 @@ References
    discrepancy for goodness-of-fit tests." *ICML*.
 .. [2] Chwialkowski, K., Strathmann, H., & Gretton, A. (2016). "A kernel
    test of goodness of fit." *ICML*.
+.. [3] Gorham, J. & Mackey, L. (2017). "Measuring sample quality with
+   kernels." *ICML*.
 """
 
 import numpy as np
@@ -174,20 +176,62 @@ def kernel_stein_discrepancy(
         Sample points, shape ``(n,)`` or ``(n, d)``.
     score_fn : callable
         Score function of the target distribution P. Takes array of shape
-        ``(n, d)`` and returns array of shape ``(n, d)``.
+        ``(n, d)`` and returns array of shape ``(n, d)`` with
+        :math:`\nabla \log p(x)` evaluated at each sample point.
     kernel : str, optional
-        Kernel function. Only ``"rbf"`` is supported. Default is ``"rbf"``.
+        Kernel function: ``"rbf"`` (Gaussian, default) or ``"imq"``
+        (inverse multiquadric). The IMQ kernel
+        :math:`k(x,y) = (c^2 + \|x-y\|^2)^{-1/2}` has provable
+        convergence control guarantees that the RBF kernel lacks.
     bandwidth : float or None, optional
-        Bandwidth for the RBF kernel. If None, uses the median heuristic.
+        Bandwidth parameter. For the RBF kernel this is :math:`\sigma`
+        in :math:`k(x,y) = \exp(-\|x-y\|^2 / (2\sigma^2))`. For the
+        IMQ kernel this is :math:`c` in
+        :math:`k(x,y) = (c^2 + \|x-y\|^2)^{-1/2}`. If ``None``, the
+        median heuristic is used for both kernels.
 
     Returns
     -------
     float
-        Squared KSD (U-statistic estimator). Close to 0 when samples come
-        from P.
+        Squared KSD (U-statistic estimator). Close to 0 when samples
+        come from P.
+
+    Raises
+    ------
+    ValueError
+        If ``kernel`` is not ``"rbf"`` or ``"imq"``, or if fewer than
+        2 samples are provided.
+
+    Notes
+    -----
+    The **RBF kernel** :math:`k(x,y) = \exp(-\|x-y\|^2/(2\sigma^2))`
+    is the standard choice. The **IMQ kernel**
+    :math:`k(x,y) = (c^2 + \|x-y\|^2)^{-1/2}` is recommended for
+    MCMC convergence diagnostics because it provides *convergence
+    control*: :math:`\mathrm{KSD}(\mu_n, \pi) \to 0` implies
+    :math:`\mu_n \Rightarrow \pi` (weak convergence) and tightness
+    of :math:`\{\mu_n\}` [3]_.
+
+    References
+    ----------
+    .. [1] Liu, Q., Lee, J., & Jordan, M. (2016). "A kernelized Stein
+       discrepancy for goodness-of-fit tests." *ICML*.
+    .. [2] Chwialkowski, K., Strathmann, H., & Gretton, A. (2016).
+       "A kernel test of goodness of fit." *ICML*.
+    .. [3] Gorham, J. & Mackey, L. (2017). "Measuring sample quality
+       with kernels." *ICML*.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> rng = np.random.default_rng(42)
+    >>> samples = rng.standard_normal(1000)
+    >>> ksd = kernel_stein_discrepancy(samples, lambda x: -x, kernel="imq")
+    >>> abs(ksd) < 0.1  # close to zero for matching distribution
+    True
     """
-    if kernel != "rbf":
-        raise ValueError(f"Only 'rbf' kernel is supported, got '{kernel}'")
+    if kernel not in ("rbf", "imq"):
+        raise ValueError(f"Unsupported kernel '{kernel}'. Use 'rbf' or 'imq'.")
 
     x = np.asarray(samples, dtype=float)
     if x.ndim == 1:
@@ -202,45 +246,147 @@ def kernel_stein_discrepancy(
     if s.ndim == 1:
         s = s.reshape(-1, 1)
 
-    # Bandwidth
+    # Bandwidth (median heuristic)
     if bandwidth is None:
         bandwidth = _median_bandwidth(x)
 
-    gamma = 1.0 / (2.0 * bandwidth**2)
-
-    # Pairwise squared distances and kernel
+    # Pairwise squared distances
     sq_dists = cdist(x, x, metric="sqeuclidean")
-    K = np.exp(-gamma * sq_dists)
-
-    # Term 1: s(x_i)^T s(x_j) k(x_i, x_j)
-    # s @ s.T gives (n, n) matrix where [i,j] = s_i . s_j
-    term1 = (s @ s.T) * K
-
-    # For RBF kernel k(x,y) = exp(-gamma ||x-y||^2):
-    #   grad_y k(x,y) = 2*gamma*(x - y)*k(x,y)
-    #   grad_x k(x,y) = -2*gamma*(x - y)*k(x,y)
-    #   grad_x . grad_y k(x,y) = (2*gamma*d - 4*gamma^2*||x-y||^2)*k(x,y)
 
     # diff[i,j,:] = x[i] - x[j]
     diff = x[:, np.newaxis, :] - x[np.newaxis, :, :]  # (n, n, d)
 
-    # Term 2: s(x_i)^T grad_{x_j} k(x_i, x_j)
-    #       = s(x_i)^T * 2*gamma*(x_i - x_j) * k_ij
-    s_dot_diff = np.einsum("id,ijd->ij", s, diff)  # (n, n)
-    term2 = 2.0 * gamma * s_dot_diff * K
-
-    # Term 3: s(x_j)^T grad_{x_i} k(x_i, x_j)
-    #       = s(x_j)^T * (-2*gamma)*(x_i - x_j) * k_ij
+    # s[i] . (x[i] - x[j]) and s[j] . (x[i] - x[j])
+    s_dot_diff_i = np.einsum("id,ijd->ij", s, diff)  # (n, n)
     s_dot_diff_j = np.einsum("jd,ijd->ij", s, diff)  # (n, n)
-    term3 = -2.0 * gamma * s_dot_diff_j * K
 
-    # Term 4: grad_{x_i} . grad_{x_j} k = (2*gamma*d - 4*gamma^2*||x_i-x_j||^2)*k
-    term4 = (2.0 * gamma * d - 4.0 * gamma**2 * sq_dists) * K
+    # s[i] . s[j]
+    ss = s @ s.T  # (n, n)
 
-    stein_kernel = term1 + term2 + term3 + term4
+    if kernel == "rbf":
+        stein_kernel = _rbf_stein_kernel(
+            ss, s_dot_diff_i, s_dot_diff_j, sq_dists, bandwidth, d
+        )
+    else:  # imq
+        stein_kernel = _imq_stein_kernel(
+            ss, s_dot_diff_i, s_dot_diff_j, sq_dists, bandwidth, d
+        )
 
     # U-statistic: exclude diagonal
     np.fill_diagonal(stein_kernel, 0.0)
     ksd_sq = np.sum(stein_kernel) / (n * (n - 1))
 
     return float(ksd_sq)
+
+
+def _rbf_stein_kernel(
+    ss: np.ndarray,
+    s_dot_diff_i: np.ndarray,
+    s_dot_diff_j: np.ndarray,
+    sq_dists: np.ndarray,
+    bandwidth: float,
+    d: int,
+) -> np.ndarray:
+    """Compute the Stein kernel matrix for the RBF kernel.
+
+    Parameters
+    ----------
+    ss : np.ndarray
+        Pairwise score dot products ``s[i] . s[j]``, shape ``(n, n)``.
+    s_dot_diff_i : np.ndarray
+        ``s[i] . (x[i] - x[j])``, shape ``(n, n)``.
+    s_dot_diff_j : np.ndarray
+        ``s[j] . (x[i] - x[j])``, shape ``(n, n)``.
+    sq_dists : np.ndarray
+        Pairwise squared Euclidean distances, shape ``(n, n)``.
+    bandwidth : float
+        Kernel bandwidth :math:`\\sigma`.
+    d : int
+        Dimensionality.
+
+    Returns
+    -------
+    np.ndarray
+        Stein kernel matrix, shape ``(n, n)``.
+    """
+    gamma = 1.0 / (2.0 * bandwidth**2)
+    K = np.exp(-gamma * sq_dists)
+
+    term1 = ss * K
+    term2 = 2.0 * gamma * s_dot_diff_i * K
+    term3 = -2.0 * gamma * s_dot_diff_j * K
+    term4 = (2.0 * gamma * d - 4.0 * gamma**2 * sq_dists) * K
+
+    return term1 + term2 + term3 + term4
+
+
+def _imq_stein_kernel(
+    ss: np.ndarray,
+    s_dot_diff_i: np.ndarray,
+    s_dot_diff_j: np.ndarray,
+    sq_dists: np.ndarray,
+    c: float,
+    d: int,
+    beta: float = -0.5,
+) -> np.ndarray:
+    r"""Compute the Stein kernel matrix for the IMQ kernel.
+
+    The inverse multiquadric kernel is:
+
+    .. math::
+
+        k(x, y) = (c^2 + \|x - y\|^2)^{\beta}
+
+    with :math:`\beta = -1/2` by default.
+
+    Parameters
+    ----------
+    ss : np.ndarray
+        Pairwise score dot products ``s[i] . s[j]``, shape ``(n, n)``.
+    s_dot_diff_i : np.ndarray
+        ``s[i] . (x[i] - x[j])``, shape ``(n, n)``.
+    s_dot_diff_j : np.ndarray
+        ``s[j] . (x[i] - x[j])``, shape ``(n, n)``.
+    sq_dists : np.ndarray
+        Pairwise squared Euclidean distances, shape ``(n, n)``.
+    c : float
+        Scale parameter (typically the median heuristic bandwidth).
+    d : int
+        Dimensionality.
+    beta : float, optional
+        Exponent of the IMQ kernel. Default is ``-0.5``.
+
+    Returns
+    -------
+    np.ndarray
+        Stein kernel matrix, shape ``(n, n)``.
+
+    References
+    ----------
+    .. [1] Gorham, J. & Mackey, L. (2017). "Measuring sample quality
+       with kernels." *ICML*.
+    """
+    base = c**2 + sq_dists  # (n, n)
+
+    # k(x, y) = base^beta
+    K = base**beta
+
+    # grad_y k = -2*beta*(x - y)*base^(beta-1)
+    # grad_x k =  2*beta*(x - y)*base^(beta-1)
+    K_bm1 = base ** (beta - 1)
+
+    # Term 1: s_i . s_j * k
+    term1 = ss * K
+
+    # Term 2: s_i^T grad_y k = -2*beta * s_dot_diff_i * base^(beta-1)
+    term2 = -2.0 * beta * s_dot_diff_i * K_bm1
+
+    # Term 3: s_j^T grad_x k = 2*beta * s_dot_diff_j * base^(beta-1)
+    term3 = 2.0 * beta * s_dot_diff_j * K_bm1
+
+    # Term 4: trace Hessian
+    # nabla_x . nabla_y k = -2*beta * base^(beta-2) * [d*base + 2*(beta-1)*r^2]
+    K_bm2 = base ** (beta - 2)
+    term4 = -2.0 * beta * K_bm2 * (d * base + 2.0 * (beta - 1.0) * sq_dists)
+
+    return term1 + term2 + term3 + term4

@@ -127,7 +127,7 @@ class TestKernelSteinDiscrepancy:
 
     def test_invalid_kernel(self, normal_01):
         """Unknown kernel should raise ValueError."""
-        with pytest.raises(ValueError, match="Only 'rbf' kernel"):
+        with pytest.raises(ValueError, match="Unsupported kernel"):
             kernel_stein_discrepancy(normal_01, standard_normal_score, kernel="laplace")
 
     def test_too_few_samples(self):
@@ -141,3 +141,43 @@ class TestKernelSteinDiscrepancy:
         samples = rng.normal(5.0, 0.5, 500)
         ksd = kernel_stein_discrepancy(samples, standard_normal_score)
         assert ksd > 0.1
+
+
+# ===========================================================================
+# TestIMQKernelSteinDiscrepancy
+# ===========================================================================
+class TestIMQKernelSteinDiscrepancy:
+    """Tests for kernel_stein_discrepancy with kernel='imq'."""
+
+    def test_matching_near_zero(self, normal_01):
+        """KSD(IMQ) should be near 0 when samples match the target."""
+        ksd = kernel_stein_discrepancy(normal_01, standard_normal_score, kernel="imq")
+        np.testing.assert_allclose(ksd, 0.0, atol=0.05)
+
+    def test_mismatched_positive(self, normal_shifted):
+        """KSD(IMQ) should be positive for mismatched distribution."""
+        ksd = kernel_stein_discrepancy(
+            normal_shifted, standard_normal_score, kernel="imq"
+        )
+        assert ksd > 0.05
+
+    def test_2d_matching(self, normal_01_2d):
+        """IMQ KSD in 2D should be near 0 for matching samples."""
+        ksd = kernel_stein_discrepancy(
+            normal_01_2d, standard_normal_score, kernel="imq"
+        )
+        np.testing.assert_allclose(ksd, 0.0, atol=0.1)
+
+    def test_custom_bandwidth(self, normal_01):
+        """Custom bandwidth should produce finite result."""
+        ksd = kernel_stein_discrepancy(
+            normal_01, standard_normal_score, kernel="imq", bandwidth=1.0
+        )
+        assert np.isfinite(ksd)
+
+    def test_detects_shift(self):
+        """IMQ should detect distribution mismatch."""
+        rng = np.random.default_rng(42)
+        samples = rng.normal(3.0, 1.0, 1000)
+        ksd_imq = kernel_stein_discrepancy(samples, standard_normal_score, kernel="imq")
+        assert ksd_imq > 0.5
