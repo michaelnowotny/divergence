@@ -368,14 +368,18 @@ def ksg_mutual_information(
         # digamma(m) instead of digamma(n+1). For continuous distributions,
         # the difference between < and <= is measure-zero, so using <=
         # is numerically stable and the -1/k term handles the correction.
-        m_x = np.array([
-            len(tree_x.query_ball_point(samples_x[i], r=epsilon[i], p=np.inf)) - 1
-            for i in range(n)
-        ])
-        m_y = np.array([
-            len(tree_y.query_ball_point(samples_y[i], r=epsilon[i], p=np.inf)) - 1
-            for i in range(n)
-        ])
+        m_x = np.array(
+            [
+                len(tree_x.query_ball_point(samples_x[i], r=epsilon[i], p=np.inf)) - 1
+                for i in range(n)
+            ]
+        )
+        m_y = np.array(
+            [
+                len(tree_y.query_ball_point(samples_y[i], r=epsilon[i], p=np.inf)) - 1
+                for i in range(n)
+            ]
+        )
 
         # Ensure >= 1 for digamma
         m_x = np.maximum(m_x, 1)
