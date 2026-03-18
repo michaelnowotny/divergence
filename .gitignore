@@ -134,3 +134,9 @@ MODERNIZATION_PLAN.md
 
 # Executed notebooks
 *_executed.ipynb
+
+# MkDocs build output
+site/
+
+# Notebook copies in docs (copied at build time)
+docs/notebooks/*.ipynb

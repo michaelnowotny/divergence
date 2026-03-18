@@ -41,6 +41,11 @@ dev = [
     "ruff",
     "xarray>=2024.1",
 ]
+docs = [
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-jupyter",
+]
 integration = [
     "arviz>=1.0",
     "emcee>=3.1",

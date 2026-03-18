@@ -1,0 +1,93 @@
+site_name: Divergence
+site_description: Information-theoretic measures of entropy, divergence, and dependence
+site_url: https://michaelnowotny.github.io/divergence/
+repo_url: https://github.com/michaelnowotny/divergence
+repo_name: michaelnowotny/divergence
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            heading_level: 3
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+  - mkdocs-jupyter:
+      include_source: true
+      execute: false
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - admonition
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - Tutorials:
+    - "1. Shannon's Foundations": notebooks/Divergence.ipynb
+    - "2. Beyond KL": notebooks/Beyond_KL.ipynb
+    - "3. Distances & Testing": notebooks/Distances_and_Testing.ipynb
+    - "4. Dependence & Causality": notebooks/Dependence_and_Causality.ipynb
+    - "5. Scores & Transport": notebooks/Scores_and_Transport.ipynb
+    - "6. Bayesian Diagnostics": notebooks/Bayesian_Diagnostics.ipynb
+  - API Reference:
+    - Overview: api/index.md
+    - Shannon Measures: api/shannon.md
+    - f-Divergences: api/f_divergences.md
+    - "Rényi Family": api/renyi.md
+    - Integral Probability Metrics: api/ipms.md
+    - kNN Estimators: api/knn.md
+    - Multivariate Dependence: api/multivariate.md
+    - Causal / Temporal: api/causal.md
+    - Score-Based Measures: api/score_based.md
+    - Sinkhorn Divergence: api/sinkhorn.md
+    - Two-Sample Testing: api/testing.md
+    - Bayesian Diagnostics: api/bayesian.md
+    - Result Types: api/types.md
