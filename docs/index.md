@@ -21,17 +21,17 @@ Divergence computes statistical measures of entropy, divergence, and dependence 
 
 ```python
 import numpy as np
-from divergence import entropy_from_samples, knn_kl_divergence, two_sample_test
+from divergence import entropy, kl_divergence, two_sample_test
 
 rng = np.random.default_rng(42)
 p = rng.normal(0, 1, 5000)
 q = rng.normal(0.5, 1.2, 5000)
 
 # Entropy
-h = entropy_from_samples(p)
+h = entropy(p)
 
-# KL divergence (kNN-based, no density estimation)
-kl = knn_kl_divergence(p, q)
+# KL divergence
+kl = kl_divergence(p, q)
 
 # Formal two-sample test
 result = two_sample_test(p, q, method="energy", n_permutations=500)

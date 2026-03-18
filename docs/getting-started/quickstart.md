@@ -5,9 +5,9 @@
 ```python
 import numpy as np
 from divergence import (
-    knn_kl_divergence,
+    kl_divergence,
     energy_distance,
-    jensen_shannon_divergence_from_samples,
+    jensen_shannon_divergence,
     two_sample_test,
 )
 
@@ -15,14 +15,14 @@ rng = np.random.default_rng(42)
 p = rng.normal(0, 1, 3000)
 q = rng.normal(0.5, 1.2, 3000)
 
-# KL divergence (kNN-based, works in any dimension)
-kl = knn_kl_divergence(p, q)
+# KL divergence (auto-dispatches to continuous KDE estimator)
+kl = kl_divergence(p, q)
 
 # Energy distance (no hyperparameters)
 ed = energy_distance(p, q)
 
 # Jensen-Shannon divergence (symmetric, bounded)
-jsd = jensen_shannon_divergence_from_samples(p, q)
+jsd = jensen_shannon_divergence(p, q)
 
 # Formal hypothesis test: H0: P = Q
 result = two_sample_test(p, q, method="energy", n_permutations=500, seed=42)
@@ -32,10 +32,10 @@ print(f"Reject H0? {result.p_value < 0.05} (p = {result.p_value:.4f})")
 ## Measuring Entropy
 
 ```python
-from divergence import entropy_from_samples, knn_entropy
+from divergence import entropy, knn_entropy
 
-# KDE-based entropy (1D)
-h_kde = entropy_from_samples(p)
+# KDE-based entropy (1D) — short alias for entropy_from_samples
+h_kde = entropy(p)
 
 # kNN-based entropy (scales to high dimensions)
 h_knn = knn_entropy(p, k=5)

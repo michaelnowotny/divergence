@@ -92,18 +92,25 @@ __all__ = [
     "chain_two_sample_test",
     # f-divergences
     "chi_squared_divergence",
+    # Shorthand aliases (1.5.0)
+    "conditional_entropy",
     "conditional_entropy_from_densities_with_support",
     "conditional_entropy_from_kde",
     "conditional_entropy_from_samples",
     # Continuous
     "continuous_conditional_entropy_from_samples",
     "continuous_cross_entropy_from_sample",
+    "continuous_cross_entropy_from_samples",
     "continuous_entropy_from_sample",
+    "continuous_entropy_from_samples",
     "continuous_jensen_shannon_divergence_from_sample",
+    "continuous_jensen_shannon_divergence_from_samples",
     "continuous_joint_entropy_from_samples",
     "continuous_mutual_information_from_samples",
     "continuous_relative_entropy_from_sample",
+    "continuous_relative_entropy_from_samples",
     "cressie_read_divergence",
+    "cross_entropy",
     "cross_entropy_from_densities_with_support",
     "cross_entropy_from_kde",
     "cross_entropy_from_samples",
@@ -117,6 +124,7 @@ __all__ = [
     "discrete_relative_entropy",
     # IPMs
     "energy_distance",
+    "entropy",
     "entropy_from_density_with_support",
     "entropy_from_kde",
     # Unified API
@@ -127,14 +135,17 @@ __all__ = [
     "information_gain",
     "intersection",
     "jeffreys_divergence",
+    "jensen_shannon_divergence",
     "jensen_shannon_divergence_from_densities_with_support",
     "jensen_shannon_divergence_from_kde",
     "jensen_shannon_divergence_from_samples",
+    "joint_entropy",
     "joint_entropy_from_densities_with_support",
     "joint_entropy_from_kde",
     "joint_entropy_from_samples",
     # Score-based measures
     "kernel_stein_discrepancy",
+    "kl_divergence",
     # kNN estimators
     "knn_entropy",
     "knn_kl_divergence",
@@ -143,6 +154,7 @@ __all__ = [
     # Convergence diagnostics
     "mixing_diagnostic",
     "model_divergence",
+    "mutual_information",
     "mutual_information_from_densities_with_support",
     "mutual_information_from_kde",
     "mutual_information_from_samples",
@@ -273,3 +285,25 @@ def conditional_entropy_from_samples(
         return continuous_conditional_entropy_from_samples(
             sample_x=sample_x, sample_y=sample_y, base=base
         )
+
+
+# ---------------------------------------------------------------------------
+# Shorthand aliases (added in 1.5.0)
+# ---------------------------------------------------------------------------
+
+# Clean short names that dispatch to the _from_samples unified wrappers
+entropy = entropy_from_samples
+cross_entropy = cross_entropy_from_samples
+kl_divergence = relative_entropy_from_samples
+jensen_shannon_divergence = jensen_shannon_divergence_from_samples
+mutual_information = mutual_information_from_samples
+joint_entropy = joint_entropy_from_samples
+conditional_entropy = conditional_entropy_from_samples
+
+# Singular/plural consistency: add plural aliases for singular originals
+continuous_entropy_from_samples = continuous_entropy_from_sample
+continuous_cross_entropy_from_samples = continuous_cross_entropy_from_sample
+continuous_relative_entropy_from_samples = continuous_relative_entropy_from_sample
+continuous_jensen_shannon_divergence_from_samples = (
+    continuous_jensen_shannon_divergence_from_sample
+)

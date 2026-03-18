@@ -19,6 +19,22 @@ Divergence provides 72 public functions and 4 result types organized into themat
 | [Bayesian Diagnostics](bayesian.md) | ArviZ integration for MCMC convergence and inference diagnostics |
 | [Result Types](types.md) | Named tuples returned by testing and diagnostic functions |
 
+## Shorthand Aliases
+
+For convenience, short aliases are provided for the most common measures. These dispatch to the unified `_from_samples` wrappers with a `discrete` toggle:
+
+| Alias | Equivalent to |
+|-------|---------------|
+| `entropy()` | `entropy_from_samples()` |
+| `cross_entropy()` | `cross_entropy_from_samples()` |
+| `kl_divergence()` | `relative_entropy_from_samples()` |
+| `jensen_shannon_divergence()` | `jensen_shannon_divergence_from_samples()` |
+| `mutual_information()` | `mutual_information_from_samples()` |
+| `joint_entropy()` | `joint_entropy_from_samples()` |
+| `conditional_entropy()` | `conditional_entropy_from_samples()` |
+
+Plural aliases are also provided for the continuous functions that had singular names (e.g., `continuous_entropy_from_samples` = `continuous_entropy_from_sample`).
+
 ## Common Parameters
 
 Most functions accept these parameters:

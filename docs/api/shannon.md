@@ -2,6 +2,20 @@
 
 Unified API functions that dispatch to discrete or continuous implementations based on the `discrete` parameter.
 
+## Shorthand Aliases
+
+These are the shortest way to access the core measures:
+
+```python
+from divergence import entropy, kl_divergence, mutual_information
+
+h = entropy(samples)
+kl = kl_divergence(p, q)
+mi = mutual_information(x, y, discrete=True)
+```
+
+All aliases accept the same `base` and `discrete` parameters as their full-name counterparts.
+
 ## Unified API
 
 ::: divergence.entropy_from_samples
