@@ -855,6 +855,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#shorthand-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shorthand Aliases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1255,6 +1266,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#shorthand-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shorthand Aliases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#common-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1346,6 +1368,47 @@
 </tr>
 </tbody>
 </table>
+<h2 id="shorthand-aliases">Shorthand Aliases<a class="headerlink" href="#shorthand-aliases" title="Permanent link">&para;</a></h2>
+<p>For convenience, short aliases are provided for the most common measures. These dispatch to the unified <code>_from_samples</code> wrappers with a <code>discrete</code> toggle:</p>
+<table>
+<thead>
+<tr>
+<th>Alias</th>
+<th>Equivalent to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entropy()</code></td>
+<td><code>entropy_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>cross_entropy()</code></td>
+<td><code>cross_entropy_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>kl_divergence()</code></td>
+<td><code>relative_entropy_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>jensen_shannon_divergence()</code></td>
+<td><code>jensen_shannon_divergence_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>mutual_information()</code></td>
+<td><code>mutual_information_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>joint_entropy()</code></td>
+<td><code>joint_entropy_from_samples()</code></td>
+</tr>
+<tr>
+<td><code>conditional_entropy()</code></td>
+<td><code>conditional_entropy_from_samples()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Plural aliases are also provided for the continuous functions that had singular names (e.g., <code>continuous_entropy_from_samples</code> = <code>continuous_entropy_from_sample</code>).</p>
 <h2 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">&para;</a></h2>
 <p>Most functions accept these parameters:</p>
 <ul>
