@@ -2,90 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://michaelnowotny.github.io/divergence/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/bayesian/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/causal/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/f_divergences/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/ipms/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/knn/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/multivariate/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/renyi/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/score_based/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/shannon/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/sinkhorn/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/testing/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/api/types/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/getting-started/installation/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/getting-started/quickstart/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Bayesian_Diagnostics/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Beyond_KL/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Dependence_and_Causality/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Distances_and_Testing/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Divergence/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
     <url>
          <loc>https://michaelnowotny.github.io/divergence/notebooks/Scores_and_Transport/</loc>
-         <lastmod>2026-03-18</lastmod>
+         <lastmod>2026-03-19</lastmod>
     </url>
 </urlset>

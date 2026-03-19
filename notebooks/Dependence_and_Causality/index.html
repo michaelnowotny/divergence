@@ -3483,7 +3483,7 @@ $$</p>
 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="n">Y_effect</span><span class="p">[</span><span class="n">t_show</span><span class="p">],</span> <span class="s1">'-'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'coral'</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="s1">'$Y_t$ (effect)'</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Time'</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Causal coupling: $Y_t = 0.8\,X_{t-1} + </span><span class="se">\\</span><span class="s1">mathrm</span><span class="si">{noise}</span><span class="s1">$'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Causal coupling: $Y_t = 0.8</span><span class="se">\\</span><span class="s1">,X_{t-1} + </span><span class="se">\\</span><span class="s1">mathrm</span><span class="si">{noise}</span><span class="s1">$'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -3504,7 +3504,7 @@ ax.plot(np.arange(100, 200), X_cause[t_show], '-', color='steelblue',
 ax.plot(np.arange(100, 200), Y_effect[t_show], '-', color='coral',
         label='$Y_t$ (effect)', alpha=0.9, lw=1.5)
 ax.set_xlabel('Time')
-ax.set_title('Causal coupling: $Y_t = 0.8\,X_{t-1} + \\mathrm{noise}$', fontsize=13)
+ax.set_title('Causal coupling: $Y_t = 0.8\\,X_{t-1} + \\mathrm{noise}$', fontsize=13)
 ax.legend(loc='upper right')
 plt.tight_layout()
 plt.show()</div>
@@ -3516,16 +3516,6 @@ plt.show()</div>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>&lt;&gt;:17: SyntaxWarning: invalid escape sequence '\,'
-&lt;&gt;:17: SyntaxWarning: invalid escape sequence '\,'
-/tmp/ipykernel_9899/2888010585.py:17: SyntaxWarning: invalid escape sequence '\,'
-  ax.set_title('Causal coupling: $Y_t = 0.8\,X_{t-1} + \\mathrm{noise}$', fontsize=13)
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">

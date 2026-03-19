@@ -1287,6 +1287,13 @@
 
 <h1 id="score-based-measures">Score-Based Measures<a class="headerlink" href="#score-based-measures" title="Permanent link">&para;</a></h1>
 <p>Divergences that use score functions (gradients of log-densities) rather than densities themselves. These have the key advantage of not requiring the normalizing constant.</p>
+<div class="admonition note">
+<p class="admonition-title">Large-scale performance</p>
+<p>For n &gt;= 5,000 samples, <code>kernel_stein_discrepancy</code> automatically uses
+a Numba JIT-compiled kernel that runs 14-18x faster and uses O(n)
+memory (for pre-evaluated scores) instead of O(n^2). This makes KSD
+feasible at n=50,000+.</p>
+</div>
 
 
 <div class="doc doc-object doc-function">

@@ -2764,7 +2764,29 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">divergence</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">divergence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">conditional_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">continuous_conditional_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">continuous_cross_entropy_from_sample</span><span class="p">,</span>
+    <span class="n">continuous_entropy_from_sample</span><span class="p">,</span>
+    <span class="n">continuous_jensen_shannon_divergence_from_sample</span><span class="p">,</span>
+    <span class="n">continuous_joint_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">continuous_mutual_information_from_samples</span><span class="p">,</span>
+    <span class="n">continuous_relative_entropy_from_sample</span><span class="p">,</span>
+    <span class="n">cross_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">discrete_conditional_entropy_of_y_given_x</span><span class="p">,</span>
+    <span class="n">discrete_cross_entropy</span><span class="p">,</span>
+    <span class="n">discrete_entropy</span><span class="p">,</span>
+    <span class="n">discrete_jensen_shannon_divergence</span><span class="p">,</span>
+    <span class="n">discrete_joint_entropy</span><span class="p">,</span>
+    <span class="n">discrete_mutual_information</span><span class="p">,</span>
+    <span class="n">discrete_relative_entropy</span><span class="p">,</span>
+    <span class="n">entropy_from_samples</span><span class="p">,</span>
+    <span class="n">jensen_shannon_divergence_from_samples</span><span class="p">,</span>
+    <span class="n">joint_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">mutual_information_from_samples</span><span class="p">,</span>
+    <span class="n">relative_entropy_from_samples</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
     <span class="s1">'figure.figsize'</span><span class="p">:</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
@@ -2776,7 +2798,29 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="clipboard-copy-txt" id="cell-1">import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-from divergence import *
+from divergence import (
+    conditional_entropy_from_samples,
+    continuous_conditional_entropy_from_samples,
+    continuous_cross_entropy_from_sample,
+    continuous_entropy_from_sample,
+    continuous_jensen_shannon_divergence_from_sample,
+    continuous_joint_entropy_from_samples,
+    continuous_mutual_information_from_samples,
+    continuous_relative_entropy_from_sample,
+    cross_entropy_from_samples,
+    discrete_conditional_entropy_of_y_given_x,
+    discrete_cross_entropy,
+    discrete_entropy,
+    discrete_jensen_shannon_divergence,
+    discrete_joint_entropy,
+    discrete_mutual_information,
+    discrete_relative_entropy,
+    entropy_from_samples,
+    jensen_shannon_divergence_from_samples,
+    joint_entropy_from_samples,
+    mutual_information_from_samples,
+    relative_entropy_from_samples,
+)
 
 plt.rcParams.update({
     'figure.figsize': (8, 4),

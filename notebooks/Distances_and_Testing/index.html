@@ -832,6 +832,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#all-distances-on-the-same-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All distances on the same data
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1583,6 +1594,17 @@
     <span class="md-ellipsis">
       
         Practical recommendations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-distances-on-the-same-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All distances on the same data
       
     </span>
   </a>
@@ -2406,9 +2428,21 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">stats</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">divergence</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">divergence</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">energy_distance</span><span class="p">,</span>
+    <span class="n">entropy_from_samples</span><span class="p">,</span>
+    <span class="n">knn_entropy</span><span class="p">,</span>
+    <span class="n">knn_kl_divergence</span><span class="p">,</span>
+    <span class="n">ksg_mutual_information</span><span class="p">,</span>
+    <span class="n">maximum_mean_discrepancy</span><span class="p">,</span>
+    <span class="n">mutual_information_from_samples</span><span class="p">,</span>
+    <span class="n">relative_entropy_from_samples</span><span class="p">,</span>
+    <span class="n">sliced_wasserstein_distance</span><span class="p">,</span>
+    <span class="n">two_sample_test</span><span class="p">,</span>
+    <span class="n">wasserstein_distance</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
     <span class="s1">'figure.figsize'</span><span class="p">:</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
@@ -2416,24 +2450,30 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
     <span class="s1">'axes.spines.right'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="s1">'font.size'</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
 <span class="p">})</span>
-
-<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">5_000</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import numpy as np
+import scipy.stats as stats
 import matplotlib.pyplot as plt
-from scipy import stats
-from divergence import *
+from divergence import (
+    energy_distance,
+    entropy_from_samples,
+    knn_entropy,
+    knn_kl_divergence,
+    ksg_mutual_information,
+    maximum_mean_discrepancy,
+    mutual_information_from_samples,
+    relative_entropy_from_samples,
+    sliced_wasserstein_distance,
+    two_sample_test,
+    wasserstein_distance,
+)
 
 plt.rcParams.update({
     'figure.figsize': (8, 4),
     'axes.spines.top': False,
     'axes.spines.right': False,
     'font.size': 12,
-})
-
-np.random.seed(42)
-n = 5_000</div>
+})</div>
 </div>
 </div>
 </div>
@@ -2470,7 +2510,10 @@ n = 5_000</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># 1D distributions</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">5000</span>
+
+<span class="c1"># 1D distributions</span>
 <span class="n">mu_p</span><span class="p">,</span> <span class="n">sigma_p</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span>
 <span class="n">mu_q</span><span class="p">,</span> <span class="n">sigma_q</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.2</span>
 
@@ -2509,7 +2552,10 @@ n = 5_000</div>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2"># 1D distributions
+<div class="clipboard-copy-txt" id="cell-2">np.random.seed(42)
+n = 5000
+
+# 1D distributions
 mu_p, sigma_p = 0.0, 1.0
 mu_q, sigma_q = 1.5, 1.2
 
@@ -2880,9 +2926,9 @@ print(f'Energy distance (P vs P\'):  {ed_same:.4f}  (should be near 0)')</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Energy distance (1D): 1.0501
-Energy distance (2D): 0.4897
-Energy distance (P vs P'):  0.0006  (should be near 0)
+<pre>Energy distance (1D): 1.0496
+Energy distance (2D): 0.4890
+Energy distance (P vs P'):  0.0002  (should be near 0)
 </pre>
 </div>
 </div>
@@ -3038,8 +3084,8 @@ print(f'  W1 (shifted):      {wasserstein_distance(baseline, shifted, p=1):.6f}'
 <pre>Detecting a subtle mean shift of 0.3:
   MMD^2 (no shift):  0.002061
   MMD^2 (shifted):   0.026562
-  Energy (no shift): 0.008970
-  Energy (shifted):  0.082488
+  Energy (no shift): 0.006778
+  Energy (shifted):  0.080301
   W1 (no shift):     0.129936
   W1 (shifted):      0.382951
 </pre>
@@ -3885,6 +3931,107 @@ print(f'  MMD:    statistic = {result_mmd.statistic:.6f}, p = {result_mmd.p_valu
 <li><strong>"How much does X tell me about Y?"</strong> → Use <code>ksg_mutual_information</code> for nonlinear relationships, or <code>mutual_information_from_samples</code> for KDE-based estimation in 1D/2D.</li>
 <li><strong>"I need entropy in high dimensions."</strong> → Use <code>knn_entropy</code>. KDE-based entropy breaks down above 3–4 dimensions.</li>
 </ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=sidebyside">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="all-distances-on-the-same-data">All distances on the same data<a class="anchor-link" href="#all-distances-on-the-same-data">¶</a></h3><p>To build intuition for magnitudes, let's compute every distance on our two standard distributions side by side:</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=sidebyside_code">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-18">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Head-to-head comparison of all sample-based distances</span>
+<span class="n">P_cmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+<span class="n">Q_cmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'P ~ N(0, 1),  Q ~ N(0.5, 1.5²),  n = 2,000 each'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"Measure"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="s2">"Value"</span><span class="si">:</span><span class="s1">&gt;10</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'-'</span> <span class="o">*</span> <span class="mi">40</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"Energy distance"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">energy_distance</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"Wasserstein W₁"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">wasserstein_distance</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"Wasserstein W₂"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">wasserstein_distance</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"MMD² (RBF)"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">maximum_mean_discrepancy</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"kNN KL divergence"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">knn_kl_divergence</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="s2">"KSG mutual information"</span><span class="si">:</span><span class="s1">&lt;28</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">ksg_mutual_information</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span><span class="w"> </span><span class="n">Q_cmp</span><span class="p">)</span><span class="si">:</span><span class="s1">&gt;10.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="c1"># Formal test: is the difference significant?</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">two_sample_test</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span> <span class="n">Q_cmp</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Two-sample test (energy):  statistic = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">statistic</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">,  p = </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="n">result_mmd</span> <span class="o">=</span> <span class="n">two_sample_test</span><span class="p">(</span><span class="n">P_cmp</span><span class="p">,</span> <span class="n">Q_cmp</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'mmd'</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Two-sample test (MMD):     statistic = </span><span class="si">{</span><span class="n">result_mmd</span><span class="o">.</span><span class="n">statistic</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">,  p = </span><span class="si">{</span><span class="n">result_mmd</span><span class="o">.</span><span class="n">p_value</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-18"># Head-to-head comparison of all sample-based distances
+P_cmp = np.random.normal(0, 1, 2000)
+Q_cmp = np.random.normal(0.5, 1.5, 2000)
+
+print(f'P ~ N(0, 1),  Q ~ N(0.5, 1.5²),  n = 2,000 each')
+print()
+print(f'{"Measure":&lt;28} {"Value":&gt;10}')
+print('-' * 40)
+print(f'{"Energy distance":&lt;28} {energy_distance(P_cmp, Q_cmp):&gt;10.4f}')
+print(f'{"Wasserstein W₁":&lt;28} {wasserstein_distance(P_cmp, Q_cmp, p=1):&gt;10.4f}')
+print(f'{"Wasserstein W₂":&lt;28} {wasserstein_distance(P_cmp, Q_cmp, p=2):&gt;10.4f}')
+print(f'{"MMD² (RBF)":&lt;28} {maximum_mean_discrepancy(P_cmp, Q_cmp):&gt;10.4f}')
+print(f'{"kNN KL divergence":&lt;28} {knn_kl_divergence(P_cmp, Q_cmp):&gt;10.4f}')
+print(f'{"KSG mutual information":&lt;28} {ksg_mutual_information(P_cmp, Q_cmp):&gt;10.4f}')
+print()
+# Formal test: is the difference significant?
+result = two_sample_test(P_cmp, Q_cmp, method='energy', n_permutations=500, seed=42)
+print(f'Two-sample test (energy):  statistic = {result.statistic:.4f},  p = {result.p_value:.4f}')
+result_mmd = two_sample_test(P_cmp, Q_cmp, method='mmd', n_permutations=500, seed=42)
+print(f'Two-sample test (MMD):     statistic = {result_mmd.statistic:.4f},  p = {result_mmd.p_value:.4f}')</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>P ~ N(0, 1),  Q ~ N(0.5, 1.5²),  n = 2,000 each
+
+Measure                           Value
+----------------------------------------
+Energy distance                  0.1579
+Wasserstein W₁                   0.5757
+Wasserstein W₂                   0.6933
+MMD² (RBF)                       0.0613
+kNN KL divergence                0.1754
+KSG mutual information          -0.0084
+
+Two-sample test (energy):  statistic = 0.1593,  p = 0.0020
+Two-sample test (MMD):     statistic = 0.0613,  p = 0.0020
+</pre>
+</div>
+</div>
 </div>
 </div>
 </div>
