@@ -101,11 +101,18 @@ def energy_distance(
         )
 
     # Vectorized path for small n (avoids JIT compilation overhead)
+    n = len(x)
+    m = len(y)
     d_xy = cdist(x, y, metric="euclidean")
     d_xx = cdist(x, x, metric="euclidean")
     d_yy = cdist(y, y, metric="euclidean")
 
-    return float(2.0 * np.mean(d_xy) - np.mean(d_xx) - np.mean(d_yy))
+    # Use U-statistic: exclude diagonal (self-pairs) from E[||X-X'||]
+    mean_xy = np.sum(d_xy) / (n * m)
+    mean_xx = np.sum(d_xx) / (n * (n - 1)) if n > 1 else 0.0
+    mean_yy = np.sum(d_yy) / (m * (m - 1)) if m > 1 else 0.0
+
+    return float(2.0 * mean_xy - mean_xx - mean_yy)
 
 
 def wasserstein_distance(

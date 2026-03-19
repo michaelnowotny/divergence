@@ -259,3 +259,66 @@ class TestSlicedWasserstein:
         sw = sliced_wasserstein_distance(samples_p, samples_q, p=2, seed=42)
         w = wasserstein_distance(samples_p, samples_q, p=2)
         assert sw == pytest.approx(w, rel=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# JIT vs vectorized cross-validation
+# ---------------------------------------------------------------------------
+class TestJITConsistency:
+    """Verify JIT and vectorized paths produce identical results."""
+
+    @pytest.fixture()
+    def small_samples(self):
+        rng = np.random.default_rng(42)
+        return rng.normal(0, 1, (200, 1)), rng.normal(0.5, 1.2, (200, 1))
+
+    def test_energy_distance_jit_matches_vectorized(self, small_samples):
+        """JIT and vectorized energy distance should match on same data."""
+        import divergence.ipms as ipms
+
+        x, y = small_samples
+        old = ipms._JIT_THRESHOLD
+
+        ipms._JIT_THRESHOLD = 100_000  # force vectorized
+        ed_vec = energy_distance(x.ravel(), y.ravel())
+
+        ipms._JIT_THRESHOLD = 1  # force JIT
+        ed_jit = energy_distance(x.ravel(), y.ravel())
+
+        ipms._JIT_THRESHOLD = old
+        np.testing.assert_allclose(ed_vec, ed_jit, rtol=1e-6)
+
+    def test_mmd_jit_matches_vectorized(self, small_samples):
+        """JIT and vectorized MMD should match on same data."""
+        import divergence.ipms as ipms
+
+        x, y = small_samples
+        old = ipms._JIT_THRESHOLD
+
+        ipms._JIT_THRESHOLD = 100_000
+        mmd_vec = maximum_mean_discrepancy(x.ravel(), y.ravel(), bandwidth=1.0)
+
+        ipms._JIT_THRESHOLD = 1
+        mmd_jit = maximum_mean_discrepancy(x.ravel(), y.ravel(), bandwidth=1.0)
+
+        ipms._JIT_THRESHOLD = old
+        np.testing.assert_allclose(mmd_vec, mmd_jit, rtol=1e-6)
+
+    def test_energy_distance_jit_nonnegative(self):
+        """JIT energy distance should be non-negative."""
+        from divergence._numba_kernels import _energy_distance_jit
+
+        rng = np.random.default_rng(42)
+        x = rng.normal(0, 1, (300, 1))
+        y = rng.normal(1, 1, (300, 1))
+        assert _energy_distance_jit(x, y) >= 0
+
+    def test_mmd_jit_same_distribution_near_zero(self):
+        """JIT MMD for same distribution should be near zero."""
+        from divergence._numba_kernels import _mmd_squared_jit
+
+        rng = np.random.default_rng(42)
+        x = rng.normal(0, 1, (300, 1))
+        y = rng.normal(0, 1, (300, 1))
+        mmd = _mmd_squared_jit(x, y, 0.5)
+        np.testing.assert_allclose(mmd, 0.0, atol=0.1)

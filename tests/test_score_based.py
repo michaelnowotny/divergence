@@ -181,3 +181,58 @@ class TestIMQKernelSteinDiscrepancy:
         samples = rng.normal(3.0, 1.0, 1000)
         ksd_imq = kernel_stein_discrepancy(samples, standard_normal_score, kernel="imq")
         assert ksd_imq > 0.5
+
+
+# ===========================================================================
+# TestKSDJITConsistency
+# ===========================================================================
+class TestKSDJITConsistency:
+    """Verify JIT and vectorized KSD paths produce identical results."""
+
+    def test_rbf_jit_matches_vectorized(self, normal_01):
+        """JIT and vectorized RBF KSD should match."""
+        from divergence._numba_kernels import _ksd_stein_kernel_sum_jit
+
+        x = normal_01.reshape(-1, 1).copy()
+        s = standard_normal_score(x)
+        bw = 1.0
+
+        # Vectorized
+        ksd_vec = kernel_stein_discrepancy(
+            normal_01, standard_normal_score, kernel="rbf", bandwidth=bw
+        )
+
+        # JIT
+        n = len(x)
+        total = _ksd_stein_kernel_sum_jit(
+            np.ascontiguousarray(x),
+            np.ascontiguousarray(s),
+            bw**2,
+            0,  # RBF
+        )
+        ksd_jit = total / (n * (n - 1))
+
+        np.testing.assert_allclose(ksd_vec, ksd_jit, rtol=1e-6)
+
+    def test_imq_jit_matches_vectorized(self, normal_01):
+        """JIT and vectorized IMQ KSD should match."""
+        from divergence._numba_kernels import _ksd_stein_kernel_sum_jit
+
+        x = normal_01.reshape(-1, 1).copy()
+        s = standard_normal_score(x)
+        bw = 1.0
+
+        ksd_vec = kernel_stein_discrepancy(
+            normal_01, standard_normal_score, kernel="imq", bandwidth=bw
+        )
+
+        n = len(x)
+        total = _ksd_stein_kernel_sum_jit(
+            np.ascontiguousarray(x),
+            np.ascontiguousarray(s),
+            bw**2,
+            1,  # IMQ
+        )
+        ksd_jit = total / (n * (n - 1))
+
+        np.testing.assert_allclose(ksd_vec, ksd_jit, rtol=1e-6)
