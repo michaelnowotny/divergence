@@ -19,6 +19,10 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import wasserstein_distance as _scipy_wasserstein
 
+# Threshold above which JIT kernels are used (avoids compilation overhead
+# for small problems while preventing O(n^2) memory allocation for large ones)
+_JIT_THRESHOLD = 5000
+
 
 def _ensure_2d(x: np.ndarray) -> np.ndarray:
     """Reshape 1D array to column vector for consistent pairwise distance computation."""
@@ -89,7 +93,14 @@ def energy_distance(
     x = _ensure_2d(samples_p)
     y = _ensure_2d(samples_q)
 
-    # Pairwise distances
+    if max(len(x), len(y)) >= _JIT_THRESHOLD:
+        from divergence._numba_kernels import _energy_distance_jit
+
+        return float(
+            _energy_distance_jit(np.ascontiguousarray(x), np.ascontiguousarray(y))
+        )
+
+    # Vectorized path for small n (avoids JIT compilation overhead)
     d_xy = cdist(x, y, metric="euclidean")
     d_xx = cdist(x, x, metric="euclidean")
     d_yy = cdist(y, y, metric="euclidean")
@@ -278,29 +289,39 @@ def maximum_mean_discrepancy(
             f"Need at least 2 samples from each distribution, got m={m}, n={n}"
         )
 
-    # Pairwise squared Euclidean distances
+    # Bandwidth: median heuristic if not provided
+    if bandwidth is None:
+        if max(m, n) >= _JIT_THRESHOLD:
+            from divergence._numba_kernels import _median_bandwidth_jit
+
+            pooled = np.ascontiguousarray(np.concatenate([x, y], axis=0))
+            bandwidth = float(_median_bandwidth_jit(pooled))
+        else:
+            pooled = np.concatenate([x, y], axis=0)
+            d_pooled = cdist(pooled, pooled, metric="euclidean")
+            triu_indices = np.triu_indices_from(d_pooled, k=1)
+            bandwidth = float(np.median(d_pooled[triu_indices]))
+        if bandwidth == 0.0:
+            bandwidth = 1.0
+
+    gamma = 1.0 / (2.0 * bandwidth**2)
+
+    if max(m, n) >= _JIT_THRESHOLD:
+        from divergence._numba_kernels import _mmd_squared_jit
+
+        return float(
+            _mmd_squared_jit(np.ascontiguousarray(x), np.ascontiguousarray(y), gamma)
+        )
+
+    # Vectorized path for small n
     d_xx_sq = cdist(x, x, metric="sqeuclidean")
     d_yy_sq = cdist(y, y, metric="sqeuclidean")
     d_xy_sq = cdist(x, y, metric="sqeuclidean")
 
-    # Bandwidth: median heuristic if not provided
-    if bandwidth is None:
-        pooled = np.concatenate([x, y], axis=0)
-        d_pooled = cdist(pooled, pooled, metric="euclidean")
-        # Extract upper triangle (excluding diagonal)
-        triu_indices = np.triu_indices_from(d_pooled, k=1)
-        bandwidth = float(np.median(d_pooled[triu_indices]))
-        if bandwidth == 0.0:
-            bandwidth = 1.0  # fallback to avoid division by zero
-
-    gamma = 1.0 / (2.0 * bandwidth**2)
-
-    # RBF kernel matrices
     k_xx = np.exp(-gamma * d_xx_sq)
     k_yy = np.exp(-gamma * d_yy_sq)
     k_xy = np.exp(-gamma * d_xy_sq)
 
-    # U-statistic: exclude diagonal for k_xx and k_yy
     np.fill_diagonal(k_xx, 0.0)
     np.fill_diagonal(k_yy, 0.0)
 

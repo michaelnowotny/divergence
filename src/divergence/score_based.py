@@ -248,9 +248,28 @@ def kernel_stein_discrepancy(
 
     # Bandwidth (median heuristic)
     if bandwidth is None:
-        bandwidth = _median_bandwidth(x)
+        if n >= 5000:
+            from divergence._numba_kernels import _median_bandwidth_jit
 
-    # Pairwise squared distances
+            bandwidth = float(_median_bandwidth_jit(np.ascontiguousarray(x)))
+        else:
+            bandwidth = _median_bandwidth(x)
+
+    # JIT path for large n: O(1) memory instead of O(n^2)
+    if n >= 5000:
+        from divergence._numba_kernels import _ksd_stein_kernel_sum_jit
+
+        kernel_type = 0 if kernel == "rbf" else 1
+        sq_bw = bandwidth**2
+        total = _ksd_stein_kernel_sum_jit(
+            np.ascontiguousarray(x),
+            np.ascontiguousarray(s),
+            sq_bw,
+            kernel_type,
+        )
+        return float(total / (n * (n - 1)))
+
+    # Vectorized path for small n
     sq_dists = cdist(x, x, metric="sqeuclidean")
 
     # diff[i,j,:] = x[i] - x[j]
