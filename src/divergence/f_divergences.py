@@ -637,9 +637,7 @@ def cressie_read_divergence(
 
     def f_cr(t: np.ndarray) -> np.ndarray:
         with np.errstate(divide="ignore", invalid="ignore"):
-            result = (t ** (lam + 1) - 1 - (lam + 1) * (t - 1)) / (
-                lam * (lam + 1)
-            )
+            result = (t ** (lam + 1) - 1 - (lam + 1) * (t - 1)) / (lam * (lam + 1))
         return np.where(np.isfinite(result), result, 0.0)
 
     return f_divergence(sample_p, sample_q, f_cr, discrete=discrete)
