@@ -109,7 +109,8 @@ def _continuous_f_divergence_kde(
 
     mask = q > 0
     ratio = np.where(mask, p / np.where(mask, q, 1.0), 0.0)
-    integrand = np.where(mask, q * f(ratio), 0.0)
+    with np.errstate(invalid="ignore"):
+        integrand = np.where(mask, q * f(ratio), 0.0)
     return float(np.trapezoid(integrand, support))
 
 
@@ -635,6 +636,10 @@ def cressie_read_divergence(
         return f_divergence(sample_p, sample_q, f_rkl, discrete=discrete)
 
     def f_cr(t: np.ndarray) -> np.ndarray:
-        return (t ** (lam + 1) - 1 - (lam + 1) * (t - 1)) / (lam * (lam + 1))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            result = (t ** (lam + 1) - 1 - (lam + 1) * (t - 1)) / (
+                lam * (lam + 1)
+            )
+        return np.where(np.isfinite(result), result, 0.0)
 
     return f_divergence(sample_p, sample_q, f_cr, discrete=discrete)
