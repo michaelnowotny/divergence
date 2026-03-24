@@ -18,6 +18,8 @@ Shannon's entropy for a discrete distribution is:
 
 H = -Σ p(x) log p(x)
 
+$$H(X) = -\sum_{x} p(x) \log p(x)$$
+
 Each outcome contributes its probability times the log of its probability. Rare events contribute more. Common events contribute less. The sum tells you how uncertain you are about what comes next.
 
 A fair coin: H = 1 bit. A loaded coin (90/10): H = 0.47 bits. You're less uncertain about the loaded coin because you can mostly predict it.
@@ -39,15 +41,15 @@ h = entropy(samples)
 
 Suppose you're compressing data. Your data comes from distribution P, but you designed your compression code for distribution Q. How much space do you waste?
 
-The answer is the Kullback-Leibler divergence, D_KL(P || Q). It measures the extra cost — in bits or nats — of encoding P using Q's code. If P and Q are identical, the cost is zero. If they differ, you pay.
+The answer is the Kullback-Leibler divergence, $D_{\text{KL}}(P \| Q)$. It measures the extra cost — in bits or nats — of encoding P using Q's code. If P and Q are identical, the cost is zero. If they differ, you pay.
 
-(If you've seen "perplexity" in NLP papers: that's just exponentiated cross-entropy. A language model with cross-entropy of 5.6 bits has perplexity 2^5.6 ≈ 49 — it's as confused as if it were choosing uniformly among 49 words at each position. Same idea, different scale.)
+(If you've seen "perplexity" in NLP papers: that's just exponentiated cross-entropy. A language model with cross-entropy of 5.6 bits has perplexity $2^{5.6} \approx 49$ — it's as confused as if it were choosing uniformly among 49 words at each position. Same idea, different scale.)
 
 Solomon Kullback and Richard Leibler were cryptanalysts at the NSA in 1951, working on the mathematics of distinguishing one message source from another. Was this intercepted signal random noise, or did it contain a hidden pattern? Their divergence gives a precise answer: how much evidence does the data provide that P and Q are different?
 
 Decades later, Bayesian statisticians realized that KL divergence is exactly the information gained by updating from a prior to a posterior. The cryptanalysts' wartime tool and the Bayesian's measure of learning turned out to be the same equation.
 
-One thing to know: KL divergence is not symmetric. D_KL(P || Q) ≠ D_KL(Q || P). Encoding P with Q's code is a different problem from encoding Q with P's code. This asymmetry is both a feature and a limitation — it motivates everything that comes next.
+One thing to know: KL divergence is not symmetric. $D_{\text{KL}}(P \| Q) \neq D_{\text{KL}}(Q \| P)$. Encoding P with Q's code is a different problem from encoding Q with P's code. This asymmetry is both a feature and a limitation — it motivates everything that comes next.
 
 ---
 
@@ -57,17 +59,21 @@ For decades, people treated KL divergence, chi-squared, total variation, and Hel
 
 In 1963, a Hungarian mathematician named Imre Csiszár proved they're all the same thing.
 
-Every one of these measures is an f-divergence: D_f(P || Q) = Σ q(x) · f(p(x)/q(x)), where f is a convex function. Change f and you get a different divergence. Set f(t) = t log t and you get KL. Set f(t) = (t-1)² and you get chi-squared. Set f(t) = (√t - 1)² and you get Hellinger. Set f(t) = |t-1|/2 and you get total variation.
+Every one of these measures is an f-divergence:
+
+$$D_f(P \| Q) = \sum_x q(x) \cdot f\!\left(\frac{p(x)}{q(x)}\right)$$
+
+where $f$ is a convex function. Change $f$ and you get a different divergence. Set $f(t) = t \log t$ and you get KL. Set $f(t) = (t-1)^2$ and you get chi-squared. Set $f(t) = (\sqrt{t} - 1)^2$ and you get Hellinger. Set $f(t) = |t-1|/2$ and you get total variation.
 
 Different functions of the same density ratio. Each one emphasizes different kinds of distributional mismatch. KL is sensitive to where P has mass and Q doesn't. Chi-squared amplifies large density ratios. Hellinger is gentler — more robust to outliers. Total variation measures the largest possible difference in probability assigned to any event.
 
 [IMAGE: beyond_kl/generator_functions.png]
 
-But the real surprise came in 1984. Noel Cressie and Timothy Read showed that you can parameterize the entire family with a single number λ:
+But the real surprise came in 1984. Noel Cressie and Timothy Read showed that you can parameterize the entire family with a single number $\lambda$:
 
-CR_λ(P || Q) = (1 / λ(λ+1)) Σ p(x) [(p(x)/q(x))^λ - 1]
+$$\text{CR}_\lambda(P \| Q) = \frac{1}{\lambda(\lambda+1)} \sum_x p(x) \left[\left(\frac{p(x)}{q(x)}\right)^\lambda - 1\right]$$
 
-Set λ = -1: reverse KL. Set λ = -1/2: Hellinger. Set λ = 0: KL divergence. Set λ = 2/3: the value Cressie and Read themselves recommended for goodness-of-fit testing. Set λ = 1: Pearson chi-squared. One formula. One parameter. A smooth continuum connecting measures that had been treated as unrelated for the better part of a century.
+Set $\lambda = -1$: reverse KL. Set $\lambda = -\tfrac{1}{2}$: Hellinger. Set $\lambda = 0$: KL divergence. Set $\lambda = \tfrac{2}{3}$: the value Cressie and Read themselves recommended for goodness-of-fit testing. Set $\lambda = 1$: Pearson chi-squared. One formula. One parameter. A smooth continuum connecting measures that had been treated as unrelated for the better part of a century.
 
 [IMAGE: cressie_read_continuum.png]
 
@@ -82,18 +88,18 @@ cr = cressie_read_divergence(p, q, lambda_param=0.0)  # KL at lambda=0
 
 ## Rényi's telescope
 
-Alfréd Rényi presented his generalization at the Fourth Berkeley Symposium in 1961. Where Shannon defined one entropy, Rényi defined a family indexed by a parameter α:
+Alfréd Rényi presented his generalization at the Fourth Berkeley Symposium in 1961. Where Shannon defined one entropy, Rényi defined a family indexed by a parameter $\alpha$:
 
-H_α(X) = (1 / (1-α)) log Σ p(x)^α
+$$H_\alpha(X) = \frac{1}{1-\alpha} \log \sum_x p(x)^\alpha$$
 
-The parameter α acts like a focusing dial. Turn it one way and you count outcomes. Turn it the other and you zoom in on the peak.
+The parameter $\alpha$ acts like a focusing dial. Turn it one way and you count outcomes. Turn it the other and you zoom in on the peak.
 
-- α → 0: Hartley entropy. Just counts how many outcomes are possible, ignoring their probabilities.
-- α → 1: Shannon entropy. The familiar average surprise.
-- α = 2: Collision entropy. The probability that two independent draws give the same outcome.
-- α → ∞: Min-entropy. Determined entirely by the single most likely event. Used in cryptography because it measures the worst case for an attacker.
+- $\alpha \to 0$: Hartley entropy. Just counts how many outcomes are possible, ignoring their probabilities.
+- $\alpha \to 1$: Shannon entropy. The familiar average surprise.
+- $\alpha = 2$: Collision entropy. The probability that two independent draws give the same outcome.
+- $\alpha \to \infty$: Min-entropy. Determined entirely by the single most likely event. Used in cryptography because it measures the worst case for an attacker.
 
-Rényi entropy is monotonically non-increasing in α. As you increase the parameter, you focus more on the high-probability events and the entropy drops. Every value of α gives you a different view of the same distribution.
+Rényi entropy is monotonically non-increasing in $\alpha$. As you increase the parameter, you focus more on the high-probability events and the entropy drops. Every value of $\alpha$ gives you a different view of the same distribution.
 
 [IMAGE: beyond_kl/renyi_entropy_alpha.png]
 
