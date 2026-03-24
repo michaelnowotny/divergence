@@ -604,7 +604,7 @@ def cressie_read_divergence(
     >>> from divergence import cressie_read_divergence
     >>> p = np.array([0, 0, 0, 1, 1, 2])
     >>> q = np.array([0, 1, 1, 1, 2, 2])
-    >>> cressie_read_divergence(p, q, lambda_param=1.0, discrete=True)  # Neyman chi^2
+    >>> cressie_read_divergence(p, q, lambda_param=1.0, discrete=True)  # Pearson chi^2 / 2
     0.1...
 
     References
