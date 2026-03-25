@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2583,6 +2583,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="p">})</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="n">FIGURES_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">'figures/scores_and_transport'</span><span class="p">)</span>
+<span class="n">FIGURES_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import numpy as np
 import matplotlib.pyplot as plt
@@ -2602,7 +2606,11 @@ plt.rcParams.update({
     'font.size': 12,
 })
 
-np.random.seed(42)</div>
+np.random.seed(42)
+
+from pathlib import Path
+FIGURES_DIR = Path('figures/scores_and_transport')
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)</div>
 </div>
 </div>
 </div>
@@ -2679,6 +2687,7 @@ $$</p>
              <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'gray'</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'density_and_score.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># Visualize the density and its score function side by side
@@ -2710,6 +2719,7 @@ ax2.annotate('score = 0\nat the peak', xy=(0, 0), xytext=(1.8, 1.5),
              fontsize=11, color='gray')
 
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'density_and_score.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2889,6 +2899,7 @@ D_F(N(0,1) || N(2,1)) = 4.0000  (expected: μ² = 4.0)
              <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'fisher_divergence_parabola.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4">mu_values = np.linspace(0, 3, 15)
@@ -2911,6 +2922,7 @@ ax.set_title('Fisher Divergence: $D_F(\\mathcal{N}(0,1) \\| \\mathcal{N}(\\mu,1)
              fontsize=13)
 ax.legend()
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'fisher_divergence_parabola.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3155,6 +3167,7 @@ print(f'  Samples from N(2,1): KSD² = {ksd_wrong:.6f}  ← clearly positive ✗
             <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s1">'-&gt;'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'steelblue'</span><span class="p">),</span>
             <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'steelblue'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'ksd_vs_mismatch.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7">mu_shifts = np.linspace(0, 3, 12)
@@ -3177,6 +3190,7 @@ ax.annotate('Samples match target', xy=(0, ksd_values[0]),
             arrowprops=dict(arrowstyle='-&gt;', color='steelblue'),
             fontsize=11, color='steelblue')
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'ksd_vs_mismatch.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3361,7 +3375,13 @@ print(f'Farther distributions → larger divergence.')</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>S_ε(P, P) = 0.000000  (expected: 0.0 — debiasing works!)
-
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
 S_ε(P, Q_close)  = 0.3020  (μ = 0.5)
 S_ε(P, Q_far)    = 4.0060  (μ = 2.0)
 Farther distributions → larger divergence.
@@ -3478,6 +3498,7 @@ Symmetric? True
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Three measures of distribution separation'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'sinkhorn_vs_wasserstein_energy.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-11">mu_range = np.linspace(0, 3, 15)
@@ -3505,6 +3526,7 @@ ax.set_ylabel('Divergence / Distance')
 ax.set_title('Three measures of distribution separation', fontsize=13)
 ax.legend()
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'sinkhorn_vs_wasserstein_energy.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3576,6 +3598,7 @@ plt.show()</div>
            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'$W_2$ = </span><span class="si">{</span><span class="n">w2_ref</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'sinkhorn_epsilon_effect.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-12">epsilons = [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0]
@@ -3596,6 +3619,7 @@ ax.axhline(w2_ref, color='steelblue', ls='--', lw=1.5, alpha=0.7,
            label=f'$W_2$ = {w2_ref:.3f}')
 ax.legend()
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'sinkhorn_epsilon_effect.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3769,6 +3793,16 @@ print(f'2D Sinkhorn divergence (same):      {s_2d_self:.6f}  (≈ 0)')</div>
 <td>6</td>
 <td><a href="Bayesian_Diagnostics.ipynb">Bayesian Diagnostics</a></td>
 <td>End-to-end MCMC with emcee: convergence diagnostics, information gain, Bayesian surprise</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="Real_World_Applications.ipynb">Real-World Applications</a></td>
+<td>Stock market contagion, crop yields, Phillips Curve — real data, real stakes</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="NumPyro_KSD.ipynb">Did My Sampler Find the Truth?</a></td>
+<td>KSD as convergence diagnostic with NumPyro: NUTS vs VI, the 250-year journey from Bayes to Stein</td>
 </tr>
 </tbody>
 </table>

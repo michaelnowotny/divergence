@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2794,6 +2794,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
     <span class="s1">'axes.spines.right'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="s1">'font.size'</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
 <span class="p">})</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="n">FIGURES_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">'figures/divergence'</span><span class="p">)</span>
+<span class="n">FIGURES_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import numpy as np
 import scipy as sp
@@ -2827,7 +2831,11 @@ plt.rcParams.update({
     'axes.spines.top': False,
     'axes.spines.right': False,
     'font.size': 12,
-})</div>
+})
+
+from pathlib import Path
+FIGURES_DIR = Path('figures/divergence')
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)</div>
 </div>
 </div>
 </div>
@@ -2935,6 +2943,7 @@ pdf_q = lambda x: sp.stats.norm.pdf(x, mu_q, sigma_q)</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'The two distributions we will compare throughout'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'two_distributions.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">x = np.linspace(-12, 16, 500)
@@ -2949,6 +2958,7 @@ ax.set_ylabel('Density')
 ax.set_title('The two distributions we will compare throughout')
 ax.legend()
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'two_distributions.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3743,6 +3753,7 @@ JSD(q, p) = 0.086305   ← symmetric!
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'X'</span><span class="p">);</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Y'</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Independent (ρ = 0)'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'bivariate_normal.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-14"># Bivariate normal setup
@@ -3768,6 +3779,7 @@ axes[1].scatter(sample_x[:2000], sample_y_indep[:2000], alpha=0.2, s=5, color='c
 axes[1].set_xlabel('X'); axes[1].set_ylabel('Y')
 axes[1].set_title('Independent (ρ = 0)')
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'bivariate_normal.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3837,7 +3849,13 @@ print(f'\nSymmetry: I(X;Y) = {MI_est:.6f},  I(Y;X) = {MI_yx:.6f}')</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>I(X; Y)   estimated = 0.1500,  analytical = 0.1438  (correlated)
 I(X; Y)   independent = 0.0094  (should be ≈ 0)
-
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>
 Symmetry: I(X;Y) = 0.149988,  I(Y;X) = 0.149988
 </pre>
 </div>
@@ -4447,6 +4465,16 @@ KL(p||q) = H_q(p) - H(p)  [discrete]
 <td>6</td>
 <td><a href="Bayesian_Diagnostics.ipynb">Bayesian Diagnostics</a></td>
 <td>End-to-end MCMC with emcee: convergence diagnostics, information gain, Bayesian surprise</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="Real_World_Applications.ipynb">Real-World Applications</a></td>
+<td>Stock market contagion, crop yields, Phillips Curve — real data, real stakes</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="NumPyro_KSD.ipynb">Did My Sampler Find the Truth?</a></td>
+<td>KSD as convergence diagnostic with NumPyro: NUTS vs VI, the 250-year journey from Bayes to Stein</td>
 </tr>
 </tbody>
 </table>

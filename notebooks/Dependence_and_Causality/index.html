@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2558,6 +2558,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="p">})</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="n">FIGURES_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">'figures/dependence_and_causality'</span><span class="p">)</span>
+<span class="n">FIGURES_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import numpy as np
 import matplotlib.pyplot as plt
@@ -2579,7 +2583,11 @@ plt.rcParams.update({
     'font.size': 12,
 })
 
-np.random.seed(42)</div>
+np.random.seed(42)
+
+from pathlib import Path
+FIGURES_DIR = Path('figures/dependence_and_causality')
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)</div>
 </div>
 </div>
 </div>
@@ -2899,6 +2907,7 @@ TC and MI agree — Watanabe's measure generalizes Shannon's.
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Entropy (nats)'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Total Correlation as the Redundancy Gap'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'total_correlation_gap.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5"># Compute individual and joint entropies for the correlated 3-variable case
@@ -2928,6 +2937,7 @@ ax.text(
 ax.set_ylabel('Entropy (nats)')
 ax.set_title('Total Correlation as the Redundancy Gap', fontsize=14)
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'total_correlation_gap.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3103,6 +3113,7 @@ NMI of independent clusterings: 0.0008 (expected: ≈ 0.0)
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nmi_values</span><span class="p">):</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'normalized_mi_comparison.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7"># Compare all five normalizations on the correlated bivariate normal
@@ -3121,6 +3132,7 @@ ax.set_ylim(0, 1)
 for i, v in enumerate(nmi_values):
     ax.text(i, v + 0.02, f'{v:.3f}', ha='center', fontsize=11)
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'normalized_mi_comparison.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3358,6 +3370,7 @@ print(f'  VI(A, C) ≤ VI(A, B) + VI(B, C)? {vi_ac &lt;= vi_ab + vi_bc + 1e-10}'
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Variation of Information (disagreement)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'nmi_vs_vi_corruption.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-10"># Gradually corrupt labels by flipping a fraction of them
@@ -3389,6 +3402,7 @@ ax2.set_ylabel('VI (nats)')
 ax2.set_title('Variation of Information (disagreement)', fontsize=13)
 
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'nmi_vs_vi_corruption.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3486,6 +3500,7 @@ $$</p>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Causal coupling: $Y_t = 0.8</span><span class="se">\\</span><span class="s1">,X_{t-1} + </span><span class="se">\\</span><span class="s1">mathrm</span><span class="si">{noise}</span><span class="s1">$'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'causal_timeseries.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-11">T = 5000  # time steps
@@ -3507,6 +3522,7 @@ ax.set_xlabel('Time')
 ax.set_title('Causal coupling: $Y_t = 0.8\\,X_{t-1} + \\mathrm{noise}$', fontsize=13)
 ax.legend(loc='upper right')
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'causal_timeseries.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3611,6 +3627,7 @@ Ratio: TE(X→Y) / |TE(Y→X)| = 58.2×
     <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">bar</span><span class="o">.</span><span class="n">get_x</span><span class="p">()</span> <span class="o">+</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_width</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_height</span><span class="p">()</span> <span class="o">+</span> <span class="mf">0.03</span><span class="p">,</span>
             <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'transfer_entropy_arrow.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-13"># Visualize the asymmetry
@@ -3627,6 +3644,7 @@ for bar, val in zip(bars, [te_x_to_y, te_y_to_x]):
     ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.03,
             f'{val:.3f}', ha='center', fontsize=12, fontweight='bold')
 plt.tight_layout()
+plt.savefig(FIGURES_DIR / 'transfer_entropy_arrow.png', dpi=150, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3896,6 +3914,16 @@ Both directions show similar information transfer — symmetric coupling detecte
 <td>6</td>
 <td><a href="Bayesian_Diagnostics.ipynb">Bayesian Diagnostics</a></td>
 <td>End-to-end MCMC with emcee: convergence diagnostics, information gain, Bayesian surprise</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="Real_World_Applications.ipynb">Real-World Applications</a></td>
+<td>Stock market contagion, crop yields, Phillips Curve — real data, real stakes</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="NumPyro_KSD.ipynb">Did My Sampler Find the Truth?</a></td>
+<td>KSD as convergence diagnostic with NumPyro: NUTS vs VI, the 250-year journey from Bayes to Stein</td>
 </tr>
 </tbody>
 </table>
