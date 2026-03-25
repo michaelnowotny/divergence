@@ -21,6 +21,6 @@ jobs:
       - name: Install dependencies
         run: uv pip install --system -e ".[dev,docs]"
       - name: Copy notebooks to docs
-        run: cp notebooks/*.ipynb docs/notebooks/
+        run: mkdir -p docs/notebooks && cp notebooks/*.ipynb docs/notebooks/
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
