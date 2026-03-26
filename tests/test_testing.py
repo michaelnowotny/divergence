@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from divergence._types import TestResult
-from divergence.testing import two_sample_test, _should_use_low_memory
+from divergence.testing import _should_use_low_memory, two_sample_test
 
 
 @pytest.fixture(scope="module")
@@ -142,7 +142,7 @@ class TestLowMemoryAutoDetect:
         assert _should_use_low_memory(100, None) is False
 
     def test_large_n_uses_low_memory(self):
-        # 50K combined → 50K × 50K × 8 = 20 GiB >> 1 GiB threshold
+        # 50K combined: 50K x 50K x 8 = 20 GiB >> 1 GiB threshold
         assert _should_use_low_memory(50_000, None) is True
 
     def test_explicit_true_overrides(self):
@@ -223,7 +223,12 @@ class TestLowMemoryEnergy:
         p = rng.normal(0, 1, (200, 3))
         q = rng.normal(1, 1, (200, 3))
         result = two_sample_test(
-            p, q, method="energy", n_permutations=100, seed=42, low_memory=True,
+            p,
+            q,
+            method="energy",
+            n_permutations=100,
+            seed=42,
+            low_memory=True,
         )
         assert result.p_value < 0.05
 
