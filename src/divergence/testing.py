@@ -8,9 +8,15 @@ The permutation test is exact under H0: since the labels (P vs Q) are
 exchangeable, we can construct the null distribution by randomly shuffling
 the combined samples and recomputing the test statistic.
 
-For the ``"energy"`` and ``"mmd"`` methods, the full pairwise distance
-matrix is precomputed once and reindexed for each permutation, avoiding
-redundant O(n²) distance computations and providing a substantial speedup.
+For the ``"energy"`` and ``"mmd"`` methods, two strategies are available:
+
+- **Precomputed matrix** (default for small N): Precompute the full NxN
+  distance matrix once and reindex for each permutation.  Fast but
+  requires O(N²) memory.
+- **Low-memory** (automatic for large N, or ``low_memory=True``):
+  Recompute the test statistic from scratch each permutation using
+  Numba JIT kernels with O(N) memory.  Slower per permutation but
+  enables N > 50K without exhausting RAM.
 
 References
 ----------
@@ -27,6 +33,11 @@ from scipy.spatial.distance import cdist
 
 from divergence._types import TestResult
 
+# Distance matrix size (bytes) above which we auto-switch to low-memory mode.
+# Default: 1 GiB.  A 50K x 50K float64 matrix is ~20 GiB, so the threshold
+# kicks in well before that.
+_LOW_MEMORY_BYTES_THRESHOLD = 1 * 1024**3
+
 
 # ---------------------------------------------------------------------------
 # Fast permutation helpers using precomputed distance matrices
@@ -35,6 +46,9 @@ def _energy_from_distance_matrix(
     D: np.ndarray, idx_p: np.ndarray, idx_q: np.ndarray
 ) -> float:
     """Compute energy distance from a precomputed Euclidean distance matrix.
+
+    Uses the U-statistic estimator (excludes self-distances on the
+    diagonal), consistent with ``_energy_distance_jit``.
 
     Parameters
     ----------
@@ -48,12 +62,22 @@ def _energy_from_distance_matrix(
     Returns
     -------
     float
-        Energy distance.
+        Energy distance (U-statistic).
     """
+    n_p = len(idx_p)
+    n_q = len(idx_q)
+
     d_pq = D[np.ix_(idx_p, idx_q)]
+    mean_pq = np.sum(d_pq) / (n_p * n_q)
+
+    # Within-group: exclude diagonal (self-distances = 0) for U-statistic
     d_pp = D[np.ix_(idx_p, idx_p)]
+    mean_pp = np.sum(d_pp) / (n_p * (n_p - 1)) if n_p > 1 else 0.0
+
     d_qq = D[np.ix_(idx_q, idx_q)]
-    return float(2.0 * np.mean(d_pq) - np.mean(d_pp) - np.mean(d_qq))
+    mean_qq = np.sum(d_qq) / (n_q * (n_q - 1)) if n_q > 1 else 0.0
+
+    return float(2.0 * mean_pq - mean_pp - mean_qq)
 
 
 def _mmd_from_sq_distance_matrix(
@@ -181,6 +205,18 @@ def _permutation_test(
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+def _should_use_low_memory(n_total: int, low_memory: bool | None) -> bool:
+    """Decide whether to use low-memory mode.
+
+    Returns ``True`` if explicitly requested or if the NxN distance
+    matrix would exceed ``_LOW_MEMORY_BYTES_THRESHOLD``.
+    """
+    if low_memory is not None:
+        return low_memory
+    matrix_bytes = n_total * n_total * 8  # float64
+    return matrix_bytes > _LOW_MEMORY_BYTES_THRESHOLD
+
+
 def two_sample_test(
     samples_p: np.ndarray,
     samples_q: np.ndarray,
@@ -188,6 +224,7 @@ def two_sample_test(
     method: str = "mmd",
     n_permutations: int = 1000,
     seed: int | None = None,
+    low_memory: bool | None = None,
     **kwargs: tp.Any,
 ) -> TestResult:
     r"""Two-sample hypothesis test via permutation.
@@ -195,12 +232,6 @@ def two_sample_test(
     Tests H0: P = Q against H1: P != Q by computing a test statistic and
     comparing it to a null distribution obtained by permuting the combined
     samples.
-
-    For the ``"energy"`` and ``"mmd"`` methods, the full pairwise distance
-    matrix is precomputed once and reindexed for each permutation.  This
-    avoids redundant O(n^2) distance computations and can be **10-50x
-    faster** than the naive approach of recomputing distances each
-    iteration.
 
     Parameters
     ----------
@@ -222,6 +253,16 @@ def two_sample_test(
         Higher values give more precise p-values but take longer.
     seed : int or None
         Random seed for reproducibility.
+    low_memory : bool or None
+        Memory strategy for ``"energy"`` and ``"mmd"`` methods:
+
+        - ``None`` (default): auto-detect. Uses low-memory mode when
+          the NxN distance matrix would exceed ~1 GiB.
+        - ``True``: force low-memory mode. Uses Numba JIT kernels to
+          recompute the statistic from scratch each permutation with
+          O(N) memory. Enables N > 50K without exhausting RAM.
+        - ``False``: force precomputed matrix. Faster per permutation
+          but requires O(N²) memory.
     **kwargs
         Additional arguments passed to the test statistic function.
         For ``"mmd"``: ``kernel``, ``bandwidth``.
@@ -287,41 +328,128 @@ def two_sample_test(
     idx_p_orig = np.arange(n_p)
     idx_q_orig = np.arange(n_p, n_total)
 
-    if method == "energy":
-        # Precompute full Euclidean distance matrix once: O(N²)
-        D = cdist(combined, combined, metric="euclidean")
+    use_low_mem = _should_use_low_memory(n_total, low_memory)
 
-        observed = _energy_from_distance_matrix(D, idx_p_orig, idx_q_orig)
-        null_dist = _fast_permutation_test(
-            n_total,
-            n_p,
-            lambda ip, iq: _energy_from_distance_matrix(D, ip, iq),
-            n_permutations,
-            rng,
-        )
+    # GPU dispatch: use GPU kernels when available and beneficial
+    backend = kwargs.pop("backend", None)
+    if backend != "cpu" and method in ("energy", "mmd") and use_low_mem:
+        try:
+            from divergence._backend import get_backend
+
+            resolved = get_backend(backend)
+        except Exception:
+            resolved = "cpu"
+        if resolved == "gpu" and method == "energy":
+            from divergence._gpu_kernels import energy_permutation_test_gpu
+
+            observed, null_dist = energy_permutation_test_gpu(
+                combined,
+                n_p,
+                n_permutations,
+                seed=seed if seed is not None else 42,
+            )
+            p_value = (1 + np.sum(null_dist >= observed)) / (1 + n_permutations)
+            return TestResult(
+                statistic=float(observed),
+                p_value=float(p_value),
+                null_distribution=null_dist,
+            )
+
+    if method == "energy":
+        if use_low_mem:
+            # Low-memory path: recompute energy distance from scratch
+            # each permutation using Numba JIT kernels.  O(N) memory.
+            from divergence._numba_kernels import _energy_distance_jit
+
+            observed = float(
+                _energy_distance_jit(
+                    np.ascontiguousarray(samples_p),
+                    np.ascontiguousarray(samples_q),
+                )
+            )
+
+            def _energy_from_samples(ip, iq):
+                return float(
+                    _energy_distance_jit(
+                        np.ascontiguousarray(combined[ip]),
+                        np.ascontiguousarray(combined[iq]),
+                    )
+                )
+
+            null_dist = _fast_permutation_test(
+                n_total,
+                n_p,
+                _energy_from_samples,
+                n_permutations,
+                rng,
+            )
+        else:
+            # Precomputed matrix path: O(N²) memory, fast reindexing.
+            D = cdist(combined, combined, metric="euclidean")
+            observed = _energy_from_distance_matrix(D, idx_p_orig, idx_q_orig)
+            null_dist = _fast_permutation_test(
+                n_total,
+                n_p,
+                lambda ip, iq: _energy_from_distance_matrix(D, ip, iq),
+                n_permutations,
+                rng,
+            )
 
     elif method == "mmd":
-        # Precompute full squared distance matrix and bandwidth once: O(N²)
-        D_sq = cdist(combined, combined, metric="sqeuclidean")
-
+        # Compute bandwidth from pooled data (needed for both paths).
         bandwidth = kwargs.get("bandwidth")
         if bandwidth is None:
-            D_euc = np.sqrt(D_sq)
-            triu = D_euc[np.triu_indices_from(D_euc, k=1)]
-            bandwidth = float(np.median(triu))
+            if use_low_mem:
+                from divergence._numba_kernels import _median_bandwidth_jit
+
+                bandwidth = float(_median_bandwidth_jit(np.ascontiguousarray(combined)))
+            else:
+                D_sq = cdist(combined, combined, metric="sqeuclidean")
+                D_euc = np.sqrt(D_sq)
+                triu = D_euc[np.triu_indices_from(D_euc, k=1)]
+                bandwidth = float(np.median(triu))
             if bandwidth == 0.0:
                 bandwidth = 1.0
 
         gamma = 1.0 / (2.0 * bandwidth**2)
 
-        observed = _mmd_from_sq_distance_matrix(D_sq, idx_p_orig, idx_q_orig, gamma)
-        null_dist = _fast_permutation_test(
-            n_total,
-            n_p,
-            lambda ip, iq: _mmd_from_sq_distance_matrix(D_sq, ip, iq, gamma),
-            n_permutations,
-            rng,
-        )
+        if use_low_mem:
+            from divergence._numba_kernels import _mmd_squared_jit
+
+            observed = float(
+                _mmd_squared_jit(
+                    np.ascontiguousarray(samples_p),
+                    np.ascontiguousarray(samples_q),
+                    gamma,
+                )
+            )
+
+            def _mmd_from_samples(ip, iq):
+                return float(
+                    _mmd_squared_jit(
+                        np.ascontiguousarray(combined[ip]),
+                        np.ascontiguousarray(combined[iq]),
+                        gamma,
+                    )
+                )
+
+            null_dist = _fast_permutation_test(
+                n_total,
+                n_p,
+                _mmd_from_samples,
+                n_permutations,
+                rng,
+            )
+        else:
+            D_sq = cdist(combined, combined, metric="sqeuclidean")
+            observed = _mmd_from_sq_distance_matrix(D_sq, idx_p_orig, idx_q_orig, gamma)
+            null_dist = _fast_permutation_test(
+                n_total,
+                n_p,
+                lambda ip, iq: _mmd_from_sq_distance_matrix(D_sq, ip, iq, gamma),
+                n_permutations,
+                rng,
+            )
 
     elif method == "kl_knn":
         # kNN requires tree rebuilds each permutation — use generic fallback

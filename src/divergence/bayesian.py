@@ -975,6 +975,7 @@ def chain_two_sample_test(
     group: str = "posterior",
     n_permutations: int = 500,
     seed: int | None = None,
+    low_memory: bool | None = None,
 ) -> dict[str, ChainTestResult]:
     r"""Pairwise two-sample permutation tests between MCMC chains.
 
@@ -1003,6 +1004,11 @@ def chain_two_sample_test(
         Base random seed for reproducibility.  Per-pair seeds are
         derived as ``seed + i * n_chains + j`` to ensure statistical
         independence across chain pairs while remaining reproducible.
+    low_memory : bool or None, optional
+        Memory strategy passed to :func:`~divergence.two_sample_test`.
+        ``None`` (default) auto-detects based on sample size.  Set to
+        ``True`` for long chains (N > ~10K per chain) to avoid
+        materializing the O(N²) distance matrix.
 
     Returns
     -------
@@ -1081,6 +1087,7 @@ def chain_two_sample_test(
                     method=method,
                     n_permutations=n_permutations,
                     seed=pair_seed,
+                    low_memory=low_memory,
                 )
                 p_matrix[i, j] = test_result.p_value
                 p_matrix[j, i] = test_result.p_value
