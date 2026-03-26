@@ -1271,7 +1271,7 @@
 
 
 <h3 id="divergence.two_sample_test" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">two_sample_test</span><span class="p">(</span><span class="n">samples_p</span><span class="p">,</span> <span class="n">samples_q</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mmd&#39;</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">two_sample_test</span><span class="p">(</span><span class="n">samples_p</span><span class="p">,</span> <span class="n">samples_q</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mmd&#39;</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">low_memory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 <a href="#divergence.two_sample_test" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -1282,11 +1282,6 @@
 <p>Tests H0: P = Q against H1: P != Q by computing a test statistic and
 comparing it to a null distribution obtained by permuting the combined
 samples.</p>
-<p>For the <code>"energy"</code> and <code>"mmd"</code> methods, the full pairwise distance
-matrix is precomputed once and reindexed for each permutation.  This
-avoids redundant O(n^2) distance computations and can be <strong>10-50x
-faster</strong> than the naive approach of recomputing distances each
-iteration.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1383,6 +1378,31 @@ Higher values give more precise p-values but take longer.</p>
             <td>
               <div class="doc-md-description">
                 <p>Random seed for reproducibility.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>low_memory</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> or None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Memory strategy for <code>"energy"</code> and <code>"mmd"</code> methods:</p>
+<ul>
+<li><code>None</code> (default): auto-detect. Uses low-memory mode when
+  the NxN distance matrix would exceed ~1 GiB.</li>
+<li><code>True</code>: force low-memory mode. Uses Numba JIT kernels to
+  recompute the statistic from scratch each permutation with
+  O(N) memory. Enables N &gt; 50K without exhausting RAM.</li>
+<li><code>False</code>: force precomputed matrix. Faster per permutation
+  but requires O(N²) memory.</li>
+</ul>
               </div>
             </td>
             <td>

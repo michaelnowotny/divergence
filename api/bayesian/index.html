@@ -2795,7 +2795,7 @@ Gorham and Mackey (2017) [1]_ proved that
 
 
 <h3 id="divergence.chain_two_sample_test" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">chain_two_sample_test</span><span class="p">(</span><span class="n">idata</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mmd&#39;</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s1">&#39;posterior&#39;</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">chain_two_sample_test</span><span class="p">(</span><span class="n">idata</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">var_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;mmd&#39;</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s1">&#39;posterior&#39;</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">low_memory</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#divergence.chain_two_sample_test" class="headerlink" title="Permanent link">&para;</a></h3>
 
@@ -2916,6 +2916,25 @@ computational cost.</p>
                 <p>Base random seed for reproducibility.  Per-pair seeds are
 derived as <code>seed + i * n_chains + j</code> to ensure statistical
 independence across chain pairs while remaining reproducible.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>low_memory</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span> or None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Memory strategy passed to :func:<code>~divergence.two_sample_test</code>.
+<code>None</code> (default) auto-detects based on sample size.  Set to
+<code>True</code> for long chains (N &gt; ~10K per chain) to avoid
+materializing the O(N²) distance matrix.</p>
               </div>
             </td>
             <td>
