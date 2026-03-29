@@ -132,9 +132,9 @@ dmypy.json
 # Internal planning docs
 MODERNIZATION_PLAN.md
 
-# Article drafts, scripts, and high-res figures (private)
+# Article drafts, scripts, and figures (regenerated from notebooks)
 articles/
-notebooks/figures/article_ready/
+notebooks/figures/
 
 # Executed notebooks
 *_executed.ipynb
@@ -144,3 +144,4 @@ site/
 
 # Notebook copies in docs (copied at build time)
 docs/notebooks/*.ipynb
+/planning/
