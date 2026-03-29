@@ -2306,7 +2306,7 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)</div>
 <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'Heights change with normalization.  Slopes do not.'</span><span class="p">,</span>
              <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'heights_vs_slopes.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'heights_vs_slopes.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># Demonstrate: the normalizing constant changes the height but not the slope
@@ -2349,7 +2349,7 @@ axes[2].annotate('score = 0\nat the peak', xy=(0, 0), xytext=(1.8, 2.0),
 fig.suptitle('Heights change with normalization.  Slopes do not.',
              fontsize=14, y=1.02, fontweight='bold')
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'heights_vs_slopes.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'heights_vs_slopes.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2541,7 +2541,7 @@ Posterior std:   0.425
 <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'analytical_posterior_and_score.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'analytical_posterior_and_score.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># Visualize the analytical posterior and its score function
@@ -2573,7 +2573,7 @@ ax2.set_title('Score: $s(\\lambda) = (\\alpha-1)/\\lambda - \\beta$', fontsize=1
 ax2.legend(fontsize=10)
 
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'analytical_posterior_and_score.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'analytical_posterior_and_score.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2736,7 +2736,7 @@ Number of divergences: 0
 <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'nuts_trace_and_posterior.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'nuts_trace_and_posterior.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-6"># Extract per-chain and pooled samples
@@ -2772,7 +2772,7 @@ ax2.set_title('NUTS Posterior vs Analytical', fontsize=13)
 ax2.legend(fontsize=10)
 
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'nuts_trace_and_posterior.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'nuts_trace_and_posterior.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2941,7 +2941,7 @@ KSD ≈ 0  →  NUTS found the truth. ✓
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Variational Approximation vs Analytical Posterior'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'vi_vs_analytical.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'vi_vs_analytical.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-8"># Variational inference: fit a Gaussian approximation (in log-space)
@@ -2971,7 +2971,7 @@ ax.set_ylabel('Density')
 ax.set_title('Variational Approximation vs Analytical Posterior', fontsize=13)
 ax.legend(fontsize=11)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'vi_vs_analytical.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'vi_vs_analytical.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3137,7 +3137,7 @@ Ratio: VI is 185.3× larger than NUTS
 <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'KSD: a scalar measure of how wrong your samples are'</span><span class="p">,</span>
              <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'ksd_three_comparison.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'ksd_three_comparison.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-10"># Samples from a completely wrong distribution
@@ -3180,7 +3180,7 @@ axes[0].legend(fontsize=9, loc='upper right')
 fig.suptitle('KSD: a scalar measure of how wrong your samples are',
              fontsize=14, fontweight='bold', y=1.02)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'ksd_three_comparison.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'ksd_three_comparison.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>

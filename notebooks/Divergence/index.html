@@ -2943,7 +2943,7 @@ pdf_q = lambda x: sp.stats.norm.pdf(x, mu_q, sigma_q)</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'The two distributions we will compare throughout'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'two_distributions.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'two_distributions.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">x = np.linspace(-12, 16, 500)
@@ -2958,7 +2958,7 @@ ax.set_ylabel('Density')
 ax.set_title('The two distributions we will compare throughout')
 ax.legend()
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'two_distributions.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'two_distributions.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3753,7 +3753,7 @@ JSD(q, p) = 0.086305   ← symmetric!
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'X'</span><span class="p">);</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Y'</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Independent (ρ = 0)'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'bivariate_normal.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'bivariate_normal.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-14"># Bivariate normal setup
@@ -3779,7 +3779,7 @@ axes[1].scatter(sample_x[:2000], sample_y_indep[:2000], alpha=0.2, s=5, color='c
 axes[1].set_xlabel('X'); axes[1].set_ylabel('Y')
 axes[1].set_title('Independent (ρ = 0)')
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'bivariate_normal.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'bivariate_normal.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>

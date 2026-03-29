@@ -2701,7 +2701,7 @@ Mean flow: 919 × 10⁸ m³
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Annual Flow of the Nile at Aswan, 1871–1970'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'upper right'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'nile_timeseries.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'nile_timeseries.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-3">fig, ax = plt.subplots(figsize=(12, 5))
@@ -2723,7 +2723,7 @@ ax.set_ylabel('Annual flow (10⁸ m³)')
 ax.set_title('Annual Flow of the Nile at Aswan, 1871–1970', fontsize=14)
 ax.legend(loc='upper right', fontsize=10)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'nile_timeseries.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'nile_timeseries.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3079,7 +3079,7 @@ Late sample:  16 walkers × 4,000 steps (after burn-in)
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> — first 100 steps'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'The Impatient Detective: Are the walkers still searching?'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.01</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'trace_plots_early.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'trace_plots_early.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7"># Trace plot comparison: early vs late
@@ -3094,7 +3094,7 @@ for i, (name, ax) in enumerate(zip(var_names, axes.flat)):
     ax.set_title(f'{name} — first 100 steps', fontsize=11)
 fig.suptitle('The Impatient Detective: Are the walkers still searching?', fontsize=14, y=1.01)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'trace_plots_early.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'trace_plots_early.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3164,7 +3164,7 @@ plt.show()</div>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'Do the walkers agree? Energy distance between each pair.'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'chain_divergence_heatmap.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'chain_divergence_heatmap.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Early — max pairwise divergence: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cd_early</span><span class="p">[</span><span class="s2">"tau"</span><span class="p">])</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
@@ -3191,7 +3191,7 @@ plt.colorbar(im2, ax=ax2, shrink=0.8)
 
 plt.suptitle('Do the walkers agree? Energy distance between each pair.', fontsize=13, y=1.02)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'chain_divergence_heatmap.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'chain_divergence_heatmap.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 print(f'Early — max pairwise divergence: {np.max(cd_early["tau"]):.2f}')
@@ -3375,7 +3375,7 @@ Any significant at α=0.05? True
 <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'Transfer entropy: does the first half of each walker predict the second?'</span><span class="p">,</span>
              <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'mixing_stationarity.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'mixing_stationarity.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-10">mix_early = mixing_diagnostic(idata_early, var_names=['mu1'])
@@ -3398,7 +3398,7 @@ ax2.axhline(0, color='gray', lw=0.5)
 plt.suptitle('Transfer entropy: does the first half of each walker predict the second?',
              fontsize=13, y=1.02)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'mixing_stationarity.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'mixing_stationarity.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3480,7 +3480,7 @@ plt.show()</div>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">'The Posterior Speaks: What the Nile Data Tells Us'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.03</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'posterior_histograms.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'posterior_histograms.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Change-point τ:  median = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">tau_post</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">, '</span>
@@ -3520,7 +3520,7 @@ for ax in axes:
 
 plt.suptitle('The Posterior Speaks: What the Nile Data Tells Us', fontsize=14, y=1.03)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'posterior_histograms.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'posterior_histograms.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 print(f'Change-point τ:  median = {np.median(tau_post):.1f}, '
@@ -3645,7 +3645,7 @@ Flow reduction:  246 × 10⁸ m³/year
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Information gain (nats)'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'How much did the Nile data teach us about each parameter?'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'information_gain.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'information_gain.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-12"># For information gain, we need prior samples alongside the posterior.
@@ -3704,7 +3704,7 @@ for i, v in enumerate(values):
 ax.set_ylabel('Information gain (nats)')
 ax.set_title('How much did the Nile data teach us about each parameter?', fontsize=13)
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'information_gain.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'information_gain.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3904,7 +3904,7 @@ Low sensitivity → the data dominates regardless of prior choice.
                 <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'coral'</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'bayesian_surprise.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'bayesian_surprise.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-14"># Compute log-likelihood for each posterior sample at each observation
@@ -3953,7 +3953,7 @@ for idx in top_idx:
                 ha='center', fontsize=9, fontweight='bold', color='coral')
 
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'bayesian_surprise.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'bayesian_surprise.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -4296,7 +4296,7 @@ R-hat sees matching means/variances and says "converged."
         <span class="n">ax2</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">p</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
                 <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'rhat_failure.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'rhat_failure.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -4343,7 +4343,7 @@ for i in range(4):
         ax2.text(j, i, f'{p:.2f}', ha='center', va='center', fontsize=11,
                 fontweight='bold', color=color)
 
-plt.savefig(FIGURES_DIR / 'rhat_failure.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'rhat_failure.png', dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.show()
 

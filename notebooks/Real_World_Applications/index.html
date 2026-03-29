@@ -2291,7 +2291,7 @@ Transfer entropy:
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Transfer entropy (nats)'</span><span class="p">)</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Transfer entropy: directed information flow'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'stock_market_contagion.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'stock_market_contagion.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -2321,7 +2321,7 @@ for bar, val in zip(bars, [te_sp_nk, te_nk_sp]):
 ax2.set_ylabel('Transfer entropy (nats)')
 ax2.set_title('Transfer entropy: directed information flow', fontsize=12)
 
-plt.savefig(FIGURES_DIR / 'stock_market_contagion.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'stock_market_contagion.png', dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.show()
 
@@ -2507,7 +2507,7 @@ Mutual information says: "temperature matters enormously" (MI = 0.74 nats)
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">mi</span><span class="p">]):</span>
     <span class="n">ax2</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s1">'center'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">'bold'</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'crop_yield_heat_cliff.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'crop_yield_heat_cliff.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -2534,7 +2534,7 @@ ax2.set_title('Correlation sees nothing.\nMutual information sees the cliff.', f
 for i, v in enumerate([abs(r), mi]):
     ax2.text(i, v + 0.02, f'{v:.3f}', ha='center', fontsize=13, fontweight='bold')
 
-plt.savefig(FIGURES_DIR / 'crop_yield_heat_cliff.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'crop_yield_heat_cliff.png', dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.show()</div>
 </div>
@@ -2630,7 +2630,7 @@ plt.show()</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Unemployment rate (%)'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'CPI inflation (%)'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'The Phillips Curve, 1960–2023: the relationship keeps shifting'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'phillips_curve_scatter.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'phillips_curve_scatter.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -2677,7 +2677,7 @@ for yr, u, i, label in [
 ax.set_xlabel('Unemployment rate (%)')
 ax.set_ylabel('CPI inflation (%)')
 ax.set_title('The Phillips Curve, 1960–2023: the relationship keeps shifting', fontsize=13)
-plt.savefig(FIGURES_DIR / 'phillips_curve_scatter.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'phillips_curve_scatter.png', dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.show()</div>
 </div>
@@ -3066,7 +3066,7 @@ print(f'  Epistemic: {r["epistemic"]:.2f} nats ({pct_epistemic:.0f}%)')</div>
         <span class="n">startangle</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">textprops</span><span class="o">=</span><span class="p">{</span><span class="s1">'fontsize'</span><span class="p">:</span> <span class="mi">13</span><span class="p">})</span>
 <span class="n">ax2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Prediction uncertainty at </span><span class="si">{</span><span class="n">u_pred</span><span class="si">}</span><span class="s1">% unemployment (2024)'</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'phillips_curve_uncertainty.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'phillips_curve_uncertainty.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -3090,7 +3090,7 @@ ax2.pie([pct_aleatoric, pct_epistemic],
         startangle=90, textprops={'fontsize': 13})
 ax2.set_title(f'Prediction uncertainty at {u_pred}% unemployment (2024)', fontsize=12)
 
-plt.savefig(FIGURES_DIR / 'phillips_curve_uncertainty.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'phillips_curve_uncertainty.png', dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.show()</div>
 </div>

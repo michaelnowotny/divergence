@@ -2558,7 +2558,7 @@ FIGURES_DIR.mkdir(parents=True, exist_ok=True)</div>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">'equal'</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'distributions_1d_2d.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'distributions_1d_2d.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">np.random.seed(42)
@@ -2601,7 +2601,7 @@ axes[1].legend()
 axes[1].set_aspect('equal')
 
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'distributions_1d_2d.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'distributions_1d_2d.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2741,7 +2741,7 @@ W2 for normals = sqrt((mu1-mu2)^2 + (sigma1-sigma2)^2)
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s1">'$W_1$ is the area between the two CDFs'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'wasserstein_cdf_area.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'wasserstein_cdf_area.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># Visualize W1 as the area between CDFs
@@ -2760,7 +2760,7 @@ ax.set_ylabel('CDF')
 ax.set_title(r'$W_1$ is the area between the two CDFs')
 ax.legend()
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'wasserstein_cdf_area.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'wasserstein_cdf_area.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -2827,7 +2827,7 @@ plt.show()</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Sliced Wasserstein converges quickly'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'sliced_wasserstein_convergence.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'sliced_wasserstein_convergence.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">sw2 = sliced_wasserstein_distance(P_2d, Q_2d, n_projections=200, p=2, seed=42)
@@ -2846,7 +2846,7 @@ ax.set_ylabel('$SW_2$')
 ax.set_title('Sliced Wasserstein converges quickly')
 ax.legend()
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'sliced_wasserstein_convergence.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'sliced_wasserstein_convergence.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3236,7 +3236,7 @@ print(f'  KDE error:   {abs(H_kde - H_analytical):.4f}')</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'kNN entropy estimate vs. number of neighbors'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'knn_entropy_vs_k.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'knn_entropy_vs_k.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-10"># Effect of k on the estimate
@@ -3252,7 +3252,7 @@ ax.set_ylabel('Estimated entropy (nats)')
 ax.set_title('kNN entropy estimate vs. number of neighbors')
 ax.legend()
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'knn_entropy_vs_k.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'knn_entropy_vs_k.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3506,7 +3506,7 @@ print(f'  KDE MI:            {mi_kde:.4f} nats')</div>
 <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">'Correlation is blind to nonlinear dependence; MI is not'</span><span class="p">)</span>
 <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'lower right'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'correlation_vs_mutual_information.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'correlation_vs_mutual_information.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-13"># The key plot: scatter with annotations
@@ -3531,7 +3531,7 @@ ax.set_xlim(-3.5, 3.5)
 ax.set_title('Correlation is blind to nonlinear dependence; MI is not')
 ax.legend(loc='lower right')
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'correlation_vs_mutual_information.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'correlation_vs_mutual_information.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
@@ -3773,7 +3773,7 @@ Different distributions (mean shift = 0.5):
     <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'permutation_test.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">FIGURES_DIR</span> <span class="o">/</span> <span class="s1">'permutation_test.png'</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">'tight'</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-16"># Visualize the null distribution with the observed statistic
@@ -3804,7 +3804,7 @@ for ax, result, title in [(axes[0], result_same, 'Same distribution'),
     ax.legend(fontsize=9)
 
 plt.tight_layout()
-plt.savefig(FIGURES_DIR / 'permutation_test.png', dpi=150, bbox_inches='tight')
+plt.savefig(FIGURES_DIR / 'permutation_test.png', dpi=300, bbox_inches='tight')
 plt.show()</div>
 </div>
 </div>
