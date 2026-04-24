@@ -36,6 +36,7 @@ bayesian = [
 dev = [
     "arviz>=1.0",
     "hypothesis",
+    "ipywidgets>=8.0",
     "pytest",
     "pytest-cov",
     "ruff",
