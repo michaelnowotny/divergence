@@ -145,3 +145,5 @@ site/
 # Notebook copies in docs (copied at build time)
 docs/notebooks/*.ipynb
 /planning/
+/papers/
+/session-transcripts/
