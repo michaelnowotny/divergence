@@ -374,6 +374,14 @@ def chain_divergence(
     off-diagonal values indicate chains exploring different regions of
     parameter space.
 
+    For ``method="mmd"`` the RBF bandwidth is estimated once from the
+    pooled samples across all chains, not per pair.  That gives every
+    entry of the returned matrix a shared scale (which is what users
+    actually want from a pairwise-divergence ranking) and halves the
+    wall time by removing the per-pair median-heuristic call.  Users
+    who need per-pair bandwidths can call
+    :func:`~divergence.ipms.maximum_mean_discrepancy` directly.
+
     Examples
     --------
     >>> import numpy as np
@@ -390,6 +398,15 @@ def chain_divergence(
     _validate_group(idata, group)
     dataset = idata[group]
     names = _get_var_names(dataset, var_names)
+
+    # Fast path for MMD: compute the RBF bandwidth once from pooled data
+    # and pass it explicitly to each pairwise call.  See
+    # ``_chain_divergence_mmd``.
+    if method == "mmd":
+        results_mmd = _chain_divergence_mmd(dataset, names)
+        if results_mmd is not None:
+            return results_mmd
+
     div_fn = _get_divergence_fn(method)
 
     results: dict[str, np.ndarray] = {}
@@ -412,6 +429,70 @@ def chain_divergence(
                 d = float(div_fn(chain_samples[i], chain_samples[j]))
                 matrix[i, j] = d
                 matrix[j, i] = d  # assume symmetric for display
+
+        results[name] = matrix
+    return results
+
+
+def _chain_divergence_mmd(
+    dataset: tp.Any,
+    names: list[str],
+) -> dict[str, np.ndarray] | None:
+    """Faster MMD² path for ``chain_divergence`` via shared bandwidth.
+
+    The dominant per-pair cost in the naive loop is *bandwidth estimation*:
+    each ``maximum_mean_discrepancy(chain_i, chain_j)`` call re-runs the
+    median heuristic on the pooled chain pair.  For ``C`` chains the median
+    therefore runs ``C*(C-1)/2`` times even though all inputs come from the
+    same underlying parameter.
+
+    This helper computes the bandwidth *once* from the full pool across all
+    chains, then passes it explicitly to each pairwise MMD² call.  The
+    pooled bandwidth is also a strictly more-robust median estimate
+    (``C*m`` samples instead of ``2*m``) and gives every entry of the
+    returned matrix a shared scale, which is exactly what users want
+    when reading pairwise divergences as a relative ranking.
+
+    Returns ``None`` if a parameter has fewer than two draws, signalling
+    the caller to fall back to the naive per-pair loop.  Individual
+    ``maximum_mean_discrepancy(chain_i, chain_j)`` calls remain unchanged
+    for users who want per-pair bandwidths.
+    """
+    from divergence._numba_kernels import _median_bandwidth_jit
+
+    results: dict[str, np.ndarray] = {}
+    for name in names:
+        arr = _get_values(dataset, name)  # (chain, draw, ...)
+        n_chains, n_draws = arr.shape[:2]
+
+        if n_draws < 2:
+            return None
+
+        # Stack chains into one pooled array; 1D params become (n_total, 1).
+        n_total = n_chains * n_draws
+        if arr.ndim == 2:
+            flat = arr.reshape(n_total, 1).astype(float, copy=False)
+        else:
+            flat = arr.reshape(n_total, -1).astype(float, copy=False)
+
+        bandwidth = float(_median_bandwidth_jit(np.ascontiguousarray(flat)))
+        if bandwidth == 0.0:
+            bandwidth = 1.0
+
+        # Per-chain slices into the pooled array — avoids re-shaping
+        # inside the inner loop.
+        chain_samples = [flat[c * n_draws : (c + 1) * n_draws] for c in range(n_chains)]
+
+        matrix = np.zeros((n_chains, n_chains))
+        for i in range(n_chains):
+            for j in range(i + 1, n_chains):
+                d_val = float(
+                    maximum_mean_discrepancy(
+                        chain_samples[i], chain_samples[j], bandwidth=bandwidth
+                    )
+                )
+                matrix[i, j] = d_val
+                matrix[j, i] = d_val
 
         results[name] = matrix
     return results

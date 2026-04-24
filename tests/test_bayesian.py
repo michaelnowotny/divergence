@@ -184,6 +184,30 @@ class TestChainDivergence:
         off_diag = result["mu"][np.triu_indices(4, k=1)]
         assert np.all(off_diag < 0.5)
 
+    def test_mmd_shared_bandwidth_matches_manual(self, rng):
+        """chain_divergence('mmd') must equal a naive loop that shares
+        the pooled-median bandwidth across pair calls."""
+        from divergence._numba_kernels import _median_bandwidth_jit
+        from divergence.ipms import maximum_mean_discrepancy
+
+        n_chains, n_draws = 4, 300
+        arr = rng.normal(0, 1, (n_chains, n_draws))
+        arr[2] += 0.5  # one chain shifted — forces non-trivial off-diagonals
+        idata = az.from_dict({"posterior": {"mu": arr}})
+
+        result = chain_divergence(idata, method="mmd")["mu"]
+
+        # Reference: compute bandwidth once, reuse across pairs
+        flat = arr.reshape(-1, 1).astype(float)
+        bw = float(_median_bandwidth_jit(flat))
+        expected = np.zeros((n_chains, n_chains))
+        for i in range(n_chains):
+            for j in range(i + 1, n_chains):
+                v = float(maximum_mean_discrepancy(arr[i], arr[j], bandwidth=bw))
+                expected[i, j] = expected[j, i] = v
+
+        np.testing.assert_allclose(result, expected, atol=1e-12)
+
 
 # ---------------------------------------------------------------------------
 # TestBayesianSurprise

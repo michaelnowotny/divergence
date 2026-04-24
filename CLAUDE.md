@@ -87,17 +87,22 @@ Hot paths are JIT-compiled via Numba and dispatched automatically based on input
 
 **Functions without dedicated JIT kernels** (and why):
 - `wasserstein_distance`, `sliced_wasserstein_distance` — scipy's 1D Wasserstein is already sort-based O(n log n).
-- `knn_entropy`, `knn_kl_divergence`, `ksg_mutual_information` — scipy `cKDTree` is C-optimized; Numba can't improve neighbor queries.
+- `knn_entropy`, `knn_kl_divergence`, `ksg_mutual_information` — scipy `cKDTree` is C-optimized; Numba can't improve neighbor queries.  Tree-reuse across permutations was investigated and rejected: tree construction is only ~15% of per-permutation cost, so the ceiling is too low to justify the added complexity.
 - `total_correlation`, `variation_of_information`, `normalized_mutual_information` — compose kNN entropy; as fast as the underlying kNN.
 - `transfer_entropy` — composes kNN mutual information.
-- f-divergences, Rényi, Bayesian diagnostics — operate on small arrays or delegate.
+- f-divergences (continuous path) — use fixed-grid trapezoidal integration over pooled KDE support; already fast (<1ms at n=500).
+- Rényi, discrete measures, most Bayesian diagnostics — operate on small arrays or delegate.
+
+**Bayesian chain diagnostics** (`bayesian.py`):
+- `chain_divergence` with `method='mmd'` computes the RBF bandwidth once from the pooled samples across all chains and passes it explicitly to each pairwise `maximum_mean_discrepancy` call.  The per-pair median-heuristic call dominated the naive loop; eliminating it gives a ~1.7–2× speedup (e.g., 8 chains × 1000 draws: 1.1 s → 0.6 s; 16 chains: 5.3 s → 2.7 s).  The matrix-based amortization variant (one big kernel matrix + block sums) was benchmarked and rejected: the JIT streaming MMD is already so fast per-call that the O((C·m)²) exp work in the amortized path cancels the savings.
 
 **Performance benchmarks** (dev machine, Linux x86_64):
 - `energy_distance` at n=3000 (1D): ~30 μs
 - `maximum_mean_discrepancy` at n=2000: ~43 ms
 - `sinkhorn_divergence` at n=500: ~900 ms
 - `two_sample_test(energy, n_permutations=500)` at n=3000 per group (1D): ~0.11 s
-- `two_sample_test(mmd, n_permutations=500)` at n=2000 per group: ~7 s (further optimization tracked in `planning/performance_overhaul_epic.md`)
+- `two_sample_test(mmd, n_permutations=500)` at n=2000 per group: ~7 s
+- `chain_divergence(mmd)` at 8 chains × 1000 draws: ~0.6 s (down from ~1.1 s)
 
 ### Dependencies
 
