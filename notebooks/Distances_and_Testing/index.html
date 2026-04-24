@@ -3210,9 +3210,26 @@ print(f'MMD^2(P, P\') = {mmd_same:.6f}  (near 0, may be slightly negative)')</di
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/home/michaelnowotny/PycharmProjects/divergence/.venv/lib/python3.12/site-packages/numba/core/typed_passes.py:338: NumbaPerformanceWarning: <span class="ansi-bold">
+The keyword argument 'parallel=True' was specified but no transformation for parallel execution was possible.
+
+To find out why, try turning on parallel diagnostics, see https://numba.readthedocs.io/en/stable/user/parallel.html#diagnostics for help.
+</span><span class="ansi-bold">
+File "../src/divergence/_numba_kernels.py", line 407:</span>
+<span class="ansi-bold">@numba.njit(parallel=True)
+</span><span class="ansi-bold">def _median_bandwidth_jit(x: np.ndarray) -&gt; float:
+</span><span class="ansi-bold">^</span>
+
+  warnings.warn(errors.NumbaPerformanceWarning(msg,
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>MMD^2(P, Q) = 0.274796
-MMD^2(P, P') = 0.000255  (near 0, may be slightly negative)
+<pre>MMD^2(P, Q) = 0.274368
+MMD^2(P, P') = 0.000254  (near 0, may be slightly negative)
 </pre>
 </div>
 </div>
@@ -3286,8 +3303,8 @@ print(f'  W1 (shifted):      {wasserstein_distance(baseline, shifted, p=1):.6f}'
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>Detecting a subtle mean shift of 0.3:
-  MMD^2 (no shift):  0.002061
-  MMD^2 (shifted):   0.026562
+  MMD^2 (no shift):  0.002049
+  MMD^2 (shifted):   0.026554
   Energy (no shift): 0.006778
   Energy (shifted):  0.080301
   W1 (no shift):     0.129936
