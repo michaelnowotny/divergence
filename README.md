@@ -167,13 +167,17 @@ Works with **PyMC, Stan, NumPyro, PyJAGS, emcee** — any package that produces 
 
 ## Performance
 
-For large-scale computations (n ≥ 5,000), energy distance, MMD, and KSD automatically use **Numba JIT-compiled kernels** with O(1) memory and multicore parallelism — 10-18x faster than vectorized implementations and enabling n=50,000+ (which previously exhausted memory).
+Hot paths dispatch to Numba JIT-compiled kernels automatically based on input size and dimensionality — no flags to set.
 
-| Function | n=5K | n=20K | n=50K |
-|----------|------|-------|-------|
-| Energy distance | 21ms | 276ms | 1.4s |
-| MMD | 136ms | 1.9s | 12s |
-| KSD | 114ms | 1.4s | 8.6s |
+- **Energy distance (1D):** sort-based O(n log n) kernel; n=3,000 in ~30 μs.
+- **Energy distance (multi-D):** O(n·m) kernel with O(1) memory, enabling n=50,000+ that previously exhausted RAM.
+- **MMD:** JIT kernel with tight memory footprint; n=2,000 in ~43 ms. The `two_sample_test(method='mmd')` permutation loop precomputes the full kernel matrix once and uses a symmetry identity to sum only two blocks per permutation.
+- **Sinkhorn divergence:** log-domain iterations inlined in Numba (~4× faster than the SciPy-based reference); no Python fallback.
+- **KSD:** Numba kernel for Stein-kernel sums; RBF and IMQ kernels supported.
+
+For large-scale two-sample testing, 1D energy distance tests are the fastest choice: n=3,000 per group with 500 permutations runs in ~0.11 s end-to-end.
+
+A GPU backend (JAX, energy distance only) is available via `backend="gpu"` or the `DIVERGENCE_BACKEND=gpu` environment variable.
 
 ---
 

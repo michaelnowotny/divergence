@@ -19,9 +19,15 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.stats import wasserstein_distance as _scipy_wasserstein
 
-# Threshold above which JIT kernels are used (avoids compilation overhead
-# for small problems while preventing O(n^2) memory allocation for large ones)
+# Thresholds above which JIT kernels are preferred over vectorized scipy/numpy.
+#
+# The right threshold differs per measure.  For energy distance, scipy's
+# ``cdist`` is heavily tuned and the vectorized path is competitive up to
+# quite large ``n``.  For MMD, the vectorized path has to materialize the
+# full kernel matrix (3 copies of exp(-gamma * D_sq)), so the O(1)-memory
+# JIT kernel pays off at much smaller sizes.
 _JIT_THRESHOLD = 5000
+_MMD_JIT_THRESHOLD = 500
 
 
 def _ensure_2d(x: np.ndarray) -> np.ndarray:
@@ -311,9 +317,11 @@ def maximum_mean_discrepancy(
             f"Need at least 2 samples from each distribution, got m={m}, n={n}"
         )
 
-    # Bandwidth: median heuristic if not provided
+    # Bandwidth: median heuristic if not provided.  Uses the same JIT
+    # threshold as the main MMD path — if we're going to JIT the
+    # kernel sums we may as well JIT the bandwidth estimate too.
     if bandwidth is None:
-        if max(m, n) >= _JIT_THRESHOLD:
+        if max(m, n) >= _MMD_JIT_THRESHOLD:
             from divergence._numba_kernels import _median_bandwidth_jit
 
             pooled = np.ascontiguousarray(np.concatenate([x, y], axis=0))
@@ -328,7 +336,10 @@ def maximum_mean_discrepancy(
 
     gamma = 1.0 / (2.0 * bandwidth**2)
 
-    if max(m, n) >= _JIT_THRESHOLD:
+    # MMD kicks into JIT at a much smaller size than energy distance
+    # because the vectorized path must materialize three full
+    # (n+m) x (n+m) kernel matrices.  See ``_MMD_JIT_THRESHOLD``.
+    if max(m, n) >= _MMD_JIT_THRESHOLD:
         from divergence._numba_kernels import _mmd_squared_jit
 
         return float(

@@ -511,12 +511,44 @@ def two_sample_test(
                 rng,
             )
         else:
+            # Precomputed matrix path.  Key optimization: bake the RBF
+            # nonlinearity into a kernel matrix K = exp(-gamma * D_sq)
+            # ONCE outside the permutation loop, then sum blocks of K
+            # (no exp() inside the loop).  With the old code each
+            # permutation did ~3 * n_p * n_q exp() calls, so a 500-
+            # permutation test at n = 2000 spent most of its time
+            # recomputing the same kernel values.
+            #
+            # Also exploit symmetry: K.sum() is constant across
+            # permutations, so S_PQ = (K_total - S_PP - S_QQ) / 2 can
+            # replace one of the three block-sum computations per
+            # iteration.  The diagonal K[i, i] = exp(0) = 1, so the
+            # within-group sums need ``len(idx)`` subtracted to match
+            # the U-statistic form.
+            from divergence._numba_kernels import _sum_block_jit
+
             D_sq = cdist(combined, combined, metric="sqeuclidean")
-            observed = _mmd_from_sq_distance_matrix(D_sq, idx_p_orig, idx_q_orig, gamma)
+            K = np.exp(-gamma * D_sq)
+            k_total = float(K.sum())
+
+            def _mmd_from_kernel_matrix(idx_p, idx_q):
+                idx_p_c = np.ascontiguousarray(idx_p, dtype=np.int64)
+                idx_q_c = np.ascontiguousarray(idx_q, dtype=np.int64)
+                m_size = len(idx_p_c)
+                n_size = len(idx_q_c)
+                k_pp = _sum_block_jit(K, idx_p_c, idx_p_c)
+                k_qq = _sum_block_jit(K, idx_q_c, idx_q_c)
+                k_pq = (k_total - k_pp - k_qq) / 2.0
+                term_pp = (k_pp - m_size) / (m_size * (m_size - 1))
+                term_qq = (k_qq - n_size) / (n_size * (n_size - 1))
+                term_pq = k_pq / (m_size * n_size)
+                return float(term_pp - 2.0 * term_pq + term_qq)
+
+            observed = _mmd_from_kernel_matrix(idx_p_orig, idx_q_orig)
             null_dist = _fast_permutation_test(
                 n_total,
                 n_p,
-                lambda ip, iq: _mmd_from_sq_distance_matrix(D_sq, ip, iq, gamma),
+                _mmd_from_kernel_matrix,
                 n_permutations,
                 rng,
             )
