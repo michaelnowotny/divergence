@@ -3022,13 +3022,7 @@ print(f'MMD^2(P, P\') = {mmd_same:.6f}  (near 0, may be slightly negative)')</di
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>MMD^2(P, Q) = 0.274796
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>MMD^2(P, P') = 0.000255  (near 0, may be slightly negative)
+MMD^2(P, P') = 0.000255  (near 0, may be slightly negative)
 </pre>
 </div>
 </div>
@@ -4055,30 +4049,12 @@ Measure                           Value
 Energy distance                  0.1579
 Wasserstein W₁                   0.5757
 Wasserstein W₂                   0.6933
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>MMD² (RBF)                       0.0613
+MMD² (RBF)                       0.0613
 kNN KL divergence                0.1754
 KSG mutual information          -0.0084
 
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Two-sample test (energy):  statistic = 0.1579,  p = 0.0020
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Two-sample test (MMD):     statistic = 0.0613,  p = 0.0020
+Two-sample test (energy):  statistic = 0.1579,  p = 0.0020
+Two-sample test (MMD):     statistic = 0.0613,  p = 0.0020
 </pre>
 </div>
 </div>
@@ -4135,23 +4111,28 @@ KSG mutual information          -0.0084
 </tr>
 <tr>
 <td>5</td>
-<td><a href="Scores_and_Transport.ipynb">Scores and Transport</a></td>
-<td>The modern frontier: Fisher divergence, kernel Stein discrepancy, Sinkhorn divergence</td>
+<td><a href="Bayesian_Diagnostics.ipynb">Bayesian Diagnostics</a></td>
+<td>End-to-end MCMC with emcee on the Nile change-point — convergence diagnostics, information gain, Bayesian surprise</td>
 </tr>
 <tr>
 <td>6</td>
-<td><a href="Bayesian_Diagnostics.ipynb">Bayesian Diagnostics</a></td>
-<td>End-to-end MCMC with emcee: convergence diagnostics, information gain, Bayesian surprise</td>
+<td><a href="Real_World_Applications.ipynb">Real-World Applications</a></td>
+<td>Stock market contagion, crop yields, Phillips Curve — real data, real stakes</td>
 </tr>
 <tr>
 <td>7</td>
-<td><a href="Real_World_Applications.ipynb">Real-World Applications</a></td>
-<td>Stock market contagion, crop yields, Phillips Curve — real data, real stakes</td>
+<td><a href="Scores_and_Transport.ipynb">Scores and Transport</a></td>
+<td>Fisher divergence, kernel Stein discrepancy, Sinkhorn divergence</td>
 </tr>
 <tr>
 <td>8</td>
 <td><a href="NumPyro_KSD.ipynb">Did My Sampler Find the Truth?</a></td>
 <td>KSD as convergence diagnostic with NumPyro: NUTS vs VI, the 250-year journey from Bayes to Stein</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="Phillips_Curve_TVP.ipynb">Phillips Curve TVP</a></td>
+<td>Time-varying Phillips Curve with PyJAGS Gibbs sampling — stagflation as a structural break</td>
 </tr>
 </tbody>
 </table>
