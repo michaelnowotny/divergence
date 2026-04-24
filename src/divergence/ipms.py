@@ -93,6 +93,21 @@ def energy_distance(
     x = _ensure_2d(samples_p)
     y = _ensure_2d(samples_q)
 
+    # 1D fast path: O((n + m) log(n + m)) via sorted-sample identities.
+    # Asymptotically faster than both the vectorized and the Numba JIT
+    # paths for one-dimensional data (the common case for scalar MCMC
+    # parameters).  Guard with a small-n threshold so cheap cases still
+    # use the vectorized path and avoid JIT compilation overhead.
+    if x.shape[1] == 1 and y.shape[1] == 1 and max(len(x), len(y)) >= 200:
+        from divergence._numba_kernels import _energy_distance_1d_jit
+
+        return float(
+            _energy_distance_1d_jit(
+                np.ascontiguousarray(x.ravel(), dtype=np.float64),
+                np.ascontiguousarray(y.ravel(), dtype=np.float64),
+            )
+        )
+
     if max(len(x), len(y)) >= _JIT_THRESHOLD:
         from divergence._numba_kernels import _energy_distance_jit
 

@@ -43,12 +43,29 @@ _LOW_MEMORY_BYTES_THRESHOLD = 1 * 1024**3
 # Fast permutation helpers using precomputed distance matrices
 # ---------------------------------------------------------------------------
 def _energy_from_distance_matrix(
-    D: np.ndarray, idx_p: np.ndarray, idx_q: np.ndarray
+    D: np.ndarray,
+    idx_p: np.ndarray,
+    idx_q: np.ndarray,
+    d_total: float | None = None,
 ) -> float:
     """Compute energy distance from a precomputed Euclidean distance matrix.
 
     Uses the U-statistic estimator (excludes self-distances on the
     diagonal), consistent with ``_energy_distance_jit``.
+
+    The three submatrix sums that make up the U-statistic are computed
+    via ``_sum_block_jit``, which sums over block indices in place
+    without materializing a submatrix via ``np.ix_()``.  Avoiding those
+    allocations removes the dominant overhead in the permutation-test
+    hot loop.
+
+    When ``d_total`` (the precomputed full sum of ``D``) is supplied,
+    the between-group sum is derived via the symmetry identity
+
+        D.sum() = S_PP + S_QQ + 2 * S_PQ
+
+    which saves one of the three block-sum computations per call.
+    Useful in permutation loops where ``D`` is fixed across iterations.
 
     Parameters
     ----------
@@ -58,24 +75,35 @@ def _energy_from_distance_matrix(
         Indices of the P-samples in the combined array.
     idx_q : np.ndarray
         Indices of the Q-samples in the combined array.
+    d_total : float, optional
+        Precomputed ``D.sum()``.  If supplied, uses the symmetry
+        identity to derive ``S_PQ`` from ``S_PP``, ``S_QQ``, and
+        ``d_total``, skipping a block sum.
 
     Returns
     -------
     float
         Energy distance (U-statistic).
     """
+    from divergence._numba_kernels import _sum_block_jit
+
     n_p = len(idx_p)
     n_q = len(idx_q)
 
-    d_pq = D[np.ix_(idx_p, idx_q)]
-    mean_pq = np.sum(d_pq) / (n_p * n_q)
+    # Ensure index arrays have a type Numba accepts without surprises.
+    idx_p_c = np.ascontiguousarray(idx_p, dtype=np.int64)
+    idx_q_c = np.ascontiguousarray(idx_q, dtype=np.int64)
 
-    # Within-group: exclude diagonal (self-distances = 0) for U-statistic
-    d_pp = D[np.ix_(idx_p, idx_p)]
-    mean_pp = np.sum(d_pp) / (n_p * (n_p - 1)) if n_p > 1 else 0.0
+    s_pp = _sum_block_jit(D, idx_p_c, idx_p_c)
+    s_qq = _sum_block_jit(D, idx_q_c, idx_q_c)
+    if d_total is None:
+        s_pq = _sum_block_jit(D, idx_p_c, idx_q_c)
+    else:
+        s_pq = (d_total - s_pp - s_qq) / 2.0
 
-    d_qq = D[np.ix_(idx_q, idx_q)]
-    mean_qq = np.sum(d_qq) / (n_q * (n_q - 1)) if n_q > 1 else 0.0
+    mean_pq = s_pq / (n_p * n_q)
+    mean_pp = s_pp / (n_p * (n_p - 1)) if n_p > 1 else 0.0
+    mean_qq = s_qq / (n_q * (n_q - 1)) if n_q > 1 else 0.0
 
     return float(2.0 * mean_pq - mean_pp - mean_qq)
 
@@ -87,6 +115,12 @@ def _mmd_from_sq_distance_matrix(
     gamma: float,
 ) -> float:
     """Compute MMD² from a precomputed squared Euclidean distance matrix.
+
+    Uses ``_sum_block_rbf_jit`` to sum ``exp(-gamma * D_sq)`` over each
+    block in place — avoids allocating submatrices and their
+    exponentiated copies per permutation.  The diagonal contributes
+    ``exp(0) = 1`` per self-pair, so the within-group kernel sums need
+    ``len(idx)`` subtracted to obtain the U-statistic.
 
     Parameters
     ----------
@@ -104,19 +138,24 @@ def _mmd_from_sq_distance_matrix(
     float
         Squared MMD (U-statistic).
     """
+    from divergence._numba_kernels import _sum_block_rbf_jit
+
     m = len(idx_p)
     n = len(idx_q)
 
-    k_pp = np.exp(-gamma * D_sq[np.ix_(idx_p, idx_p)])
-    k_qq = np.exp(-gamma * D_sq[np.ix_(idx_q, idx_q)])
-    k_pq = np.exp(-gamma * D_sq[np.ix_(idx_p, idx_q)])
+    idx_p_c = np.ascontiguousarray(idx_p, dtype=np.int64)
+    idx_q_c = np.ascontiguousarray(idx_q, dtype=np.int64)
 
-    np.fill_diagonal(k_pp, 0.0)
-    np.fill_diagonal(k_qq, 0.0)
+    # Full block sums of the RBF kernel.  For the within-group sums,
+    # the diagonal contributes ``exp(0) = 1`` per index; subtract those
+    # to turn the block sum into the sum over ordered off-diagonal pairs.
+    k_pp_full = _sum_block_rbf_jit(D_sq, idx_p_c, idx_p_c, gamma)
+    k_qq_full = _sum_block_rbf_jit(D_sq, idx_q_c, idx_q_c, gamma)
+    k_pq_full = _sum_block_rbf_jit(D_sq, idx_p_c, idx_q_c, gamma)
 
-    term_pp = np.sum(k_pp) / (m * (m - 1))
-    term_qq = np.sum(k_qq) / (n * (n - 1))
-    term_pq = np.sum(k_pq) / (m * n)
+    term_pp = (k_pp_full - m) / (m * (m - 1))
+    term_qq = (k_qq_full - n) / (n * (n - 1))
+    term_pq = k_pq_full / (m * n)
 
     return float(term_pp - 2.0 * term_pq + term_qq)
 
@@ -356,7 +395,32 @@ def two_sample_test(
             )
 
     if method == "energy":
-        if use_low_mem:
+        # 1D fast path: sort-based O((n + m) log(n + m)) kernel.  This is
+        # asymptotically faster than both the JIT sample-based path and
+        # the precomputed-matrix path, and it's the overwhelmingly common
+        # case (scalar MCMC parameters).  The permutation loop calls the
+        # 1D kernel on each permuted labeling, with per-permutation cost
+        # dominated by two sorts of size ~n rather than the O(n^2)
+        # submatrix sums used by the matrix path.
+        if combined.shape[1] == 1:
+            from divergence._numba_kernels import _energy_distance_1d_jit
+
+            combined_1d = np.ascontiguousarray(combined.ravel(), dtype=np.float64)
+            p_flat = combined_1d[:n_p]
+            q_flat = combined_1d[n_p:]
+            observed = float(_energy_distance_1d_jit(p_flat, q_flat))
+
+            def _energy_1d_from_indices(ip, iq):
+                return float(_energy_distance_1d_jit(combined_1d[ip], combined_1d[iq]))
+
+            null_dist = _fast_permutation_test(
+                n_total,
+                n_p,
+                _energy_1d_from_indices,
+                n_permutations,
+                rng,
+            )
+        elif use_low_mem:
             # Low-memory path: recompute energy distance from scratch
             # each permutation using Numba JIT kernels.  O(N) memory.
             from divergence._numba_kernels import _energy_distance_jit
@@ -385,12 +449,18 @@ def two_sample_test(
             )
         else:
             # Precomputed matrix path: O(N²) memory, fast reindexing.
+            # Precomputing ``d_total`` once lets the permutation loop
+            # skip one of the three block-sum computations per iteration
+            # via ``S_PQ = (d_total - S_PP - S_QQ) / 2``.
             D = cdist(combined, combined, metric="euclidean")
-            observed = _energy_from_distance_matrix(D, idx_p_orig, idx_q_orig)
+            d_total = float(D.sum())
+            observed = _energy_from_distance_matrix(
+                D, idx_p_orig, idx_q_orig, d_total=d_total
+            )
             null_dist = _fast_permutation_test(
                 n_total,
                 n_p,
-                lambda ip, iq: _energy_from_distance_matrix(D, ip, iq),
+                lambda ip, iq: _energy_from_distance_matrix(D, ip, iq, d_total=d_total),
                 n_permutations,
                 rng,
             )
