@@ -2518,6 +2518,13 @@ the matrix is symmetric. For KL divergence, entry <code>(i, j)</code> is
 <p>Well-mixed chains should have small pairwise divergences. Large
 off-diagonal values indicate chains exploring different regions of
 parameter space.</p>
+<p>For <code>method="mmd"</code> the RBF bandwidth is estimated once from the
+pooled samples across all chains, not per pair.  That gives every
+entry of the returned matrix a shared scale (which is what users
+actually want from a pairwise-divergence ranking) and halves the
+wall time by removing the per-pair median-heuristic call.  Users
+who need per-pair bandwidths can call
+:func:<code>~divergence.ipms.maximum_mean_discrepancy</code> directly.</p>
 </details>
 
 <p><span class="doc-section-title">Examples:</span></p>
