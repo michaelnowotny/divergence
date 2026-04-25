@@ -423,6 +423,35 @@ class TestChainKSD:
         )
         assert all(np.isfinite(result["mu"].ksd_per_chain))
 
+    def test_shared_bandwidth_matches_manual(self, rng):
+        """chain_ksd must equal a naive loop that shares the pooled-median
+        bandwidth across per-chain calls.  Pins the speedup to exact
+        numerical equivalence."""
+        from divergence._numba_kernels import _median_bandwidth_jit
+        from divergence.score_based import kernel_stein_discrepancy
+
+        n_chains, n_draws = 4, 800
+        arr = rng.standard_normal((n_chains, n_draws))
+        idata = az.from_dict({"posterior": {"mu": arr}})
+
+        result = chain_ksd(idata, _standard_normal_score, kernel="imq")
+        per_chain = result["mu"].ksd_per_chain
+
+        flat = arr.reshape(-1, 1).astype(float)
+        bw = float(_median_bandwidth_jit(flat))
+        expected = np.array(
+            [
+                kernel_stein_discrepancy(
+                    arr[c].reshape(-1, 1),
+                    _standard_normal_score,
+                    kernel="imq",
+                    bandwidth=bw,
+                )
+                for c in range(n_chains)
+            ]
+        )
+        np.testing.assert_allclose(per_chain, expected, atol=1e-12)
+
 
 # ---------------------------------------------------------------------------
 # TestChainTwoSampleTest

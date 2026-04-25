@@ -23,6 +23,15 @@ References
 import numpy as np
 from scipy.spatial.distance import cdist
 
+# JIT crossover for ``kernel_stein_discrepancy``.  The vectorized path
+# materializes (n, n, d) diff arrays plus several (n, n) intermediates,
+# so the JIT path with O(1) memory wins decisively from a few hundred
+# samples upward.  Measured crossover sits between n=200 and n=500
+# (n=500: vectorized 22 ms vs JIT 4 ms; n=3000: vectorized 690 ms vs
+# JIT 41 ms).  Threshold mirrors ``_MMD_JIT_THRESHOLD`` for the same
+# memory-allocation reason.
+_KSD_JIT_THRESHOLD = 500
+
 
 def _median_bandwidth(samples: np.ndarray) -> float:
     """Compute the median heuristic bandwidth for the RBF kernel."""
@@ -248,15 +257,15 @@ def kernel_stein_discrepancy(
 
     # Bandwidth (median heuristic)
     if bandwidth is None:
-        if n >= 5000:
+        if n >= _KSD_JIT_THRESHOLD:
             from divergence._numba_kernels import _median_bandwidth_jit
 
             bandwidth = float(_median_bandwidth_jit(np.ascontiguousarray(x)))
         else:
             bandwidth = _median_bandwidth(x)
 
-    # JIT path for large n: O(1) memory instead of O(n^2)
-    if n >= 5000:
+    # JIT path: O(1) memory instead of O(n^2).  See ``_KSD_JIT_THRESHOLD``.
+    if n >= _KSD_JIT_THRESHOLD:
         from divergence._numba_kernels import _ksd_stein_kernel_sum_jit
 
         kernel_type = 0 if kernel == "rbf" else 1

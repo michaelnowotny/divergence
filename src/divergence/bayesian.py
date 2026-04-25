@@ -943,7 +943,11 @@ def chain_ksd(
         provable convergence control guarantees [1]_.
     bandwidth : float or None, optional
         Kernel bandwidth / scale parameter.  If ``None``, the median
-        heuristic is used.
+        heuristic is used, computed *once* from the pooled samples
+        across all chains.  Sharing the bandwidth gives every entry a
+        common scale (which is exactly what you want when reading
+        per-chain KSDs as a relative ranking) and removes the
+        dominant per-call cost.  Pass an explicit value to override.
     split : bool, optional
         If ``True`` (default), additionally compute KSD for the first
         and second halves of each chain.  This is analogous to
@@ -993,8 +997,9 @@ def chain_ksd(
     .. [2] Liu, Q., Lee, J., & Jordan, M. (2016). "A kernelized Stein
        discrepancy for goodness-of-fit tests." *ICML*.
     """
+    from divergence._numba_kernels import _median_bandwidth_jit
     from divergence._types import ChainKSDResult
-    from divergence.score_based import kernel_stein_discrepancy
+    from divergence.score_based import _median_bandwidth, kernel_stein_discrepancy
 
     _import_arviz()
     _validate_group(idata, group)
@@ -1007,6 +1012,31 @@ def chain_ksd(
         n_chains, n_draws = arr.shape[:2]
         trailing = arr.shape[2:]
 
+        # Compute the kernel bandwidth once from the pooled samples across
+        # all chains rather than per chain.  Without sharing, every per-chain
+        # call (and every split-half call) re-runs the median heuristic on
+        # the same parameter — that's the dominant cost at moderate n_draws,
+        # mirroring what we found for chain_divergence.  Pooling also gives
+        # all chains a common scale, which is exactly what users want when
+        # comparing per-chain KSD values to spot one outlier chain.
+        if bandwidth is None:
+            pooled_flat = _flatten_samples(dataset, name)
+            if pooled_flat.ndim == 1:
+                pooled_flat_2d = pooled_flat.reshape(-1, 1)
+            else:
+                pooled_flat_2d = pooled_flat
+            n_pooled = pooled_flat_2d.shape[0]
+            if n_pooled >= 500:
+                effective_bw = float(
+                    _median_bandwidth_jit(np.ascontiguousarray(pooled_flat_2d))
+                )
+            else:
+                effective_bw = _median_bandwidth(pooled_flat_2d)
+            if effective_bw == 0.0:
+                effective_bw = 1.0
+        else:
+            effective_bw = bandwidth
+
         ksd_per_chain = np.empty(n_chains)
         ksd_split_first = np.empty(n_chains) if split else None
         ksd_split_second = np.empty(n_chains) if split else None
@@ -1016,7 +1046,7 @@ def chain_ksd(
             if trailing:
                 chain_samples = chain_samples.reshape(n_draws, -1)
             ksd_per_chain[c] = kernel_stein_discrepancy(
-                chain_samples, score_fn, kernel=kernel, bandwidth=bandwidth
+                chain_samples, score_fn, kernel=kernel, bandwidth=effective_bw
             )
 
             if split:
@@ -1027,16 +1057,16 @@ def chain_ksd(
                     first = first.reshape(mid, -1)
                     second = second.reshape(n_draws - mid, -1)
                 ksd_split_first[c] = kernel_stein_discrepancy(
-                    first, score_fn, kernel=kernel, bandwidth=bandwidth
+                    first, score_fn, kernel=kernel, bandwidth=effective_bw
                 )
                 ksd_split_second[c] = kernel_stein_discrepancy(
-                    second, score_fn, kernel=kernel, bandwidth=bandwidth
+                    second, score_fn, kernel=kernel, bandwidth=effective_bw
                 )
 
         # Pooled: all chains combined
         pooled = _flatten_samples(dataset, name)
         ksd_pooled = kernel_stein_discrepancy(
-            pooled, score_fn, kernel=kernel, bandwidth=bandwidth
+            pooled, score_fn, kernel=kernel, bandwidth=effective_bw
         )
 
         results[name] = ChainKSDResult(

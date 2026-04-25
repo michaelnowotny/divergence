@@ -76,6 +76,7 @@ Hot paths are JIT-compiled via Numba and dispatched automatically based on input
 - `_energy_distance_1d_jit(x, y)` — O((n + m) log(n + m)) sort-based kernel using closed-form sums of order statistics. **Dispatched by `energy_distance` when input is 1D and `max(n, m) >= 200`.** Also dispatched by `two_sample_test(method='energy')` for 1D data, which is the common case for scalar MCMC parameters.
 - `_energy_distance_jit(x, y)` — O(n·m) multi-dimensional kernel with O(1) memory. Dispatched when `max(n, m) >= _JIT_THRESHOLD` (5000).
 - `_mmd_squared_jit(x, y, gamma)` — O(n·m) multi-dimensional MMD² with RBF kernel, O(1) memory. Dispatched when `max(n, m) >= _MMD_JIT_THRESHOLD` (500; the threshold is lower than energy distance's because the vectorized MMD path must materialize three full kernel matrices).
+- `_ksd_stein_kernel_sum_jit(x, scores, sq_bw, kernel_type)` — O(n²) Stein-kernel U-statistic with O(1) memory.  Dispatched by `kernel_stein_discrepancy` when `n >= _KSD_JIT_THRESHOLD` (500, in `score_based.py`).  Same threshold as MMD for the same reason: the vectorized path materializes (n, n, d) diff arrays plus several (n, n) intermediates, so JIT wins from a few hundred samples upward (n=3000: vectorized 690 ms vs JIT 41 ms).
 - `_sinkhorn_cost_jit(C, epsilon, max_iter, tol)` — inlined log-domain Sinkhorn iterations. **Always** used by `sinkhorn_divergence` (no Python fallback); ~4× faster than the SciPy-based reference at n=500 that it replaced.
 - `_sum_block_jit(D, idx_a, idx_b)` — sums the block `D[idx_a, idx_b]` in place without materializing a submatrix. Used by the precomputed-matrix path in `two_sample_test` to avoid per-permutation `np.ix_()` allocations. The block sums exploit the symmetry identity `D.sum() = S_PP + S_QQ + 2·S_PQ` to compute only two blocks per permutation instead of three.
 - `_sum_block_rbf_jit(D_sq, idx_a, idx_b, gamma)` — same idea with RBF applied. Currently exposed via the `_mmd_from_sq_distance_matrix` helper but the MMD permutation loop in `two_sample_test` uses a precomputed-kernel-matrix approach that bypasses it for speed.
@@ -95,6 +96,7 @@ Hot paths are JIT-compiled via Numba and dispatched automatically based on input
 
 **Bayesian chain diagnostics** (`bayesian.py`):
 - `chain_divergence` with `method='mmd'` computes the RBF bandwidth once from the pooled samples across all chains and passes it explicitly to each pairwise `maximum_mean_discrepancy` call.  The per-pair median-heuristic call dominated the naive loop; eliminating it gives a ~1.7–2× speedup (e.g., 8 chains × 1000 draws: 1.1 s → 0.6 s; 16 chains: 5.3 s → 2.7 s).  The matrix-based amortization variant (one big kernel matrix + block sums) was benchmarked and rejected: the JIT streaming MMD is already so fast per-call that the O((C·m)²) exp work in the amortized path cancels the savings.
+- `chain_ksd` shares the kernel bandwidth across chains via the same pattern.  Combined with the lower `_KSD_JIT_THRESHOLD` (5000 → 500), the function went from ~6.5 s to ~0.9 s at 4 chains × 3000 draws (~7×).
 
 **Performance benchmarks** (dev machine, Linux x86_64):
 - `energy_distance` at n=3000 (1D): ~30 μs
@@ -103,6 +105,8 @@ Hot paths are JIT-compiled via Numba and dispatched automatically based on input
 - `two_sample_test(energy, n_permutations=500)` at n=3000 per group (1D): ~0.11 s
 - `two_sample_test(mmd, n_permutations=500)` at n=2000 per group: ~7 s
 - `chain_divergence(mmd)` at 8 chains × 1000 draws: ~0.6 s (down from ~1.1 s)
+- `chain_ksd` at 4 chains × 3000 draws: ~0.9 s (down from ~6.5 s)
+- `kernel_stein_discrepancy` at n=3000: ~50 ms (down from ~915 ms — JIT threshold lowered)
 
 ### Dependencies
 
