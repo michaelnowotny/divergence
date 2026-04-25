@@ -2674,7 +2674,11 @@ provable convergence control guarantees [1]_.</p>
             <td>
               <div class="doc-md-description">
                 <p>Kernel bandwidth / scale parameter.  If <code>None</code>, the median
-heuristic is used.</p>
+heuristic is used, computed <em>once</em> from the pooled samples
+across all chains.  Sharing the bandwidth gives every entry a
+common scale (which is exactly what you want when reading
+per-chain KSDs as a relative ranking) and removes the
+dominant per-call cost.  Pass an explicit value to override.</p>
               </div>
             </td>
             <td>
