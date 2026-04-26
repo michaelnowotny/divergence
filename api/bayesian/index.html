@@ -3020,9 +3020,16 @@ named tuples with fields <code>p_value_matrix</code>,
 (&gt; 0.05).  If any pair has a small p-value, the chains are
 sampling from detectably different distributions, indicating a
 convergence problem.</p>
-<p>The MMD test statistic is recommended as the default because it is
-symmetric, works in any dimension, and is consistent against all
-alternatives when using a characteristic kernel.</p>
+<p>For typical MCMC use (scalar or low-dimensional parameters), the
+<code>"energy"</code> method is generally faster: it has a 1D sort-based
+fast path that runs in microseconds even for thousands of draws,
+and it does not require kernel-bandwidth selection.  The <code>"mmd"</code>
+method is appropriate when you have a specific kernel choice in
+mind, are working with high-dimensional posteriors, or want to
+align with a published benchmark that specifies MMD.</p>
+<p>For <code>method="mmd"</code> the RBF bandwidth is estimated once from the
+pooled samples across all chains and reused for every pair —
+avoids <code>C*(C-1)/2</code> redundant median-heuristic calls.</p>
 </details>
 
 <p><span class="doc-section-title">Examples:</span></p>
