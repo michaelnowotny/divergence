@@ -1142,9 +1142,17 @@ def chain_two_sample_test(
     sampling from detectably different distributions, indicating a
     convergence problem.
 
-    The MMD test statistic is recommended as the default because it is
-    symmetric, works in any dimension, and is consistent against all
-    alternatives when using a characteristic kernel.
+    For typical MCMC use (scalar or low-dimensional parameters), the
+    ``"energy"`` method is generally faster: it has a 1D sort-based
+    fast path that runs in microseconds even for thousands of draws,
+    and it does not require kernel-bandwidth selection.  The ``"mmd"``
+    method is appropriate when you have a specific kernel choice in
+    mind, are working with high-dimensional posteriors, or want to
+    align with a published benchmark that specifies MMD.
+
+    For ``method="mmd"`` the RBF bandwidth is estimated once from the
+    pooled samples across all chains and reused for every pair —
+    avoids ``C*(C-1)/2`` redundant median-heuristic calls.
 
     Examples
     --------
@@ -1186,6 +1194,23 @@ def chain_two_sample_test(
                 s = s.reshape(s.shape[0], -1)
             chain_samples.append(s)
 
+        # Shared-bandwidth fast path for the MMD method: every per-pair
+        # ``two_sample_test`` call would otherwise re-run the median
+        # heuristic on its own pooled pair, which dominates the per-pair
+        # cost.  Computing the bandwidth once from all chains pooled also
+        # gives every entry of the p-value matrix a comparable scale.
+        extra_kwargs: dict[str, tp.Any] = {}
+        if method == "mmd":
+            from divergence._numba_kernels import _median_bandwidth_jit
+
+            pooled = np.concatenate(chain_samples, axis=0)
+            if pooled.ndim == 1:
+                pooled = pooled.reshape(-1, 1)
+            shared_bw = float(_median_bandwidth_jit(np.ascontiguousarray(pooled)))
+            if shared_bw == 0.0:
+                shared_bw = 1.0
+            extra_kwargs["bandwidth"] = shared_bw
+
         p_matrix = np.ones((n_chains, n_chains))
         s_matrix = np.zeros((n_chains, n_chains))
 
@@ -1199,6 +1224,7 @@ def chain_two_sample_test(
                     n_permutations=n_permutations,
                     seed=pair_seed,
                     low_memory=low_memory,
+                    **extra_kwargs,
                 )
                 p_matrix[i, j] = test_result.p_value
                 p_matrix[j, i] = test_result.p_value

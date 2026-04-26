@@ -492,6 +492,45 @@ class TestChainTwoSampleTest:
         assert result["mu"].p_value_matrix.shape == (4, 4)
         assert result["mu"].statistic_matrix.shape == (4, 4)
 
+    def test_mmd_shared_bandwidth_matches_manual(self, rng):
+        """chain_two_sample_test(mmd) must equal a naive loop that shares
+        the pooled-median bandwidth across pair calls.  Pins the speedup
+        to exact numerical equivalence."""
+        from divergence._numba_kernels import _median_bandwidth_jit
+        from divergence.testing import two_sample_test
+
+        n_chains, n_draws = 3, 400
+        arr = rng.standard_normal((n_chains, n_draws))
+        idata = az.from_dict({"posterior": {"mu": arr}})
+
+        result = chain_two_sample_test(
+            idata,
+            var_names=["mu"],
+            method="mmd",
+            n_permutations=50,
+            seed=7,
+        )
+        got_stat = result["mu"].statistic_matrix
+
+        chain_samples = [arr[c].reshape(-1, 1).astype(float) for c in range(n_chains)]
+        flat = np.concatenate(chain_samples, axis=0)
+        bw = float(_median_bandwidth_jit(np.ascontiguousarray(flat)))
+        expected = np.zeros((n_chains, n_chains))
+        for i in range(n_chains):
+            for j in range(i + 1, n_chains):
+                pair_seed = 7 + i * n_chains + j
+                r = two_sample_test(
+                    chain_samples[i],
+                    chain_samples[j],
+                    method="mmd",
+                    n_permutations=50,
+                    seed=pair_seed,
+                    bandwidth=bw,
+                )
+                expected[i, j] = expected[j, i] = r.statistic
+
+        np.testing.assert_allclose(got_stat, expected, atol=1e-12)
+
     def test_matrix_symmetry(self, converged_chains_idata):
         """P-value and statistic matrices should be symmetric."""
         result = chain_two_sample_test(
