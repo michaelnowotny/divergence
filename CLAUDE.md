@@ -109,6 +109,7 @@ Hot paths are JIT-compiled via Numba and dispatched automatically based on input
 - `kernel_stein_discrepancy` at n=3000: ~50 ms (down from ~915 ms — JIT threshold lowered)
 - `fisher_divergence` (estimated `score_p`) at n=5000: ~360 ms (down from ~925 ms — KDE-gradient identity + JIT median)
 - KSD scan (12 calls, n=2000 each, common in pedagogical demos): ~390 ms (down from ~2.9 s)
+- `normalized_mutual_information` with list of 5 normalizations at n=5000: ~100 ms (down from ~540 ms)
 
 ### Dependencies
 

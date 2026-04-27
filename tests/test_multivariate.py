@@ -155,6 +155,33 @@ class TestNormalizedMutualInformation:
                 independent_2d[:, 0], independent_2d[:, 1], normalization="bad"
             )
 
+    def test_list_normalizations_returns_dict(self, correlated_2d):
+        """Passing a list of normalizations should return a dict mapping
+        each name to its NMI value, matching one-by-one calls exactly."""
+        samples, _ = correlated_2d
+        norms = ["geometric", "arithmetic", "max", "min", "joint"]
+
+        as_dict = normalized_mutual_information(
+            samples[:, 0], samples[:, 1], normalization=norms
+        )
+        assert isinstance(as_dict, dict)
+        assert set(as_dict.keys()) == set(norms)
+
+        for n in norms:
+            single = normalized_mutual_information(
+                samples[:, 0], samples[:, 1], normalization=n
+            )
+            np.testing.assert_allclose(as_dict[n], single, atol=1e-12)
+
+    def test_list_with_invalid_normalization_raises(self, independent_2d):
+        """A list containing an unknown normalization should still raise."""
+        with pytest.raises(ValueError, match="Unknown normalization"):
+            normalized_mutual_information(
+                independent_2d[:, 0],
+                independent_2d[:, 1],
+                normalization=["geometric", "bad"],
+            )
+
 
 # ===========================================================================
 # Variation of Information

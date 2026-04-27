@@ -116,10 +116,10 @@ def normalized_mutual_information(
     samples_x: np.ndarray,
     samples_y: np.ndarray,
     *,
-    normalization: str = "geometric",
+    normalization: str | list[str] = "geometric",
     base: float = np.e,
     discrete: bool = False,
-) -> float:
+) -> float | dict[str, float]:
     r"""Compute normalized mutual information between two variables.
 
     .. math::
@@ -132,9 +132,14 @@ def normalized_mutual_information(
         Samples of variable X, shape ``(n,)``.
     samples_y : np.ndarray
         Samples of variable Y, shape ``(n,)``.
-    normalization : str, optional
+    normalization : str or list of str, optional
         Normalization method: ``"geometric"`` (default), ``"arithmetic"``,
-        ``"max"``, ``"min"``, or ``"joint"``.
+        ``"max"``, ``"min"``, or ``"joint"``.  If a list is supplied, the
+        underlying mutual information and entropies are computed *once*
+        and the function returns a dict mapping each requested
+        normalization to its NMI value — much faster than calling this
+        function once per normalization for the same ``(samples_x,
+        samples_y)``.
     base : float, optional
         Logarithm base. Default is ``np.e``.
     discrete : bool, optional
@@ -142,14 +147,34 @@ def normalized_mutual_information(
 
     Returns
     -------
-    float
-        Normalized mutual information in [0, 1] (approximately).
+    float or dict[str, float]
+        Normalized mutual information.  Returns a float when
+        ``normalization`` is a string, or a dict mapping each
+        requested normalization name to its NMI when a list is given.
 
     Raises
     ------
     ValueError
-        If normalization is unknown.
+        If any requested normalization is unknown.
     """
+    valid = {"geometric", "arithmetic", "max", "min", "joint"}
+    if isinstance(normalization, str):
+        requested = [normalization]
+        return_dict = False
+    else:
+        requested = list(normalization)
+        return_dict = True
+
+    bad = [n for n in requested if n not in valid]
+    if bad:
+        raise ValueError(
+            f"Unknown normalization(s): {bad!r}. "
+            "Use 'geometric', 'arithmetic', 'max', 'min', or 'joint'."
+        )
+
+    # Compute MI and marginal entropies *once*, regardless of how many
+    # normalizations are requested.  Joint entropy is only computed when
+    # a normalization that needs it is in the request list.
     if discrete:
         mi = discrete_mutual_information(samples_x, samples_y, base=base)
         h_x = discrete_entropy(samples_x, base=base)
@@ -159,37 +184,42 @@ def normalized_mutual_information(
         h_x = knn_entropy(samples_x, base=base)
         h_y = knn_entropy(samples_y, base=base)
 
-    if normalization == "geometric":
-        denom = np.sqrt(h_x * h_y) if h_x > 0 and h_y > 0 else 0.0
-    elif normalization == "arithmetic":
-        denom = 0.5 * (h_x + h_y)
-    elif normalization == "max":
-        denom = max(h_x, h_y)
-    elif normalization == "min":
-        denom = min(h_x, h_y)
-    elif normalization == "joint":
-        if discrete:
-            denom = discrete_joint_entropy(samples_x, samples_y, base=base)
-        else:
-            denom = knn_entropy(
-                np.column_stack(
-                    [
-                        np.asarray(samples_x).ravel(),
-                        np.asarray(samples_y).ravel(),
-                    ]
-                ),
-                base=base,
-            )
-    else:
-        raise ValueError(
-            f"Unknown normalization: {normalization!r}. "
-            "Use 'geometric', 'arithmetic', 'max', 'min', or 'joint'."
-        )
+    h_joint: float | None = None
 
-    if denom == 0.0:
-        return 0.0
+    def _denom(name: str) -> float:
+        nonlocal h_joint
+        if name == "geometric":
+            return float(np.sqrt(h_x * h_y)) if h_x > 0 and h_y > 0 else 0.0
+        if name == "arithmetic":
+            return 0.5 * (h_x + h_y)
+        if name == "max":
+            return max(h_x, h_y)
+        if name == "min":
+            return min(h_x, h_y)
+        # name == "joint"
+        if h_joint is None:
+            if discrete:
+                h_joint = discrete_joint_entropy(samples_x, samples_y, base=base)
+            else:
+                h_joint = knn_entropy(
+                    np.column_stack(
+                        [
+                            np.asarray(samples_x).ravel(),
+                            np.asarray(samples_y).ravel(),
+                        ]
+                    ),
+                    base=base,
+                )
+        return h_joint
 
-    return mi / denom
+    out: dict[str, float] = {}
+    for name in requested:
+        d = _denom(name)
+        out[name] = 0.0 if d == 0.0 else mi / d
+
+    if return_dict:
+        return out
+    return out[requested[0]]
 
 
 def variation_of_information(
