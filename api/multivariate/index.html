@@ -1523,12 +1523,17 @@ Ignored when <code>discrete=True</code>.</p>
                 <code>normalization</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code>str or list of str</code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>Normalization method: <code>"geometric"</code> (default), <code>"arithmetic"</code>,
-<code>"max"</code>, <code>"min"</code>, or <code>"joint"</code>.</p>
+<code>"max"</code>, <code>"min"</code>, or <code>"joint"</code>.  If a list is supplied, the
+underlying mutual information and entropies are computed <em>once</em>
+and the function returns a dict mapping each requested
+normalization to its NMI value — much faster than calling this
+function once per normalization for the same <code>(samples_x,
+samples_y)</code>.</p>
               </div>
             </td>
             <td>
@@ -1582,11 +1587,13 @@ Ignored when <code>discrete=True</code>.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="float">float</span></code>
+                  <code><span title="float">float</span> or <span title="dict">dict</span>[<span title="str">str</span>, <span title="float">float</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Normalized mutual information in [0, 1] (approximately).</p>
+                <p>Normalized mutual information.  Returns a float when
+<code>normalization</code> is a string, or a dict mapping each
+requested normalization name to its NMI when a list is given.</p>
               </div>
             </td>
           </tr>
@@ -1609,7 +1616,7 @@ Ignored when <code>discrete=True</code>.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If normalization is unknown.</p>
+                <p>If any requested normalization is unknown.</p>
               </div>
             </td>
           </tr>
