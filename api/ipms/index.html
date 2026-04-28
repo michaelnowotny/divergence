@@ -664,6 +664,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../notebooks/Bayesian_Diagnostics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Nile's Secret: A Bayesian Detective Story
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Real_World_Applications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Applications: When Standard Tools Fall Short
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../notebooks/Scores_and_Transport/" class="md-nav__link">
         
   
@@ -692,14 +748,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Bayesian_Diagnostics/" class="md-nav__link">
+      <a href="../../notebooks/NumPyro_KSD/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    The Nile's Secret: A Bayesian Detective Story
+    Did My Sampler Find the Truth?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Phillips_Curve_TVP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Phillips Curve: From Fixed Pipes and Automatons to a New Notion of Economic Equilibrium
   
 
     
@@ -1332,11 +1416,20 @@
 <h1 id="integral-probability-metrics">Integral Probability Metrics<a class="headerlink" href="#integral-probability-metrics" title="Permanent link">&para;</a></h1>
 <p>Sample-based distance measures that do not require density estimation. These operate directly on point clouds and are true metrics (or pseudo-metrics) on the space of probability distributions.</p>
 <div class="admonition note">
-<p class="admonition-title">Large-scale performance</p>
-<p>For n &gt;= 5,000 samples, <code>energy_distance</code> and <code>maximum_mean_discrepancy</code>
-automatically use Numba JIT-compiled kernels that run 10-18x faster and
-use O(1) memory instead of O(n^2). This makes computations feasible at
-n=50,000+ (which would previously exhaust memory).</p>
+<p class="admonition-title">Performance</p>
+<p><code>energy_distance</code> and <code>maximum_mean_discrepancy</code> dispatch to Numba
+JIT kernels above small thresholds. For 1D inputs, <code>energy_distance</code>
+uses a sort-based O(n log n) closed form once n ≥ 200; the multi-D
+streaming kernel takes over at n ≥ 5,000. <code>maximum_mean_discrepancy</code>
+switches to the JIT path at n ≥ 500 — much earlier than energy
+distance because the vectorized fallback materializes three full
+kernel matrices.</p>
+<p><code>two_sample_test(method="mmd")</code> precomputes the RBF kernel matrix
+once outside the permutation loop and uses the symmetry identity
+<code>S_PQ = (K_total - K_PP - K_QQ) / 2</code> to avoid one block sum per
+permutation. The 1D energy permutation test calls the sort-based
+kernel under each permutation and runs n=3000 per group with 200
+permutations in well under a second.</p>
 </div>
 
 

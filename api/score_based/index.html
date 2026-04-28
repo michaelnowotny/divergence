@@ -664,6 +664,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../notebooks/Bayesian_Diagnostics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Nile's Secret: A Bayesian Detective Story
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Real_World_Applications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Applications: When Standard Tools Fall Short
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../notebooks/Scores_and_Transport/" class="md-nav__link">
         
   
@@ -692,14 +748,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Bayesian_Diagnostics/" class="md-nav__link">
+      <a href="../../notebooks/NumPyro_KSD/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    The Nile's Secret: A Bayesian Detective Story
+    Did My Sampler Find the Truth?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Phillips_Curve_TVP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Phillips Curve: From Fixed Pipes and Automatons to a New Notion of Economic Equilibrium
   
 
     
@@ -1288,11 +1372,18 @@
 <h1 id="score-based-measures">Score-Based Measures<a class="headerlink" href="#score-based-measures" title="Permanent link">&para;</a></h1>
 <p>Divergences that use score functions (gradients of log-densities) rather than densities themselves. These have the key advantage of not requiring the normalizing constant.</p>
 <div class="admonition note">
-<p class="admonition-title">Large-scale performance</p>
-<p>For n &gt;= 5,000 samples, <code>kernel_stein_discrepancy</code> automatically uses
-a Numba JIT-compiled kernel that runs 14-18x faster and uses O(n)
-memory (for pre-evaluated scores) instead of O(n^2). This makes KSD
-feasible at n=50,000+.</p>
+<p class="admonition-title">Performance</p>
+<p><code>kernel_stein_discrepancy</code> dispatches to a Numba JIT kernel at
+n ≥ 500. The vectorized path materializes (n, n, d) diff arrays
+plus several (n, n) intermediates; the JIT path streams with
+O(n) memory (for the pre-evaluated scores). At n=3000 the JIT
+path is roughly 17× faster.</p>
+<p><code>fisher_divergence</code> with an estimated <code>score_p</code> uses a kernel
+density gradient that is now expressed via a linearity identity
+rather than an (m, n, d) intermediate, and the median-bandwidth
+helper used by both <code>fisher_divergence</code> and
+<code>kernel_stein_discrepancy</code> switches to a subsampling kernel at
+n ≥ 500.</p>
 </div>
 
 

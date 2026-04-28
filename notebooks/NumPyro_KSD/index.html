@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://michaelnowotny.github.io/divergence/notebooks/NumPyro_KSD/">
       
       
+        <link rel="prev" href="../Scores_and_Transport/">
+      
+      
+        <link rel="next" href="../Phillips_Curve_TVP/">
       
       
         
@@ -260,10 +264,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../Divergence/" class="md-tabs__link">
           
   
@@ -489,28 +495,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -528,7 +537,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -658,6 +667,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../Bayesian_Diagnostics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Nile's Secret: A Bayesian Detective Story
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Real_World_Applications/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-World Applications: When Standard Tools Fall Short
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Scores_and_Transport/" class="md-nav__link">
         
   
@@ -683,17 +748,281 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../Bayesian_Diagnostics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Did My Sampler Find the Truth?
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    The Nile's Secret: A Bayesian Detective Story
+    Did My Sampler Find the Truth?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kernel-stein-discrepancy-as-a-convergence-diagnostic-with-numpyro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kernel Stein Discrepancy as a Convergence Diagnostic with NumPyro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-impossible-integral" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The Impossible Integral
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-heights-and-slopes-the-stein-insight" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Heights and Slopes — The Stein Insight
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Heights and Slopes — The Stein Insight">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-steins-identity-to-a-practical-diagnostic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From Stein's identity to a practical diagnostic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-a-model-with-a-known-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. A Model with a Known Answer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. A Model with a Known Answer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exponential-waiting-times" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exponential waiting times
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-analytical-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The analytical solution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-nuts-sampling-with-numpyro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. NUTS Sampling with NumPyro
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. NUTS Sampling with NumPyro">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#from-quantum-fields-to-bayesian-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From quantum fields to Bayesian inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-gaussian-approximation-when-convenience-misleads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The Gaussian Approximation — When Convenience Misleads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-deliberately-wrong-ksd-as-a-lie-detector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Deliberately Wrong — KSD as a Lie Detector
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-the-diagnostic-hierarchy-necessary-vs-sufficient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. The Diagnostic Hierarchy — Necessary vs. Sufficient
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. The Diagnostic Hierarchy — Necessary vs. Sufficient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-ksd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use KSD
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-the-250-year-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. The 250-Year Journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-divergence-notebook-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Divergence Notebook Series
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Phillips_Curve_TVP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Phillips Curve: From Fixed Pipes and Automatons to a New Notion of Economic Equilibrium
   
 
     
