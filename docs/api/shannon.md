@@ -92,4 +92,13 @@ All aliases accept the same `base` and `discrete` parameters as their full-name 
 
 ::: divergence.mutual_information_from_kde
 
+::: divergence.joint_entropy_from_kde
+
 ::: divergence.conditional_entropy_from_kde
+
+## Utilities
+
+A small interval helper used by the density-based functions when
+intersecting the supports of two estimated densities.
+
+::: divergence.intersection

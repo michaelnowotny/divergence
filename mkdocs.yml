@@ -75,8 +75,11 @@ nav:
     - "2. Beyond KL": notebooks/Beyond_KL.ipynb
     - "3. Distances & Testing": notebooks/Distances_and_Testing.ipynb
     - "4. Dependence & Causality": notebooks/Dependence_and_Causality.ipynb
-    - "5. Scores & Transport": notebooks/Scores_and_Transport.ipynb
-    - "6. Bayesian Diagnostics": notebooks/Bayesian_Diagnostics.ipynb
+    - "5. Bayesian Diagnostics": notebooks/Bayesian_Diagnostics.ipynb
+    - "6. Real-World Applications": notebooks/Real_World_Applications.ipynb
+    - "7. Scores & Transport": notebooks/Scores_and_Transport.ipynb
+    - "8. Did My Sampler Find the Truth?": notebooks/NumPyro_KSD.ipynb
+    - "9. Phillips Curve TVP": notebooks/Phillips_Curve_TVP.ipynb
   - API Reference:
     - Overview: api/index.md
     - Shannon Measures: api/shannon.md

@@ -1,6 +1,6 @@
 # API Reference
 
-Divergence provides 72 public functions and 4 result types organized into thematic modules.
+Divergence exports 79 public functions and 4 result types, organized into thematic modules.
 
 ## Modules
 

@@ -52,6 +52,6 @@ pip install "divergence[bayesian]"
 
 ## Learn More
 
-Start with the [tutorials](notebooks/Divergence.ipynb) — six interactive notebooks that build from Shannon's foundations to end-to-end Bayesian inference, with historical context and visualizations throughout.
+Start with the [tutorials](notebooks/Divergence.ipynb) — nine interactive notebooks that build from Shannon's foundations through end-to-end Bayesian inference, applied case studies, and a goodness-of-fit pass with kernel Stein discrepancy.
 
 For the complete function reference, see the [API documentation](api/index.md).
