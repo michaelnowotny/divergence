@@ -17,33 +17,25 @@
 
 ## Why Divergence?
 
-In the summer of 1948, a 32-year-old mathematician at Bell Labs named **Claude Shannon** published a paper that quietly changed the world. ["A Mathematical Theory of Communication"](https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf) gave humanity something it had never had before: a *rigorous, mathematical definition of information*. Shannon showed that uncertainty could be measured, that communication had fundamental limits, and that a single quantity — **entropy** — sat at the heart of it all.
+In 1948, **Claude Shannon's** ["A Mathematical Theory of Communication"](https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf) gave information a precise definition. Entropy, measured in bits, became the unit of uncertainty.
 
-What followed was an explosion of ideas. In 1951, **Solomon Kullback** and **Richard Leibler** — working as cryptanalysts at the NSA — formalized the concept of *relative entropy*, measuring how one probability distribution diverges from another. In 1961, **Alfréd Rényi** generalized Shannon's entropy into a family parameterized by a single number, revealing that information has not one but infinitely many faces. In the decades since, mathematicians, statisticians, and computer scientists have built an extraordinary edifice on Shannon's foundation: f-divergences, optimal transport distances, kernel methods, score-based measures — each offering a different lens on the same fundamental question: *how different are these two probability distributions?*
+Three years later, **Solomon Kullback** and **Richard Leibler** — cryptanalysts at the NSA — defined *relative entropy*: a way to say how much one distribution differs from another. In 1961, **Alfréd Rényi** generalised Shannon's entropy into a one-parameter family. The decades since produced f-divergences, optimal-transport distances, kernel methods, and score-based measures — variations on the same question: *how different are these two distributions?*
 
-**Divergence** puts this entire toolkit into your hands.
+Divergence is a Python library that implements that toolkit in one place: Shannon measures, f-divergences, Rényi, integral probability metrics, kNN estimators, score-based measures, optimal transport, and Bayesian MCMC diagnostics. Discrete or continuous, sample-based or density-based, with Numba acceleration on the hot paths and ArviZ integration for MCMC workflows.
 
-It is the most comprehensive information-theoretic package for Python — spanning Shannon measures, f-divergences, Rényi families, integral probability metrics, kNN estimators, score-based divergences, optimal transport, and Bayesian MCMC diagnostics in a single, unified API. Whether you are a Bayesian statistician checking MCMC convergence, a machine learning researcher comparing generative models, a neuroscientist measuring information flow between brain regions, or a student encountering entropy for the first time, Divergence provides the tools you need.
+### Who uses it
 
-### Who is this for?
+If you run NUTS or HMC in NumPyro, PyMC, Stan, PyJAGS, or emcee, `chain_ksd` answers a question R-hat can't: did your chains converge to the *correct* target distribution? `chain_divergence` and `chain_two_sample_test` complement it for chain-by-chain agreement, and `information_gain` quantifies how much the data updated your prior.
 
-- **Bayesian practitioners** using PyMC, Stan, NumPyro, PyJAGS, or emcee — Divergence integrates directly with ArviZ to provide information-theoretic diagnostics that go far beyond R-hat: information gain, chain convergence testing, Bayesian surprise, uncertainty decomposition, and the only diagnostic that tests convergence to the *correct target* (kernel Stein discrepancy)
+If you compare distributions for a living — generative-model evaluation, dataset shift detection, two-sample tests, feature-dependence screening — energy distance, MMD, Wasserstein, Sinkhorn, and KSG mutual information are all here, with permutation tests built in.
 
-- **Machine learning researchers** — compare distributions with energy distance, MMD, Wasserstein, or Sinkhorn divergence; run formal two-sample tests; measure feature dependence with mutual information and total correlation
-
-- **Scientists and engineers** — detect causal information flow with transfer entropy, measure multivariate dependence, quantify distributional shift in monitoring systems
-
-- **Students and educators** — six interactive notebooks with historical narrative, from Shannon's foundations through modern optimal transport, including an end-to-end Bayesian detective story using real hydrological data
-
-### Everything in one place
-
-Divergence brings together measures that are otherwise scattered across different packages, subfields, and textbooks — **Shannon measures, f-divergences, Rényi families, integral probability metrics, kNN estimators, score-based divergences, optimal transport, and Bayesian diagnostics** — in a single, coherent API. Discrete and continuous, sample-based and density-based, with configurable units (nats/bits/hartleys), Numba-accelerated performance at scale, and seamless ArviZ integration for Bayesian workflows.
+If you're learning information theory, the nine notebooks walk through the field's history with worked examples, from Shannon and Kullback-Leibler through Csiszár, Rényi, Watanabe, Schreiber, Cuturi, and Gorham-Mackey.
 
 ---
 
 ## What You Can Compute
 
-### Shannon Measures — The Foundation
+### Shannon measures
 
 *Claude Shannon (1948), Solomon Kullback & Richard Leibler (1951)*
 
@@ -59,7 +51,7 @@ Divergence brings together measures that are otherwise scattered across differen
 
 All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (hartleys).
 
-### f-Divergences — The Unifying Family
+### f-divergences
 
 *Imre Csiszár (1963), Shun-ichi Amari (1985)*
 
@@ -72,7 +64,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 | Cressie-Read | `cressie_read_divergence(p, q, lambda_param)` | Parameterized family unifying KL, chi², Hellinger |
 | General f-divergence | `f_divergence(p, q, f=...)` | Any convex generator function |
 
-### Rényi Family — The Alpha Telescope
+### Rényi family
 
 *Alfréd Rényi (1961)*
 
@@ -81,7 +73,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 | Rényi Entropy | `renyi_entropy(x, alpha)` | α→0: Hartley, α→1: Shannon, α=2: collision, α→∞: min-entropy |
 | Rényi Divergence | `renyi_divergence(p, q, alpha)` | α→1: KL divergence, monotonically non-decreasing in α |
 
-### Integral Probability Metrics — Geometry on Distributions
+### Integral probability metrics
 
 *Leonid Kantorovich (1942), Gábor Székely (2004), Arthur Gretton (2006)*
 
@@ -92,7 +84,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 | Sliced Wasserstein | `sliced_wasserstein_distance(p, q)` | Scales to high dimensions via random projections |
 | MMD | `maximum_mean_discrepancy(p, q)` | Kernel-based, consistent against all alternatives |
 
-### kNN Estimators — Density-Free Information Theory
+### kNN estimators
 
 *Kozachenko & Leonenko (1987), Kraskov, Stögbauer & Grassberger (2004)*
 
@@ -102,17 +94,17 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 | kNN KL Divergence | `knn_kl_divergence(p, q, k=5)` | No density estimation needed |
 | KSG Mutual Information | `ksg_mutual_information(x, y, k=5)` | Detects all dependence, linear and nonlinear |
 
-### Multivariate Dependence — Beyond Pairwise
+### Multivariate dependence
 
 *Satosi Watanabe (1960), Marina Meilă (2003)*
 
 | Measure | Function | What it measures |
 |---------|----------|-----------------|
 | Total Correlation | `total_correlation(samples)` | Total redundancy among d ≥ 2 variables |
-| Normalized MI | `normalized_mutual_information(x, y)` | MI on a [0, 1] scale for comparison |
+| Normalized MI | `normalized_mutual_information(x, y)` | MI on a [0, 1] scale; pass a list of normalizations to compute several at once |
 | Variation of Information | `variation_of_information(x, y)` | True metric on partitions (triangle inequality) |
 
-### Causal and Temporal — The Arrow of Information
+### Causal and temporal — the arrow of information
 
 *Thomas Schreiber (2000)*
 
@@ -120,7 +112,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 |---------|----------|----------------|
 | Transfer Entropy | `transfer_entropy(source, target)` | Directed information flow between time series |
 
-### Score-Based Measures — Slopes Instead of Heights
+### Score-based measures — slopes instead of heights
 
 *R. A. Fisher (1925), Qiang Liu, Jason Lee & Michael Jordan (2016), Jackson Gorham & Lester Mackey (2017)*
 
@@ -129,7 +121,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 | Fisher Divergence | `fisher_divergence(p, score_q)` | Compares score functions, no normalizing constant |
 | Kernel Stein Discrepancy | `kernel_stein_discrepancy(x, score)` | Goodness-of-fit without computing Z (RBF + IMQ kernels) |
 
-### Optimal Transport — The Cost of Rearrangement
+### Optimal transport
 
 *Marco Cuturi (2013), Aude Genevay (2018)*
 
@@ -137,7 +129,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 |---------|----------|---------------|
 | Sinkhorn Divergence | `sinkhorn_divergence(p, q)` | Fast, differentiable optimal transport |
 
-### Two-Sample Testing — Is the Difference Real?
+### Two-sample testing — is the difference real?
 
 *Ronald Fisher (1930s), Arthur Gretton (2012)*
 
@@ -145,7 +137,7 @@ All support `discrete=True/False` and `base=np.e` (nats) / `2` (bits) / `10` (ha
 |----------|-------------|
 | `two_sample_test(p, q, method="mmd")` | Permutation test with calibrated p-values (MMD, energy, kNN methods) |
 
-### Bayesian MCMC Diagnostics — The ArviZ Companion
+### Bayesian MCMC diagnostics
 
 *Dennis Lindley (1956), Andrew Gelman & Donald Rubin (1992)*
 
@@ -167,17 +159,13 @@ Works with **PyMC, Stan, NumPyro, PyJAGS, emcee** — any package that produces 
 
 ## Performance
 
-Hot paths dispatch to Numba JIT-compiled kernels automatically based on input size and dimensionality — no flags to set.
+The hot paths use Numba JIT kernels, dispatched automatically by input size.
 
-- **Energy distance (1D):** sort-based O(n log n) kernel; n=3,000 in ~30 μs.
-- **Energy distance (multi-D):** O(n·m) kernel with O(1) memory, enabling n=50,000+ that previously exhausted RAM.
-- **MMD:** JIT kernel with tight memory footprint; n=2,000 in ~43 ms. The `two_sample_test(method='mmd')` permutation loop precomputes the full kernel matrix once and uses a symmetry identity to sum only two blocks per permutation.
-- **Sinkhorn divergence:** log-domain iterations inlined in Numba (~4× faster than the SciPy-based reference); no Python fallback.
-- **KSD:** Numba kernel for Stein-kernel sums; RBF and IMQ kernels supported.
+Energy distance has a 1D sort-based kernel (n=3000 runs in ~30 μs) and a multi-D streaming kernel that handles n=50,000+ without exhausting RAM. MMD JITs at n ≥ 500; n=2000 runs in ~43 ms. The MMD permutation test in `two_sample_test` precomputes the full kernel matrix once and uses the identity `S_PQ = (K_total - K_PP - K_QQ) / 2` to skip one block sum per permutation. Sinkhorn's log-domain iterations are inlined in Numba (~4× faster than the SciPy reference); there is no Python fallback. KSD has a streaming Stein-kernel sum for both the RBF and IMQ choices, dispatched at n ≥ 500.
 
-For large-scale two-sample testing, 1D energy distance tests are the fastest choice: n=3,000 per group with 500 permutations runs in ~0.11 s end-to-end.
+For large-scale two-sample testing, 1D energy distance is the fastest choice: n=3000 per group with 500 permutations runs in ~0.11 s end-to-end.
 
-A GPU backend (JAX, energy distance only) is available via `backend="gpu"` or the `DIVERGENCE_BACKEND=gpu` environment variable.
+A GPU backend (JAX, energy distance only at the moment) is available via `backend="gpu"` or the `DIVERGENCE_BACKEND=gpu` environment variable.
 
 ---
 
@@ -216,16 +204,19 @@ print(f"p-value: {result.p_value:.4f}")
 
 ## Tutorials
 
-Six interactive notebooks form a progressive learning path, with historical narrative and visualizations throughout:
+Nine notebooks form a progressive learning path. The first four build the toolbox; the next two apply it; the last three are the climax (goodness-of-fit via KSD) and an applied showcase.
 
 | # | Notebook | Topics |
 |---|----------|--------|
-| 1 | [Shannon's Foundations](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb) | Entropy, KL divergence, mutual information, the information-theoretic web |
+| 1 | [Shannon's Foundations](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Divergence.ipynb) | Entropy, KL divergence, mutual information, joint and conditional entropy |
 | 2 | [Beyond KL](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Beyond_KL.ipynb) | f-divergences, Cressie-Read continuum, Rényi family |
-| 3 | [Distances & Testing](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Distances_and_Testing.ipynb) | Wasserstein, energy, MMD, kNN estimators, permutation tests |
+| 3 | [Distances & Testing](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Distances_and_Testing.ipynb) | Wasserstein, energy, MMD, Sinkhorn, kNN estimators, permutation tests |
 | 4 | [Dependence & Causality](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Dependence_and_Causality.ipynb) | Total correlation, variation of information, transfer entropy |
-| 5 | [Scores & Transport](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Scores_and_Transport.ipynb) | Fisher divergence, kernel Stein discrepancy, Sinkhorn |
-| 6 | [The Nile's Secret](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Bayesian_Diagnostics.ipynb) | End-to-end Bayesian inference with emcee — a detective story |
+| 5 | [Bayesian Diagnostics — The Nile](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Bayesian_Diagnostics.ipynb) | End-to-end Bayesian change-point analysis with emcee |
+| 6 | [Real-World Applications](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Real_World_Applications.ipynb) | Stock-market contagion, crop yields, Phillips Curve diagnostics |
+| 7 | [Score-Based Divergences: Fisher and Stein](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Scores_and_Transport.ipynb) | Fisher divergence, kernel Stein discrepancy, the 250-year journey from Bayes to Stein |
+| 8 | [Did My Sampler Find the Truth?](https://github.com/michaelnowotny/divergence/blob/master/notebooks/NumPyro_KSD.ipynb) | KSD as convergence diagnostic with NumPyro: NUTS vs VI vs wrong samples |
+| 9 | [Phillips Curve TVP](https://github.com/michaelnowotny/divergence/blob/master/notebooks/Phillips_Curve_TVP.ipynb) | Time-varying Phillips Curve via PyJAGS Gibbs sampling — stagflation as a structural break |
 
 ## Documentation
 
@@ -239,7 +230,7 @@ cd divergence
 uv venv .venv --python 3.12 && source .venv/bin/activate
 uv pip install -e ".[dev]"
 
-make test          # Run 345 tests
+make test          # Run the test suite (391 tests)
 make lint          # Ruff check + format
 make docs-serve    # Live documentation preview
 ```
